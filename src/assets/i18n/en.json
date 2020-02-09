@@ -67,6 +67,7 @@
     "COMMON_SETTINGS": "Common",
     "HTTP_SETTINGS": "Http Module",
     "ADMIN_SETTINGS": "Admin Module",
+    "MQTT_SETTINGS": "MQTT Module",
     "ADVANCED_SETTINGS": "Advanced",
 
     "SET_PASSWORD": "Set Password",

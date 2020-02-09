@@ -35,6 +35,10 @@ export class SystemConfigComponent implements OnInit {
   admin_parameter_cols: any[];
   admin_parameters_beforeEdit: any[];
 
+  mqtt_parameters: any[];
+  mqtt_parameter_cols: any[];
+  mqtt_parameters_beforeEdit: any[];
+
   data_changed: boolean = false;
   restart_core_button = false;
 
@@ -94,6 +98,95 @@ export class SystemConfigComponent implements OnInit {
     this.fillCommonDialogData();
     this.fillHttpDialogData();
     this.fillAdminDialogData();
+    this.fillMqttDialogData();
+  }
+
+
+  // ---------------------------------------------------------
+  // Column definitions for parameter configuration tables
+  //
+  columnDefinitions() {
+    const columnDefinitions = [
+      {field: 'name', sfield: 'confname', header: 'PLUGIN.PARAMETER', width: '190px'},
+      {field: 'type', sfield: 'conftype', header: 'PLUGIN.TYPE', width: '80px'},
+      {field: 'value', sfield: 'paramvalue', header: 'PLUGIN.VALUE', width: '240px'},
+      {field: 'desc', sfield: '', header: 'PLUGIN.DESCRIPTION', width: ''}
+    ];
+
+    const paddingRight = 6; // distance between rnd of value field and beginning of description
+    const widthWide = 600;  // width of wide value fields (gui_type: wide_str)
+
+    for (let i = 0; i < columnDefinitions.length; i++) {
+      const width = parseInt(columnDefinitions[i]['width'], 10);
+      if (columnDefinitions[i]['width'] !== '') {
+        columnDefinitions[i]['iwidth'] = String(width - paddingRight) + 'px';
+      } else {
+        columnDefinitions[i]['iwidth'] = '';
+      }
+      columnDefinitions[i]['iwidthwide'] = String(widthWide) + 'px';
+      if (i === 2) {
+        // if column = 2 (value) -> adjust padding for description (in column 3)
+        columnDefinitions[3]['paddingleft'] = String(widthWide - width + paddingRight) + 'px';
+      }
+    }
+    return columnDefinitions;
+  }
+
+
+  // ---------------------------------------------------------
+  // Fill ParamData for display/editing of parameters
+  //
+  fillParamData(meta, param, data) {
+    // fill valuelist
+    const vl = [];
+    if (meta['parameters'][param]['valid_list'] !== undefined) {
+      let wrk = {};
+      for (let i = 0; i < meta['parameters'][param]['valid_list'].length; i++) {
+        wrk = {label: String(meta['parameters'][param]['valid_list'][i]), value: meta['parameters'][param]['valid_list'][i]};
+        vl.push(wrk);
+      }
+    }
+
+    // generate a valid_list for bool parameters
+    if (meta['parameters'][param]['type'] === 'bool') {
+      let wrk = {};
+      wrk = {label: 'true', value: true};
+      vl.push(wrk);
+      wrk = {label: 'false', value: false};
+      vl.push(wrk);
+    }
+
+    // fill description with active language
+//    const paramdesc = this.shared.getDescription(meta['parameters'][param]['description']);
+    let paramdesc = '';
+    if (meta['parameters'][param]['description'] !== undefined) {
+      paramdesc = meta['parameters'][param]['description'][this.lang];
+      if (paramdesc === '' || paramdesc === undefined) {
+        paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage()];
+        if (paramdesc === '' || paramdesc === undefined) {
+          paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage(1)];
+        }
+      }
+    }
+
+    const paramdata = {
+      'name': param,
+      'type': meta['parameters'][param]['type'],
+      'gui_type': meta['parameters'][param]['gui_type'],
+      'valid_list': vl,
+      'valid_min': meta['parameters'][param]['valid_min'],
+      'valid_max': meta['parameters'][param]['valid_max'],
+      'default': meta['parameters'][param]['default'],
+      'mandatory': meta['parameters'][param]['mandatory'],
+      'value': data[param],
+      'desc': paramdesc
+    };
+
+    if (paramdata.value === undefined) {
+      paramdata.value = null;
+    }
+
+    return paramdata;
   }
 
 
@@ -103,13 +196,7 @@ export class SystemConfigComponent implements OnInit {
   fillCommonDialogData() {
     this.lang = sessionStorage.getItem('default_language');
 
-    this.common_parameter_cols = [
-      {field: 'name', sfield: 'confname', header: 'PLUGIN.PARAMETER', width: '190px', iwidth: '186px'},
-      {field: 'value', sfield: 'paramvalue', header: 'PLUGIN.VALUE', width: '200px', iwidth: '196px'},
-      {field: 'type', sfield: 'conftype', header: 'PLUGIN.TYPE', width: '100px', iwidth: '96px'},
-      {field: 'desc', sfield: '', header: 'PLUGIN.DESCRIPTION', width: '', iwidth: ''}
-    ];
-
+    this.common_parameter_cols = this.columnDefinitions();
     this.common_parameters = [];
 
     const meta = this.config.common.meta;
@@ -119,47 +206,10 @@ export class SystemConfigComponent implements OnInit {
     for (const param in meta.parameters) {
       // console.log({param}, data[param]);
       if (meta.parameters.hasOwnProperty(param)) {
-
-        // fill valuelist
-        const vl = [];
-        if (meta['parameters'][param]['valid_list'] !== undefined) {
-          let wrk = {};
-          for (let i = 0; i < meta['parameters'][param]['valid_list'].length; i++) {
-            wrk = {label: String(meta['parameters'][param]['valid_list'][i]), value: meta['parameters'][param]['valid_list'][i]};
-            vl.push(wrk);
-          }
-        }
-
-        // generate a valid_list for bool parameters
-        if (meta['parameters'][param]['type'] === 'bool') {
-          let wrk = {};
-          wrk = {label: 'true', value: true};
-          vl.push(wrk);
-          wrk = {label: 'false', value: false};
-          vl.push(wrk);
-        }
-
-        // fill description with active language
-        const paramdesc = this.shared.getDescription(meta['parameters'][param]['description']);
-
-        const paramdata = {
-          'name': param,
-          'type': meta['parameters'][param]['type'],
-          'valid_list': vl,
-          'valid_min': meta['parameters'][param]['valid_min'],
-          'valid_max': meta['parameters'][param]['valid_max'],
-          'default': meta['parameters'][param]['default'],
-          'mandatory': meta['parameters'][param]['mandatory'],
-          'value': data[param],
-          'desc': paramdesc
-        };
-
-        if (paramdata.value === undefined) {
-          paramdata.value = null;
-        }
+        // Fill ParamData for display/editing of parameters
+        const paramdata = this.fillParamData(meta, param, data);
         // add to the table of configured plugins
         this.common_parameters.push(paramdata);
-
       }
     }
     // deepcopy form data
@@ -172,13 +222,7 @@ export class SystemConfigComponent implements OnInit {
   fillHttpDialogData() {
     this.lang = sessionStorage.getItem('default_language');
 
-    this.http_parameter_cols = [
-      {field: 'name', sfield: 'confname', header: 'PLUGIN.PARAMETER', width: '190px', iwidth: '186px'},
-      {field: 'value', sfield: 'paramvalue', header: 'PLUGIN.VALUE', width: '200px', iwidth: '196px'},
-      {field: 'type', sfield: 'conftype', header: 'PLUGIN.TYPE', width: '100px', iwidth: '96px'},
-      {field: 'desc', sfield: '', header: 'PLUGIN.DESCRIPTION', width: '', iwidth: ''}
-    ];
-
+    this.http_parameter_cols = this.columnDefinitions();
     this.http_parameters = [];
 
     const meta = this.config.http.meta;
@@ -209,50 +253,8 @@ export class SystemConfigComponent implements OnInit {
 
         // ignore plain text password fields
         if (['password', 'service_password'].indexOf(param) === -1) {
-          // fill valuelist
-          const vl = [];
-          if (meta['parameters'][param]['valid_list'] !== undefined) {
-            for (let i = 0; i < meta['parameters'][param]['valid_list'].length; i++) {
-              const wrk = {label: String(meta['parameters'][param]['valid_list'][i]), value: meta['parameters'][param]['valid_list'][i]};
-              vl.push(wrk);
-            }
-          }
-
-          // generate a valid_list for bool parameters
-          if (meta['parameters'][param]['type'] === 'bool') {
-            let wrk = {};
-            wrk = {label: 'true', value: true};
-            vl.push(wrk);
-            wrk = {label: 'false', value: false};
-            vl.push(wrk);
-          }
-
-          // fill description with active language
-          let paramdesc = '';
-          if (meta['parameters'][param]['description'] !== undefined) {
-            paramdesc = meta['parameters'][param]['description'][this.lang];
-            if (paramdesc === '' || paramdesc === undefined) {
-              paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage()];
-              if (paramdesc === '' || paramdesc === undefined) {
-                paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage(1)];
-              }
-            }
-          }
-
-          const paramdata = {
-            'name': param,
-            'type': meta['parameters'][param]['type'],
-            'valid_list': vl,
-            'valid_min': meta['parameters'][param]['valid_min'],
-            'valid_max': meta['parameters'][param]['valid_max'],
-            'default': meta['parameters'][param]['default'],
-            'mandatory': meta['parameters'][param]['mandatory'],
-            'value': data[param],
-            'desc': paramdesc};
-
-          if (paramdata.value === undefined) {
-            paramdata.value = null;
-          }
+          // Fill ParamData for display/editing of parameters
+          const paramdata = this.fillParamData(meta, param, data);
           // add to the table of configured plugins
           this.http_parameters.push(paramdata);
         }
@@ -265,18 +267,12 @@ export class SystemConfigComponent implements OnInit {
   }
 
   // ---------------------------------------------------------
-  // Fill the mask with http parameter data
+  // Fill the mask with admin parameter data
   //
   fillAdminDialogData() {
     this.lang = sessionStorage.getItem('default_language');
 
-    this.admin_parameter_cols = [
-      {field: 'name', sfield: 'confname', header: 'PLUGIN.PARAMETER', width: '190px', iwidth: '186px'},
-      {field: 'value', sfield: 'paramvalue', header: 'PLUGIN.VALUE', width: '200px', iwidth: '196px'},
-      {field: 'type', sfield: 'conftype', header: 'PLUGIN.TYPE', width: '100px', iwidth: '96px'},
-      {field: 'desc', sfield: '', header: 'PLUGIN.DESCRIPTION', width: '', iwidth: ''}
-    ];
-
+    this.admin_parameter_cols = this.columnDefinitions();
     this.admin_parameters = [];
 
     const meta = this.config.admin.meta;
@@ -284,58 +280,41 @@ export class SystemConfigComponent implements OnInit {
 
     for (const param in meta.parameters) {
       if (meta.parameters.hasOwnProperty(param)) {
-
-        // fill valuelist
-        const vl = [];
-        if (meta['parameters'][param]['valid_list'] !== undefined) {
-          for (let i = 0; i < meta['parameters'][param]['valid_list'].length; i++) {
-            const wrk = {label: String(meta['parameters'][param]['valid_list'][i]), value: meta['parameters'][param]['valid_list'][i]};
-            vl.push(wrk);
-          }
-        }
-
-        // generate a valid_list for bool parameters
-        if (meta['parameters'][param]['type'] === 'bool') {
-          let wrk = {};
-          wrk = {label: 'true', value: true};
-          vl.push(wrk);
-          wrk = {label: 'false', value: false};
-          vl.push(wrk);
-        }
-
-        // fill description with active language
-        let paramdesc = '';
-        if (meta['parameters'][param]['description'] !== undefined) {
-          paramdesc = meta['parameters'][param]['description'][this.lang];
-          if (paramdesc === '' || paramdesc === undefined) {
-            paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage()];
-            if (paramdesc === '' || paramdesc === undefined) {
-              paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage(1)];
-            }
-          }
-        }
-
-        const paramdata = {
-          'name': param,
-          'type': meta['parameters'][param]['type'],
-          'valid_list': vl,
-          'valid_min': meta['parameters'][param]['valid_min'],
-          'valid_max': meta['parameters'][param]['valid_max'],
-          'default': meta['parameters'][param]['default'],
-          'mandatory': meta['parameters'][param]['mandatory'],
-          'value': data[param],
-          'desc': paramdesc};
-
-        if (paramdata.value === undefined) {
-          paramdata.value = null;
-        }
+        // Fill ParamData for display/editing of parameters
+        const paramdata = this.fillParamData(meta, param, data);
         // add to the table of configured plugins
         this.admin_parameters.push(paramdata);
-
       }
     }
     // deepcopy form data
     this.admin_parameters_beforeEdit = JSON.parse(JSON.stringify(this.admin_parameters));
+
+  }
+
+
+  // ---------------------------------------------------------
+  // Fill the mask with mqtt parameter data
+  //
+  fillMqttDialogData() {
+    this.lang = sessionStorage.getItem('default_language');
+
+    this.mqtt_parameter_cols = this.columnDefinitions();
+    this.mqtt_parameters = [];
+
+    const meta = this.config.mqtt.meta;
+    const data = this.config.mqtt.data;
+
+    for (const param in meta.parameters) {
+      if (meta.parameters.hasOwnProperty(param)) {
+        // Fill ParamData for display/editing of parameters
+        const paramdata = this.fillParamData(meta, param, data);
+        // add to the table of configured plugins
+        this.mqtt_parameters.push(paramdata);
+
+      }
+    }
+    // deepcopy form data
+    this.mqtt_parameters_beforeEdit = JSON.parse(JSON.stringify(this.mqtt_parameters));
 
   }
 
@@ -416,6 +395,14 @@ export class SystemConfigComponent implements OnInit {
     for (const p in this.admin_parameters) {
       if (this.admin_parameters.hasOwnProperty(p)) {
         if (this.admin_parameters[p].value !== this.admin_parameters_beforeEdit[p].value) {
+          this.data_changed = true;
+          // console.log(this.admin_parameters[p]);
+        }
+      }
+    }
+    for (const p in this.mqtt_parameters) {
+      if (this.mqtt_parameters.hasOwnProperty(p)) {
+        if (this.mqtt_parameters[p].value !== this.mqtt_parameters_beforeEdit[p].value) {
           this.data_changed = true;
           // console.log(this.admin_parameters[p]);
         }
@@ -517,6 +504,13 @@ export class SystemConfigComponent implements OnInit {
         }
       }
     }
+    for (const p in this.mqtt_parameters) {
+      if (this.mqtt_parameters.hasOwnProperty(p)) {
+        if (!this.check_value_restrictions(this.mqtt_parameters[p])) {
+          errors_found = true;
+        }
+      }
+    }
 
 
     if (errors_found) {
@@ -552,6 +546,14 @@ export class SystemConfigComponent implements OnInit {
       }
     }
 
+    data['mqtt'] = {};
+    data['mqtt']['data'] = {};
+    for (const p in this.mqtt_parameters) {
+      if (this.common_parameters.hasOwnProperty(p)) {
+        data['mqtt']['data'][this.mqtt_parameters[p].name] = this.mqtt_parameters[p].value;
+      }
+    }
+
 
     this.dataService.saveConfig(data)
       .subscribe((result: boolean) => {
@@ -561,6 +563,7 @@ export class SystemConfigComponent implements OnInit {
           this.common_parameters_beforeEdit = JSON.parse(JSON.stringify(this.common_parameters));
           this.http_parameters_beforeEdit = JSON.parse(JSON.stringify(this.http_parameters));
           this.admin_parameters_beforeEdit = JSON.parse(JSON.stringify(this.admin_parameters));
+          this.mqtt_parameters_beforeEdit = JSON.parse(JSON.stringify(this.mqtt_parameters));
 
           this.data_changed = false;
           this.restart_core_button = true;
