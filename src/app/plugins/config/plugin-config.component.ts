@@ -158,7 +158,13 @@ ngOnInit() {
                       }
                     }
                     // get description (if defined)
-                    conf['desc'] = this.shared.getDescription(desc);
+                    let plgdesc = this.shared.getDescription(desc);
+                    plgdesc = plgdesc.replace(new RegExp('\n', 'g'), '<br>');
+                    plgdesc = plgdesc.replace(new RegExp(' \\*\\*', 'g'), ' <b><mark>');
+                    plgdesc = plgdesc.replace(new RegExp('\\*\\* ', 'g'), '</mark></b> ');
+                    plgdesc = plgdesc.replace(new RegExp(' \\*', 'g'), ' <i><mark>');
+                    plgdesc = plgdesc.replace(new RegExp('\\* ', 'g'), '</mark></i> ');
+                    conf['desc'] = plgdesc;
 
                     // add to the table of configured plugins
                     this.configuredplugins.push(conf);
@@ -262,13 +268,31 @@ ngOnInit() {
       }
     }
 
-    this.parameter_cols = [
-      { field: 'name',  sfield: 'confname',   header: 'PLUGIN.PARAMETER',   width: '150px', iwidth: '146px' },
-      { field: 'value', sfield: 'paramvalue', header: 'PLUGIN.VALUE',       width: '200px', iwidth: '196px' },
-      { field: 'type',  sfield: 'conftype',   header: 'PLUGIN.TYPE',        width: '100px', iwidth:  '96px' },
-      { field: 'desc',  sfield: '',           header: 'PLUGIN.DESCRIPTION', width: '',      iwidth: '' }
+    const columnDefinitions = [
+      {field: 'name', sfield: 'confname', header: 'PLUGIN.PARAMETER', width: '190px'},
+      {field: 'type', sfield: 'conftype', header: 'PLUGIN.TYPE', width: '80px'},
+      {field: 'value', sfield: 'paramvalue', header: 'PLUGIN.VALUE', width: '240px'},
+      {field: 'desc', sfield: '', header: 'PLUGIN.DESCRIPTION', width: ''}
     ];
 
+    const paddingRight = 6; // distance between rnd of value field and beginning of description
+    const widthWide = 600;  // width of wide value fields (gui_type: wide_str)
+
+    for (let i = 0; i < columnDefinitions.length; i++) {
+      const width = parseInt(columnDefinitions[i]['width'], 10);
+      if (columnDefinitions[i]['width'] !== '') {
+        columnDefinitions[i]['iwidth'] = String(width - paddingRight) + 'px';
+      } else {
+        columnDefinitions[i]['iwidth'] = '';
+      }
+      columnDefinitions[i]['iwidthwide'] = String(widthWide) + 'px';
+      if (i === 2) {
+        // if column = 2 (value) -> adjust padding for description (in column 3)
+        columnDefinitions[3]['paddingleft'] = String(widthWide - width + paddingRight) + 'px';
+      }
+    }
+
+    this.parameter_cols = columnDefinitions;
     this.parameters = [];
 
     if (meta != null && meta !== undefined && meta['parameters'] !== 'NONE') {
@@ -293,14 +317,31 @@ ngOnInit() {
           }
 
           // fill description with active language
-          const paramdesc = this.shared.getDescription(meta['parameters'][param]['description']);
+//          const paramdesc = this.shared.getDescription(meta['parameters'][param]['description']);
+          let paramdesc = '';
+          if (meta['parameters'][param]['description'] !== undefined) {
+            paramdesc = meta['parameters'][param]['description'][this.lang];
+            if (paramdesc === '' || paramdesc === undefined) {
+              paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage()];
+              if (paramdesc === '' || paramdesc === undefined) {
+                paramdesc = meta['parameters'][param]['description'][this.shared.getFallbackLanguage(1)];
+              }
+            }
+          }
 
           const paramdescBlocks = [];
           paramdescBlocks.push(paramdesc);
 
+          paramdesc = paramdesc.replace(new RegExp('\n', 'g'), '<br>');
+          paramdesc = paramdesc.replace(new RegExp(' \\*\\*', 'g'), ' <b><mark>');
+          paramdesc = paramdesc.replace(new RegExp('\\*\\* ', 'g'), '</mark></b> ');
+          paramdesc = paramdesc.replace(new RegExp(' \\*', 'g'), ' <i><mark>');
+          paramdesc = paramdesc.replace(new RegExp('\\* ', 'g'), '</mark></i> ');
+
           const paramdata = {
             'name': param,
             'type': meta['parameters'][param]['type'],
+            'gui_type': meta['parameters'][param]['gui_type'],
             'valid_list': vl,
             'valid_min': meta['parameters'][param]['valid_min'],
             'valid_max': meta['parameters'][param]['valid_max'],

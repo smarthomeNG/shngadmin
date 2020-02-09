@@ -169,6 +169,12 @@ export class SystemConfigComponent implements OnInit {
       }
     }
 
+    paramdesc = paramdesc.replace(new RegExp('\n', 'g'), '<br>');
+    paramdesc = paramdesc.replace(new RegExp(' \\*\\*', 'g'), ' <b><mark>');
+    paramdesc = paramdesc.replace(new RegExp('\\*\\* ', 'g'), '</mark></b> ');
+    paramdesc = paramdesc.replace(new RegExp(' \\*', 'g'), ' <i><mark>');
+    paramdesc = paramdesc.replace(new RegExp('\\* ', 'g'), '</mark></i> ');
+
     const paramdata = {
       'name': param,
       'type': meta['parameters'][param]['type'],

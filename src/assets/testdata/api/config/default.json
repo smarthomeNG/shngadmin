@@ -133,7 +133,8 @@
           "type": "str",
           "default": "",
           "description": {
-            "de": "Hier wird das Bundesland für die regionalen Feiertage festgelegt<br>\n- für DE: BW, BY, BE, BB, HB, HH, HE, MV, NI, NW, RP, SL, SN, ST, SH, TH\n\n- für AT: B, K, N, O, S, ST, T, V, W (default)\n\n- für CH: AG, AR, AI, BL, BS, BE, FR, GE, GL, GR, JU, LU, NE, NW, OW, SG, SH, SZ, SO, TG, TI, UR, VD, VS, ZG, ZH\n\n- für FRA: Métropole (default), Alsace-Moselle, Guadeloupe, Guyane, Martinique, Mayotte, Nouvelle-Calédonie, La Réunion, Polynésie Française, Saint-Barthélémy, Saint-Martin, Wallis-et-Futuna\n",
+            "de": "Hier wird das Bundesland für die regionalen Feiertage festgelegt \n- für <strong>DE</strong>: BW, BY, BE, BB, HB, HH, HE, MV, NI, NW, RP, SL, SN, ST, SH, TH\n- für AT: B, K, N, O, S, ST, T, V, W (default)\n- für CH: AG, AR, AI, BL, BS, BE, FR, GE, GL, GR, JU, LU, NE, NW, OW, SG, SH, SZ, SO, TG, TI, UR, VD, VS, ZG, ZH\n- für FRA: Métropole (default), Alsace-Moselle, Guadeloupe, Guyane, Martinique, Mayotte, Nouvelle-Calédonie, La Réunion, Polynésie Française, Saint-Barthélémy, Saint-Martin, Wallis-et-Futuna",
+
             "en": "Province to be used for regional holifays\n\n- for DE: BW, BY, BE, BB, HB, HH, HE, MV, NI, NW, RP, SL, SN, ST, SH, TH\n\n- for AT: B, K, N, O, S, ST, T, V, W (default)\n\n- for CH: AG, AR, AI, BL, BS, BE, FR, GE, GL, GR, JU, LU, NE, NW, OW, SG, SH, SZ, SO, TG, TI, UR, VD, VS, ZG, ZH\n\n- for FRA: Métropole (default), Alsace-Moselle, Guadeloupe, Guyane, Martinique, Mayotte, Nouvelle-Calédonie, La Réunion, Polynésie Française, Saint-Barthélémy, Saint-Martin, Wallis-et-Futuna\n"
           }
         },
