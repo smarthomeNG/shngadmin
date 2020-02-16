@@ -33,6 +33,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ListboxModule } from 'primeng/listbox';
+import { FileUploadModule } from 'primeng/fileupload';
 
 import { AppComponent } from './app.component';
 import { HttpLoaderFactory } from './app.component';
@@ -131,6 +132,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     TriStateCheckboxModule,
     ProgressSpinnerModule,
     ListboxModule,
+    FileUploadModule,
 
     CodemirrorModule,
 

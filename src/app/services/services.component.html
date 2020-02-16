@@ -37,6 +37,8 @@
                 <td style="padding-top:23px;"><strong>{{' '}}</strong></td>
                 <td style="padding-top:22px;">
                   <button pButton type="button" icon="fa fa-download" [disabled]="backup_disabled" (click)="this.downloadBackup()" label="{{'BUTTON.DOWNLOAD'|translate}}" class="ui-button-success"></button>
+                  &nbsp;
+                  <button pButton type="button" icon="fa fa-upload" [disabled]="restore_disabled" (click)="this.restoreBackup()" label="{{'BUTTON.RESTORE'|translate}}" class="ui-button-success"></button>
                 </td>
               </tr>
               <tr>
@@ -281,10 +283,43 @@
 </div>
 
 
-<p-dialog header="{{'SERVICES.BACKUP_DONE_TITLE'|translate}}" [(visible)]="show_backup_confirm" [modal]="true" [responsive]="true" [style]="{width: '400px', minWidth: '200px'}" [minY]="70"
+<p-dialog header="{{'SERVICES.BACKUP_DONE_TITLE'|translate}}" [(visible)]="show_backup_confirm" [modal]="true" [responsive]="true" [style]="{width: '600px', minWidth: '400px'}" [minY]="70"
           [baseZIndex]="10000">
     <span>{{'SERVICES.BACKUP_DONE'|translate}}</span>
   <p-footer>
     <button type="button" pButton icon="pi pi-check" (click)="show_backup_confirm = false" label="{{'BUTTON.OK'|translate}}" class="ui-button-success"></button>
+  </p-footer>
+</p-dialog>
+
+
+<p-dialog header="{{'SERVICES.RESTORE_TITLE'|translate}}"
+          [(visible)]="show_restore_chooser"
+          [modal]="true"
+          [responsive]="true"
+          [style]="{width: '720px', minWidth: '400px'}"
+          [minY]="140"
+          [baseZIndex]="10000">
+
+  <span>{{'SERVICES.RESTORE'|translate}}</span>
+  <br><br>
+
+  <p-fileUpload #upload_form
+                name="demo[]"
+                mode="advanced"
+                [auto]="false"
+                url="./api/files/restore?filename=restore_backup.zip"
+                [method]="'PUT'"
+                accept="application/zip"
+                customUpload="true"
+                (uploadHandler)="myUploader($event, upload_form)"
+                chooseLabel="{{'SERVICES.CHOOSE_FILE'|translate}}"
+                uploadLabel="{{'SERVICES.UPLOAD_RESTORE'|translate}}"
+                cancelLabel="{{'SERVICES.CANCEL'|translate}}"
+                fileLimit="1"
+                maxFileSize="1000000">
+  </p-fileUpload>
+
+  <p-footer>
+    <button type="button" pButton icon="fa fa-times" (click)="show_restore_chooser = false" label="{{'BUTTON.CLOSE'|translate}}" class="ui-button-success"></button>
   </p-footer>
 </p-dialog>

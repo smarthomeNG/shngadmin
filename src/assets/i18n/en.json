@@ -412,6 +412,7 @@
     "SAVE_SETTINGS": "Save Settings",
     "CHECK": "Check",
     "DOWNLOAD": "Download",
+    "RESTORE": "Restore",
     "CLEAR_FILTER": "Clear Filter",
     "NEW_DEFINITION_FILE": "New File",
     "NEW_LOGIC": "New Logic",

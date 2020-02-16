@@ -6,6 +6,7 @@ import { saveAs } from 'file-saver';
 
 import {ServicesApiService} from '../common/services/services-api.service';
 import {ServerApiService} from '../common/services/server-api.service';
+import {FilesApiService} from '../common/services/files-api.service';
 
 import { ServerInfo } from '../common/models/server-info';
 import {TranslateService} from '@ngx-translate/core';
@@ -13,6 +14,7 @@ import {SharedService} from '../common/services/shared.service';
 
 import {sha512} from 'js-sha512';
 import {LogicsWatchItem} from '../common/models/logics-watch-item';
+import {SelectItem} from 'primeng/api';
 
 
 export interface CacheEntryType {
@@ -39,6 +41,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   constructor(private http: HttpClient,
               private translate: TranslateService,
               private shared: SharedService,
+              private fileService: FilesApiService,
               private dataService: ServicesApiService,
               private dataServiceServer: ServerApiService) {
   }
@@ -59,7 +62,9 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   pwd_show: boolean;
 
   backup_disabled: boolean = false;
+  restore_disabled: boolean = false;
   show_backup_confirm: boolean = false;
+  show_restore_chooser: boolean = false;
 
   // -----------------------------------------------------------------
   //  Vars for the codemirror components
@@ -466,6 +471,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     const today = yyyy + '-' + mm + '-' + dd;
 
     this.backup_disabled = true;
+    this.restore_disabled = true;
     this.dataServiceServer.downloadConfigBackup()
       .subscribe(
         (response) => {
@@ -473,8 +479,90 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
           saveAs(res, 'shng_config_backup_' + today + '.zip');
           this.show_backup_confirm = true;
           this.backup_disabled = false;
+          this.restore_disabled = false;
         }
       );
   }
 
+  restoreBackup() {
+
+    this.backup_disabled = true;
+    this.restore_disabled = true;
+    this.show_restore_chooser = true;
+
+    this.backup_disabled = false;
+    this.restore_disabled = false;
+  }
+
+
+  myUploader(event, form) {
+    console.log('myUploader', event.files);
+    console.log('myUploader', event.files[0].name);
+
+    let filecontent: any;
+
+    const reader = new FileReader();
+
+    // file reading started
+    reader.addEventListener('loadstart', function () {
+      console.log('File reading started');
+    });
+
+    // file reading finished successfully
+    reader.addEventListener('load', function () {
+      // const text = this.result;
+
+      // contents of the file
+      // console.log(text);
+    });
+
+    // file reading failed
+    reader.addEventListener('error', function () {
+      alert('Error : Failed to read file');
+    });
+
+    // file read progress
+    reader.addEventListener('progress', function (e) {
+      if (e.lengthComputable === true) {
+        const percent_read = Math.floor((e.loaded / e.total) * 100);
+        console.log(percent_read + '% read');
+      }
+    });
+
+    reader.onloadend = (e) => {
+      // console.warn(reader.result);
+      filecontent = reader.result;
+
+      this.fileService.saveFile('restore', event.files[0].name, filecontent)
+        .subscribe(
+          (response2) => {
+          }
+        );
+
+      form.clear();
+      this.show_restore_chooser = false;
+    };
+
+    // read as text file
+    // reader.readAsText(event.files[0]);
+    // reader.readAsBinaryString(event.files[0]);
+    reader.readAsDataURL(event.files[0]);
+  }
+
+
+
+  doUpload(form) {
+    console.log('doUpload');
+
+/*
+    this.fileService.saveFile('restore', event.files[0].name, 'TEST test')
+      .subscribe(
+        (response2) => {
+        }
+      );
+*/
+
+    form.clear();
+    this.show_restore_chooser = false;
+  }
 }

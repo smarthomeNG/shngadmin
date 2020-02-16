@@ -14,7 +14,9 @@ input[type='number'] {
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
+/*
   -webkit-appearance: none;
+*/
 }
 
 
@@ -117,18 +119,22 @@ textarea {
   color: var(--shng-blue) !important; }
 
 .ui-button.ui-state-active {
-  background-color: var(--shng-blue) !important; }
+  background-color: var(--shng-blue) !important;
+}
 
 .ui-button.ui-state-passive {
-  background-color: #444444 !important; }
+  background-color: #444444 !important;
+}
 
 .btn-primary {
   font-weight: 900;
-  background-color: var(--shng-blue) !important; }
+  background-color: var(--shng-blue) !important;
+}
 
 .ui-button-success {
   font-weight: 900;
-  background-color: var(--shng-blue) !important; }
+  background-color: var(--shng-blue) !important;
+}
 
 .ui-button-secondary {
   background-color: var(--shng-secondary-button) !important;
@@ -149,6 +155,11 @@ textarea {
 
 .ui-button-secondary.ui-state-focus {
   background-color: var(--shng-red) !important; }
+
+.ui-fileupload-buttonbar .ui-button {
+  font-weight: 900;
+  background-color: var(--shng-blue) !important;
+}
 
 ui-inputswitch {
   color: var(--shng-blue) !important; }

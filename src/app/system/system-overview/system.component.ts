@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 
 import { TranslateService } from '@ngx-translate/core';
-import {faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 
 import { UIChart } from 'primeng/primeng';
 
@@ -18,7 +18,7 @@ import { PypiInfo } from '../../common/models/pypi-info';
 import { WebsocketService } from '../../common/services/websocket.service';
 import { WebsocketPluginService } from '../../common/services/websocket-plugin.service';
 import { SharedService } from '../../common/services/shared.service';
-import {ServerApiService} from '../../common/services/server-api.service';
+import { ServerApiService } from '../../common/services/server-api.service';
 
 
 @Component({

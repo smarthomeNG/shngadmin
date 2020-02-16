@@ -105,7 +105,7 @@
                 </ng-container>
                 <ng-container *ngIf="col.field == 'desc' && rowData.gui_type == 'wide_str'">
                   <div [ngStyle]="{'padding-left': col.paddingleft}">
-                    {{rowData[col.field]}}
+                    <div [innerHTML]="rowData[col.field]"></div>
                   </div>
                 </ng-container>
               </ng-container>
@@ -157,7 +157,7 @@
                 </ng-container>
                 <ng-container *ngIf="col.field == 'desc' && rowData.gui_type == 'wide_str'">
                   <div [ngStyle]="{'padding-left': col.paddingleft}">
-                    {{rowData[col.field]}}
+                    <div [innerHTML]="rowData[col.field]"></div>
                   </div>
                 </ng-container>
               </ng-container>
@@ -207,7 +207,7 @@
                 </ng-container>
                 <ng-container *ngIf="col.field == 'desc' && rowData.gui_type == 'wide_str'">
                   <div [ngStyle]="{'padding-left': col.paddingleft}">
-                    {{rowData[col.field]}}
+                    <div [innerHTML]="rowData[col.field]"></div>
                   </div>
                 </ng-container>
               </ng-container>
