@@ -85,7 +85,7 @@
   "SERVICES": {
     "SERVICES": "Services",
     "LANGUAGE_UI": "Language of the user interface",
-    "BACKUP_CONFIG": "Backup Configuration",
+    "BACKUP_CONFIG": "Configuration - Last Backup",
     "BACKUP_DONE_TITLE": "Configurtion Backup Created",
     "BACKUP_DONE": "A zip-archive with the configuration data has been downloaded.",
     "RESTORE_TITLE": "Restore Configuration",

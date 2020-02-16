@@ -85,7 +85,7 @@
   "SERVICES": {
     "SERVICES": "Dienste",
     "LANGUAGE_UI": "Sprache der graphischen Oberfläche",
-    "BACKUP_CONFIG": "Konfiguration sichern",
+    "BACKUP_CONFIG": "Konfiguration - Letzte Sicherung",
     "BACKUP_DONE_TITLE": "Backup der Konfiguration erstellt",
     "BACKUP_DONE": "Ein Zip-Archiv mit den Konfigurationsdaten wurde heruntergeladen.",
     "RESTORE_TITLE": "Konfiguration wiederherstellen",

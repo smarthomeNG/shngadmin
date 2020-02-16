@@ -76,17 +76,30 @@ export class SharedService {
   }
 
 
+  isDST(d) {
+    const year = d.split('-')[0];
+    const tzOffset = d.split('+')[1];
+    const jan = new Date(year, 0, 1).getTimezoneOffset();
+    const jul = new Date(year, 6, 1).getTimezoneOffset();
+    return Math.max(jan, jul) !== -60 * parseInt(tzOffset, 10);
+  }
+
   // ---------------------------------------------------------
   // Returns a displayable string for a given datetime
   //
   displayDateTime(datetime) {
     if (datetime) {
       let datew = datetime.split(' ')[0];
+      const is_dst = this.isDST(datetime);
       datew = datew.split('-');
       const date = datew[2] + '.' + datew[1] + '.' + datew[0];
       const time = datetime.split(' ')[1].split('.')[0];
-//      const tz = this.dataService.getconfig('tzname');
-      const tz = sessionStorage.getItem('tzname');
+      let tz = '';
+      if (is_dst) {
+        tz = sessionStorage.getItem('tznameDST');
+      } else {
+        tz = sessionStorage.getItem('tzname');
+      }
       return date + ' ' + time + ' ' + tz;
     } else {
       return datetime;

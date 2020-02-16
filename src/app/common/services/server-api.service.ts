@@ -142,6 +142,8 @@ export class ServerApiService {
           sessionStorage.setItem('client_ip', this.shng_serverinfo.client_ip);
           sessionStorage.setItem('tz', this.shng_serverinfo.tz);
           sessionStorage.setItem('tzname', this.shng_serverinfo.tzname);
+          sessionStorage.setItem('tznameST', this.shng_serverinfo.tznameST);
+          sessionStorage.setItem('tznameDST', this.shng_serverinfo.tznameDST);
           sessionStorage.setItem('itemtree_fullpath', this.shng_serverinfo.itemtree_fullpath.toString());
           sessionStorage.setItem('itemtree_searchstart', this.shng_serverinfo.itemtree_searchstart.toString());
           sessionStorage.setItem('core_branch', this.shng_serverinfo.core_branch);

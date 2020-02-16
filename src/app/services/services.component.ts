@@ -40,7 +40,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
 
   constructor(private http: HttpClient,
               private translate: TranslateService,
-              private shared: SharedService,
+              public  shared: SharedService,
               private fileService: FilesApiService,
               private dataService: ServicesApiService,
               private dataServiceServer: ServerApiService) {
@@ -480,6 +480,8 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
           this.show_backup_confirm = true;
           this.backup_disabled = false;
           this.restore_disabled = false;
+
+          this.ngOnInit();
         }
       );
   }

@@ -10,6 +10,8 @@ export interface ServerInfo {
   itemtree_searchstart: number;
   tz: string;
   tzname: string;
+  tznameST: string;
+  tznameDST: string;
   core_branch: string;
   plugins_branch: string;
   websocket_host: string;
@@ -18,4 +20,5 @@ export interface ServerInfo {
   daemon_ow: string;
   daemon_mqtt: string;
   daemon_node_red: string;
+  last_backup: string;
 }

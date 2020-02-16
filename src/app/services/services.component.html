@@ -34,11 +34,11 @@
               <tr>
                 <td><img src="assets/img/backup.svg" alt="SmartHomeNG logo" width="48" height="48"></td>
                 <td style="padding-top:23px;">{{'SERVICES.BACKUP_CONFIG'|translate}}</td>
-                <td style="padding-top:23px;"><strong>{{' '}}</strong></td>
+                <td style="padding-top:23px;"><strong>{{shared.displayDateTime(serverInfo.last_backup)}}</strong></td>
                 <td style="padding-top:22px;">
-                  <button pButton type="button" icon="fa fa-download" [disabled]="backup_disabled" (click)="this.downloadBackup()" label="{{'BUTTON.DOWNLOAD'|translate}}" class="ui-button-success"></button>
+                  <button pButton type="button" icon="fa fa-download" [disabled]="backup_disabled || (shng_statuscode !== 20)" (click)="this.downloadBackup()" label="{{'BUTTON.DOWNLOAD'|translate}}" class="ui-button-success"></button>
                   &nbsp;
-                  <button pButton type="button" icon="fa fa-upload" [disabled]="restore_disabled" (click)="this.restoreBackup()" label="{{'BUTTON.RESTORE'|translate}}" class="ui-button-success"></button>
+                  <button pButton type="button" icon="fa fa-upload" [disabled]="restore_disabled || (shng_statuscode !== 20)" (click)="this.restoreBackup()" label="{{'BUTTON.RESTORE'|translate}}" class="ui-button-success"></button>
                 </td>
               </tr>
               <tr>
