@@ -32,6 +32,7 @@
     "SHNG_PLG_VERSION": "SmartHomeNG Plugins Version",
     "HOST": "Host",
     "OS": "Betriebssystem",
+    "PID": "Prozess ID",
     "ARCHITECTURE": "Architektur",
     "USER": "BS Benutzer",
     "PYTHON VERSION": "Python Version",
@@ -139,6 +140,8 @@
     "Stopping": "Stoppen",
     "Stopping: Stopping threads": "Stoppen: Threads beenden",
     "Stopped": "Angehalten",
+
+    "Restore: Uploading": "Wiederherstellen: Hochladen",
 
     "Restart clicked": "Neustart ausgelöst",
     "not active": "Nicht aktiv",

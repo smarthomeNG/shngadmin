@@ -28,10 +28,9 @@
         <tr>
           <td class="py-1"><img src="assets/img/terminal-server.svg" style="width: 36px; height: 36px; margin-left: 40px;"></td>
           <td class="py-1" style="vertical-align: middle;">{{ 'SYSTEM.HOST'|translate }}:</td>
-          <td class="py-1" style="vertical-align: middle;">{{ systeminfo.node }}&nbsp;&nbsp;-&nbsp;&nbsp;IPv4: {{ systeminfo.ip }}
-            <!--
-                      {% if ipv6 != '::1' %}&nbsp;&nbsp;-&nbsp;&nbsp;IPv6: {{ ipv6 }}{% endif %}
-            -->
+          <td class="py-1" style="vertical-align: middle;">{{ systeminfo.node }}
+            <span *ngIf="systeminfo.ip !== '0.0.0.0'">&nbsp; -&nbsp;&nbsp;IPv4: {{ systeminfo.ip }}</span>
+            <span *ngIf="systeminfo.ipv6 !== '::1'">&nbsp; -&nbsp;&nbsp;IPv6: {{ systeminfo.ipv6 }}</span>
           </td>
         </tr>
 
@@ -39,6 +38,12 @@
           <td class="py-1"><img src="assets/img/tux_hdd.svg" style="width: 36px; height: 36px; margin-left: 40px;"></td>
           <td class="py-1" style="vertical-align: middle;">{{ 'SYSTEM.OS'|translate }}:</td>
           <td class="py-1" style="vertical-align: middle;">{{ systeminfo.system }} {{ systeminfo.vers }}&nbsp;&nbsp;-&nbsp;&nbsp;{{ 'SYSTEM.ARCHITECTURE'|translate }}:&nbsp;{{ systeminfo.arch }}</td>
+        </tr>
+
+        <tr>
+          <td class="py-1"><img src="assets/img/tux_hdd.svg" style="width: 36px; height: 36px; margin-left: 40px;"></td>
+          <td class="py-1" style="vertical-align: middle;">{{ 'SYSTEM.PID'|translate }}:</td>
+          <td class="py-1" style="vertical-align: middle;">{{ systeminfo.pid }}</td>
         </tr>
 
         <tr>

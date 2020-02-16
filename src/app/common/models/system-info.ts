@@ -20,4 +20,5 @@ export interface SystemInfo {
   pyversion: string;
   ip: string;
   ipv6: string;
+  pid: string;
 }
