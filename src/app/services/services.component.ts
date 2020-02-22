@@ -1,5 +1,5 @@
 
-import { Component, AfterViewInit, AfterViewChecked, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
+import { Component, AfterViewChecked, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 import { saveAs } from 'file-saver';
@@ -13,8 +13,8 @@ import {TranslateService} from '@ngx-translate/core';
 import {SharedService} from '../common/services/shared.service';
 
 import {sha512} from 'js-sha512';
-import {LogicsWatchItem} from '../common/models/logics-watch-item';
-import {SelectItem} from 'primeng/api';
+// import {LogicsWatchItem} from '../common/models/logics-watch-item';
+// import {SelectItem} from 'primeng/api';
 
 
 export interface CacheEntryType {
@@ -49,22 +49,22 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   serverInfo = <ServerInfo>{};
   default_language: string;
   shng_status: string;
-  status_errorcount: number = 0;
+  status_errorcount = 0;
 
   valid_languagelist = [];
 
   valid_default_language = '          ';
   selected_language = null;
-  shng_statuscode: number = 0;
+  shng_statuscode = 0;
 
-  pwd_clear: string = '';
+  pwd_clear = '';
   pwd_hash: string;
   pwd_show: boolean;
 
-  backup_disabled: boolean = false;
-  restore_disabled: boolean = false;
-  show_backup_confirm: boolean = false;
-  show_restore_chooser: boolean = false;
+  backup_disabled = false;
+  restore_disabled = false;
+  show_backup_confirm = false;
+  show_restore_chooser = false;
 
   // -----------------------------------------------------------------
   //  Vars for the codemirror components
@@ -259,7 +259,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     // console.log('deleteCacheEntry', this.cacheInfo[entryNr].filename);
     this.dataService.deleteCacheFile(this.cacheInfo[entryNr].filename)
       .subscribe(
-        (response) => {
+        () => {
           this.loadCacheOrphans();
         }
       );
@@ -276,7 +276,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
 
     this.dataService.deleteCacheFile(JSON.stringify(filelist))
       .subscribe(
-        (response) => {
+        () => {
           this.loadCacheOrphans();
         }
       );
@@ -295,7 +295,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
 
     const evalEditor1 = this.evalCodeEditor.codeMirror;
     const evalEditor2 = this.evalCodeEditor2.codeMirror;
-    const h = evalEditor1.getViewport();
+    // const h = evalEditor1.getViewport();
 
     evalEditor1.setSize('100%', 160);
     evalEditor1.refresh();
@@ -326,9 +326,10 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
         (response) => {
           this.myTextOutput = <any> response;
           this.cmOptionsOutput.lineNumbers = true;
-          if (this.myTextOutput.startsWith('ERROR:')) {
-            this.cmOptionsOutput.lineNumbers = false;
-          }
+          // if (this.myTextOutput.startsWith('ERROR:')) {
+          //   this.cmOptionsOutput.lineNumbers = false;
+          // }
+          this.cmOptionsOutput.lineNumbers = !(this.myTextOutput.startsWith('ERROR:'));
           const editor2 = this.codeEditor2.codeMirror;
           editor2.refresh();
         }
@@ -387,11 +388,11 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   // translate status text of SmartHomeNG
   //
   translate_shngStatus(text) {
-    const translated_text = this.translate.instant('SHNG_STATE.' + text);
+//    const translated_text = this.translate.instant('SHNG_STATE.' + text);
 //    if (translated_text.startsWith('SHNG_STATE.')) {
 //      return text;
 //    }
-    return translated_text;
+    return this.translate.instant('SHNG_STATE.' + text);
   }
 
 
@@ -466,7 +467,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   downloadBackup() {
     const todayDate = new Date();
     const dd = String(todayDate.getDate()).padStart(2, '0');
-    const mm = String(todayDate.getMonth() + 1).padStart(2, '0'); //January is 0!
+    const mm = String(todayDate.getMonth() + 1).padStart(2, '0'); // January is 0!
     const yyyy = todayDate.getFullYear();
     const today = yyyy + '-' + mm + '-' + dd;
 
@@ -531,13 +532,14 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
       }
     });
 
-    reader.onloadend = (e) => {
+    reader.onloadend = () => {
       // console.warn(reader.result);
       filecontent = reader.result;
 
       this.fileService.saveFile('restore', event.files[0].name, filecontent)
         .subscribe(
-          (response2) => {
+          () => {
+            this.ngOnInit();
           }
         );
 

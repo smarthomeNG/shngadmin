@@ -5,7 +5,11 @@ import { HttpClient } from '@angular/common/http';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { TranslateService } from '@ngx-translate/core';
-import { faSearch, faCircleNotch, faFolder, faFolderOpen, faCoffee, faSync, faList, faStop, faTrashAlt, faThumbtack } from '@fortawesome/free-solid-svg-icons';
+
+import { faSearch, faCircleNotch, faFolder, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
+import { faSync, faList, faStop, faTrashAlt, faThumbtack } from '@fortawesome/free-solid-svg-icons';
+// import { faCoffee } from '@fortawesome/free-solid-svg-icons';
+
 import * as $ from 'jquery';
 import { TreeNode } from 'primeng/api';
 
@@ -16,7 +20,7 @@ import { OlddataService } from '../../common/services/olddata.service';
 import { ItemTree } from '../../common/models/item-tree';
 import { SharedService } from '../../common/services/shared.service';
 import {ItemDetails} from '../../common/models/item-details';
-import {ServerInfo} from '../../common/models/server-info';
+// import {ServerInfo} from '../../common/models/server-info';
 import {ServerApiService} from '../../common/services/server-api.service';
 
 
@@ -91,6 +95,13 @@ export class ItemTreeComponent implements OnInit {
     tree.css('maxHeight', height);
     treeDetail.css('height', heightDetail);
     treeDetail.css('maxHeight', heightDetail);
+  }
+
+
+  static htmlDecode(input) {
+    const e = document.createElement('div');
+    e.innerHTML = input;
+    return e.childNodes.length === 0 ? '' : e.childNodes[0].nodeValue;
   }
 
 
@@ -180,34 +191,37 @@ export class ItemTreeComponent implements OnInit {
   */
 
 
-monitorItem(path: string, monitorIt: boolean) {
-  // console.log('monitorItem: path=' + path + ', monitorIt=' + String(monitorIt));
-  if (monitorIt) {
-    this.monitoredItems.push(path);
-  } else {
-    for (let i = this.monitoredItems.length - 1; i >= 0; i--) {
-      if (this.monitoredItems[i] === path) {
-        this.monitoredItems.splice(i, 1);
-        // break;       //<-- Uncomment  if only the first term has to be removed
+  monitorItem(path: string, monitorIt: boolean) {
+    // console.log('monitorItem: path=' + path + ', monitorIt=' + String(monitorIt));
+    if (monitorIt) {
+      this.monitoredItems.push(path);
+    } else {
+      for (let i = this.monitoredItems.length - 1; i >= 0; i--) {
+        if (this.monitoredItems[i] === path) {
+          this.monitoredItems.splice(i, 1);
+          // break;       //<-- Uncomment  if only the first term has to be removed
+        }
       }
     }
+
+    // console.log(this.monitoredItems);
   }
 
-  // console.log(this.monitoredItems);
-}
 
-
-getDetails(path: string) {
+  getDetails(path: string) {
     console.log('ItemTreeComponent.getDetails: ' + path);
     if ((path !== undefined)) {
       this.dataService.getItemDetails(path)
         .subscribe(
           (response: ItemDetails[]) => {
-            this.showDetails(response[0]);
+            const details = response[0];
+            details.eval = ItemTreeComponent.htmlDecode(details.eval);
+            details.crontab = ItemTreeComponent.htmlDecode(details.crontab);
+            this.showDetails(details);
             },
           (error) => {
             console.log('ERROR: ItemsComponent: dataService.getItemDetails():');
-            console.log(error)
+            console.log(error);
           }
           );
 
@@ -308,19 +322,19 @@ getDetails(path: string) {
 
   private filterRecursive(node: TreeNode, filter: string, index: number) {
     if (node.children) {
-      node.children.forEach((childNode, index) => {
-        this.filterRecursive(childNode, filter, index);
+      node.children.forEach((childNode, index2) => {
+        this.filterRecursive(childNode, filter, index2);
         if (!childNode) {
           console.log({index});
         }
       });
     }
     if (node.label.indexOf(filter) === -1) {
-      console.log('filtered node: ' + node.label + ', index: ' + index  + ', children: ' + node.children)
+      console.log('filtered node: ' + node.label + ', index: ' + index  + ', children: ' + node.children);
 //      node.label = '( ' + node.label + ' )';
       node.label = '';
     } else {
-      console.log('active node: ' + node.label + ', index: ' + index  + ', children: ' + node.children)
+      console.log('active node: ' + node.label + ', index: ' + index  + ', children: ' + node.children);
 
     }
   }
@@ -339,7 +353,7 @@ getDetails(path: string) {
     } );
   }
 
-  collapseAll(){
+  collapseAll() {
     this.filteredTree.forEach( node => {
       this.expandRecursive(node, false);
     } );

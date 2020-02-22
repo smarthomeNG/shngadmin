@@ -2,6 +2,7 @@
 //
 // Datatype for <shng-server>:<port>/admin/items.json
 //
+
 export interface ItemDetails {
   path: string;
   name: string;
