@@ -23,6 +23,7 @@
     <ng-template pTemplate="body" let-rowData let-columns="columns">
       <tr (click)="rowClicked($event, rowData)">
         <td *ngFor="let col of columns">
+          <!-- icon with toggle-switch (enabled/disabled -->
           <ng-container *ngIf="col.field === 'enabled'">
             <ng-container *ngIf="rowData[col.field] === 'true'">
               <i style="color: var(--shng-blue);" class="fa fa-toggle-on"></i>
@@ -83,7 +84,7 @@
   [closable]="false"
   [maximizable]="true"
   [minY]="100"
-  [style]="{'minWidth':'600px', 'minHeight':'300px'}"
+  [style]="{'minWidth':'600px', 'minHeight':'300px', 'maxHeight':'98%'}"
 >
 
   <p-header>
@@ -107,7 +108,7 @@
         <td></td>
       </tr>
       <tr>
-        <td align="right">
+        <td align="center">
           <fa-icon style="color: var(--shng-warning);" title="{{'PLUGIN.DEPRECATED'|translate}}" [icon]="faExclamationTriangle"></fa-icon> &nbsp;
         </td>
         <td colspan="3">
@@ -125,7 +126,7 @@
   <br>
 
   <ng-container *ngIf="!this.classic">
-    <p-table [columns]="parameter_cols" [value]="parameters" selectionMode="single">>
+    <p-table [style]="{'minHeight':'200px', 'height':'calc(80vh - 200px)'}" [columns]="parameter_cols" [value]="parameters" selectionMode="single">
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of columns" [pSortableColumn]="col.field" [ngStyle]="{'width': col.width}">
@@ -196,11 +197,9 @@
     </h4><br>
   </ng-container>
 
-  <ng-container *ngIf="dialog_readonly === false">
-    <a style="font-size: small">{{ 'RESTART FOR CHANGES'|translate }}</a>
-  </ng-container>
   <p-footer>
     <ng-container *ngIf="dialog_readonly === false">
+      <a style="font-size: small">{{ 'RESTART FOR CHANGES'|translate }}&nbsp; &nbsp; &nbsp;</a>
 <!--
       <button pButton type="button" icon="fa fa-trash-alt" (click)="deleteConfigComponent.delete(dialog_configname)" label="{{'BUTTON.DELETE'|translate}}" class="ui-button-danger float-sm-left"></button>
 -->

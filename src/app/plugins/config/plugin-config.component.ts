@@ -52,40 +52,40 @@ export class PluginConfigComponent implements OnInit {
   parameters: any[];
   plugin_enabled: boolean;
   parameter_cols: any[];
-  classic: boolean = false;
-  state: string = '';
+  classic = false;
+  state = '';
   rowclicked_foredit: any = false;
 
   // for list of installed plugins dialog
-  dialog_display: boolean = false;
-  dialog_readonly: boolean = false;
+  dialog_display = false;
+  dialog_readonly = false;
   dialog_configname: string;
   dialog_pluginname: string;
   dialog_description: string;
 
 
   // for add dialog
-  add_display: boolean = false;
+  add_display = false;
   plugintypes: string[] = ['system', 'gateway', 'interface', 'protocol', 'web', 'unclassified'];
   plugintypes_expanded: boolean[] = [];
-  spinner_display: boolean = false;
-  add_firstrun: boolean = true;
+  spinner_display = false;
+  add_firstrun = true;
   plugins_installed: PluginsInstalled;
   plugins_installed_list: string[];
 
   // set configuration name dialog
-  setconfig_display: boolean = false;
+  setconfig_display = false;
   selected_plugin: string;
   pluginconfig_name: string;
   translate_params: {} = {};
   add_enabled: boolean;
 
-  validation_dialog_display: boolean = false;
+  validation_dialog_display = false;
   validation_dialog_parameter: string;
   validation_dialog_text: string[];
 
   // confirm delete dialog
-  confirmdelete_display: boolean = false;
+  confirmdelete_display = false;
   delete_param: {};
 
 
@@ -183,6 +183,7 @@ ngOnInit() {
 
     this.cols = [
       { field: 'enabled',  sfield: '',         header: '' },
+      { field: 'type',     sfield: '',         header: '' },
       { field: 'confname', sfield: 'confname', header: 'PLUGIN.CONFIGNAME'},
       { field: 'plugin',   sfield: 'plugin',   header: 'PLUGIN.PLUGINNAME'},
       { field: 'instance', sfield: 'instance', header: 'PLUGIN.INSTANCE', min_width: '120px'},
@@ -241,7 +242,7 @@ ngOnInit() {
   rowClicked(event, rowdata) {
     // console.warn('rowClicked');
     this.dialog_configname = rowdata.confname;
-    this.dialog_pluginname = rowdata.plugin;
+    this.dialog_pluginname = rowdata.plugin.substr(1);
     this.rowclicked_foredit = rowdata;
 
     const conf = this.pluginconflist.plugin_config[rowdata.confname];
@@ -295,6 +296,7 @@ ngOnInit() {
     this.parameter_cols = columnDefinitions;
     this.parameters = [];
 
+    this.lang = sessionStorage.getItem('default_language');
     if (meta != null && meta !== undefined && meta['parameters'] !== 'NONE') {
       for (const param in meta['parameters']) {
         if (meta['parameters'].hasOwnProperty(param) ) {

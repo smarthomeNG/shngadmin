@@ -39,11 +39,11 @@ export class SystemConfigComponent implements OnInit {
   mqtt_parameter_cols: any[];
   mqtt_parameters_beforeEdit: any[];
 
-  data_changed: boolean = false;
+  data_changed = false;
   restart_core_button = false;
 
   rowclicked_foredit: any = false;
-  dialog_readonly: boolean = false;
+  dialog_readonly = false;
 
 
 
@@ -62,7 +62,7 @@ export class SystemConfigComponent implements OnInit {
   pwd_old_is_wrong: boolean;
   pwd_new_not_identical: boolean;
 
-  validation_dialog_display: boolean = false;
+  validation_dialog_display = false;
   validation_dialog_parameter: string;
   validation_dialog_text: string[];
 

@@ -59,12 +59,14 @@
                 <td style="padding-top:23px;"><strong>{{serverInfo.daemon_mqtt|translate}}</strong></td>
                 <td></td>
               </tr>
-              <tr>
-                <td><img src="assets/img/node-red.png" alt="Icon node_red" width="48" height="48"></td>
-                <td style="padding-top:23px;">{{'SERVICES.NODE_RED_SUPPORT'|translate}}</td>
-                <td style="padding-top:23px;"><strong>{{serverInfo.daemon_node_red|translate}}</strong></td>
-                <td></td>
-              </tr>
+              <ng-container *ngIf="serverInfo.daemon_node_red !== 'SERVICES.INACTIVE'">
+                <tr>
+                  <td><img src="assets/img/node-red.png" alt="Icon node_red" width="48" height="48"></td>
+                  <td style="padding-top:23px;">{{'SERVICES.NODE_RED_SUPPORT'|translate}}</td>
+                  <td style="padding-top:23px;"><strong>{{serverInfo.daemon_node_red|translate}}</strong></td>
+                  <td></td>
+                </tr>
+              </ng-container>
               <tr>
                 <td>
                   <img src="assets/img/password.svg" alt="Icon password" width="48" height="48">
