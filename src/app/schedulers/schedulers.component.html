@@ -7,6 +7,8 @@
         <tr class="shng_heading">
           <th style="width: 280px; border-top: 0">{{ 'SCHEDULERS.SCHEDULER'|translate }}</th>
           <th style="width: 250px; border-top: 0">{{ 'SCHEDULERS.NEXT EXECUTION'|translate }}</th>
+          <th style="width: 50px; border-top: 0">{{ 'SCHEDULERS.PRIO'|translate }}</th>
+          <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.VALUE'|translate }}</th>
           <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.CYCLE'|translate }}</th>
           <th style="border-top: 0">{{ 'SCHEDULERS.CRONTAB'|translate }}</th>
         </tr>
@@ -16,6 +18,8 @@
           <tr *ngIf="scheduler.group === 'item'">
             <td class="py-1">{{ scheduler.name }}</td>
             <td class="py-1">{{ scheduler.next }}</td>
+            <td class="py-1">{{ scheduler.prio }}</td>
+            <td class="py-1">{{ scheduler.value }}</td>
             <td class="py-1">{{ scheduler.cycle }}</td>
             <td class="py-1">{{ scheduler.cron }}</td>
           </tr>
@@ -30,6 +34,8 @@
         <tr class="shng_heading">
           <th style="width: 280px; border-top: 0">{{ 'SCHEDULERS.SCHEDULER'|translate }}</th>
           <th style="width: 250px; border-top: 0">{{ 'SCHEDULERS.NEXT EXECUTION'|translate }}</th>
+          <th style="width: 50px; border-top: 0">{{ 'SCHEDULERS.PRIO'|translate }}</th>
+          <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.VALUE'|translate }}</th>
           <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.CYCLE'|translate }}</th>
           <th style="border-top: 0">{{ 'SCHEDULERS.CRONTAB'|translate }}</th>
         </tr>
@@ -39,6 +45,8 @@
           <tr *ngIf="scheduler.group === 'logic'">
             <td class="py-1">{{ scheduler.name }}</td>
             <td class="py-1">{{ scheduler.next }}</td>
+            <td class="py-1">{{ scheduler.prio }}</td>
+            <td class="py-1">{{ scheduler.value }}</td>
             <td class="py-1">{{ scheduler.cycle }}</td>
             <td class="py-1">{{ scheduler.cron }}</td>
           </tr>
@@ -53,6 +61,8 @@
         <tr class="shng_heading">
           <th style="width: 280px; border-top: 0">{{ 'SCHEDULERS.SCHEDULER'|translate }}</th>
           <th style="width: 250px; border-top: 0">{{ 'SCHEDULERS.NEXT EXECUTION'|translate }}</th>
+          <th style="width: 50px; border-top: 0">{{ 'SCHEDULERS.PRIO'|translate }}</th>
+          <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.VALUE'|translate }}</th>
           <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.CYCLE'|translate }}</th>
           <th style="border-top: 0">{{ 'SCHEDULERS.CRONTAB'|translate }}</th>
         </tr>
@@ -62,6 +72,8 @@
           <tr *ngIf="scheduler.group === 'plugin'">
             <td class="py-1">{{ scheduler.name }}</td>
             <td class="py-1">{{ scheduler.next }}</td>
+            <td class="py-1">{{ scheduler.prio }}</td>
+            <td class="py-1">{{ scheduler.value }}</td>
             <td class="py-1">{{ scheduler.cycle }}</td>
             <td class="py-1">{{ scheduler.cron }}</td>
           </tr>
@@ -76,6 +88,8 @@
         <tr class="shng_heading">
           <th style="width: 280px; border-top: 0">{{ 'SCHEDULERS.SCHEDULER'|translate }}</th>
           <th style="width: 250px; border-top: 0">{{ 'SCHEDULERS.NEXT EXECUTION'|translate }}</th>
+          <th style="width: 50px; border-top: 0">{{ 'SCHEDULERS.PRIO'|translate }}</th>
+          <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.VALUE'|translate }}</th>
           <th style="width: 130px; border-top: 0">{{ 'SCHEDULERS.CYCLE'|translate }}</th>
           <th style="border-top: 0">{{ 'SCHEDULERS.CRONTAB'|translate }}</th>
         </tr>
@@ -85,6 +99,8 @@
           <tr *ngIf="scheduler.group === 'other'">
             <td class="py-1">{{ scheduler.name }}</td>
             <td class="py-1">{{ scheduler.next }}</td>
+            <td class="py-1">{{ scheduler.prio }}</td>
+            <td class="py-1">{{ scheduler.value }}</td>
             <td class="py-1">{{ scheduler.cycle }}</td>
             <td class="py-1">{{ scheduler.cron }}</td>
           </tr>

@@ -7,4 +7,7 @@ export interface SchedulerInfo {
   next: string;
   cycle: string;
   cron: string;
+  prio: number;
+  active: boolean;
+  value: any;
 }

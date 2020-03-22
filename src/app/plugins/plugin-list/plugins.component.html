@@ -108,6 +108,14 @@
               </a>
               -->
             </ng-container>
+            <ng-container *ngIf="plugin.blog_url !== undefined && plugin.blog_url !== ''">
+              <button name="blog" class="btn btn-outline-dark btn-sm mr-1" (click)="goToLink(plugin.blog_url);"><i class="fas fa-blog fa-lg fa-icon-grey" aria-hidden="true" title="{{'PLUGIN.OPEN_BLOGS'|translate}}"></i></button>
+              <!--
+              <a href="{{plugin.metadata.support}}" target="_blank">
+                <img src="assets/img/forum_chat2.svg" style="width: 25px; cursor: pointer;"/>
+              </a>
+              -->
+            </ng-container>
           </td>
         </tr>
 

@@ -280,6 +280,8 @@
     "OTHER SCHEDULERS": "Autres planificateurs",
     "SCHEDULER": "Planificateur",
     "NEXT EXECUTION": "Prochaine exécution",
+    "PRIO": "Prio",
+    "VALUE": "Valeur",
     "CYCLE": "Cycle",
     "CRONTAB": "Crontab"
   },
@@ -339,7 +341,9 @@
     "OPEN_WEBIF": "Ouvrir interface web",
     "OPEN_CONFIGINFO": "Ouvrir documentation de configuration",
     "OPEN_DOC": "Ouvrir documentation de l'extension",
-    "OPEN_SUPPORT_THREAD": "Ouvrir fil de support"
+    "OPEN_SUPPORT_THREAD": "Ouvrir fil de support",
+    "OPEN_BLOGS": "Ouvrir Articles de blogs"
+
   },
   "SCENES": {
     "SCENE": "Scène",

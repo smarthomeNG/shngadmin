@@ -15,6 +15,7 @@ export interface PlugininfoType {
   multiinstance: boolean;
   instancename: string;
   webif_url: string;
+  blog_url: string;
   parameters: PluginParameter[];
   arttibutes: PluginItemAttribute[];
   metadata: PluginMetadata;
