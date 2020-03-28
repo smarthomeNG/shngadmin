@@ -7,6 +7,7 @@
   },
   "private": true,
   "dependencies": {
+    "@angular-devkit/build-angular": "^0.13.8",
     "@angular/animations": "^7.2.14",
     "@angular/cdk": "^7.3.7",
     "@angular/common": "^7.2.14",
@@ -29,18 +30,19 @@
     "@ngx-translate/http-loader": "^4.0.0",
     "@types/jquery": "^3.3.29",
     "angular-tree-component": "^8.2.0",
-    "bootstrap": "^4.2.1",
+    "bootstrap": "^4.4.1",
     "chart.js": "^2.7.3",
     "codemirror": "^5.43.0",
-    "core-js": "^3.0.1",
-    "cypress": "^3.2.0",
+    "core-js": "^2.6.11",
+    "core.js": "^0.4.2",
+    "cypress": "^4.2.0",
     "file-saver": "^2.0.1",
     "jquery": "^3.4.1",
     "js-sha512": "^0.8.0",
     "loadash": "^1.0.0",
     "moment": "^2.24.0",
     "ngx-bootstrap": "^3.1.4",
-    "npm": "^6.9.0",
+    "npm": "^6.14.4",
     "popper.js": "^1.14.6",
     "primeicons": "^1.0.0",
     "primeng": "^7.0.5",
@@ -48,10 +50,9 @@
     "rxjs-compat": "^6.5.1",
     "tar": "^4.4.8",
     "tslib": "^1.9.0",
-    "zone.js": "^0.9.1"
+    "zone.js": "^0.8.26"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.13.8",
     "@angular/cli": "^7.3.8",
     "@angular/compiler-cli": "^7.2.14",
     "@angular/language-service": "^7.2.14",
@@ -59,12 +60,12 @@
     "@types/jasmine": "^3.3.12",
     "@types/jasminewd2": "^2.0.6",
     "@types/node": "^11.13.9",
-    "browser-sync": "^2.26.5",
+    "browser-sync": "^2.26.7",
     "codelyzer": "^5.0.1",
     "cypress-dark": "^1.7.13",
     "jasmine-core": "^3.4.0",
     "jasmine-spec-reporter": "^4.2.1",
-    "karma": "^4.1.0",
+    "karma": "^4.4.1",
     "karma-chrome-launcher": "^2.2.0",
     "karma-cli": "^2.0.0",
     "karma-coverage-istanbul-reporter": "^2.0.4",
@@ -74,7 +75,7 @@
     "rxjs-tslint": "^0.1.7",
     "ts-node": "~8.0.1",
     "tslint": "^5.16.0",
-    "typescript": "~3.2.4",
-    "webpack": "^4.30.0"
+    "typescript": "^3.2.4",
+    "webpack": "^4.42.1"
   }
 }
