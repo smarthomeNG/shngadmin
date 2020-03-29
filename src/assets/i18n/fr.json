@@ -187,7 +187,7 @@
     "PATH": "Chemin de l'objet",
     "NAME": "Nom de l'objet",
     "TYPE": "Type de donnée",
-    "STRUCT": "Dérivé de la structure",
+    "STRUCT": "Contient des structures",
     "UPDATE INFORMATION": "Informations des mises à hour",
     "LAST CHANGE": "Dernière modification",
     "LAST UPDATE": "Dernière mise à jour",

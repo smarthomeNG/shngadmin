@@ -190,7 +190,7 @@
     "PATH": "Item Pfad",
     "NAME": "Item Name",
     "TYPE": "Datentyp",
-    "STRUCT": "Abgeleitet von Struktur",
+    "STRUCT": "Beinhaltet Struktur(en)",
     "UPDATE INFORMATION": "Änderungsinformationen",
     "LAST CHANGE": "Letze Änderung",
     "LAST UPDATE": "Letztes Update",

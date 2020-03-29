@@ -188,7 +188,7 @@
     "PATH": "Item Path",
     "NAME": "Item Name",
     "TYPE": "Datatype",
-    "STRUCT": "Derived from structure",
+    "STRUCT": "Contains structure(s)",
     "UPDATE INFORMATION": "Update Information",
     "LAST CHANGE": "Last change",
     "LAST UPDATE": "Last update",
