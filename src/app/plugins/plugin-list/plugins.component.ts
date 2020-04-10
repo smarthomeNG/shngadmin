@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
-import {faPlayCircle, faPauseCircle, faExclamationTriangle} from '@fortawesome/free-solid-svg-icons';
+import {faPlayCircle, faPauseCircle, faExclamationTriangle, faCode} from '@fortawesome/free-solid-svg-icons';
 
 import { PluginsApiService } from '../../common/services/plugins-api.service';
 import { OlddataService } from '../../common/services/olddata.service';
@@ -22,7 +22,8 @@ export class PluginsComponent implements OnInit {
 
   faPlayCircle = faPlayCircle;
   faPauseCircle = faPauseCircle;
-  faExclamationTriangle = faExclamationTriangle;
+  faExclamationTriangle = faExclamationTriangle;  // signal deprecated plugin
+  faCode = faCode;                               // signal plugin in state "develop"
 
   plugininfo: PlugininfoType[];
 

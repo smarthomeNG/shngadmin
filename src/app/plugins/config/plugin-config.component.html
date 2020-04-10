@@ -50,6 +50,9 @@
               <ng-container *ngIf="rowData[col.field].charAt(0) === '+'">
                 &nbsp; <fa-icon style="color: var(--shng-warning);" title="{{'PLUGIN.DEPRECATED'|translate}}" [icon]="faExclamationTriangle"></fa-icon>
               </ng-container>
+              <ng-container *ngIf="rowData[col.field].charAt(0) === 'd'">
+                &nbsp; <fa-icon style="color: var(--shng-orange);" title="{{'PLUGIN.DEVELOP'|translate}}" [icon]="faCode"></fa-icon>
+              </ng-container>
             </ng-container>
             <ng-container *ngIf="col.field !== 'plugin'">
               <div [innerHTML]="rowData[col.field]"></div>
@@ -292,7 +295,9 @@
                     <ng-container *ngIf="plugins_installed[iplugin].state && (plugins_installed[iplugin].state.toLowerCase() === 'deprecated')">
                       &nbsp; <fa-icon style="color: var(--shng-warning);" title="{{'PLUGIN.DEPRECATED'|translate}}" [icon]="faExclamationTriangle"></fa-icon>
                     </ng-container>
-                  </td>
+                    <ng-container *ngIf="plugins_installed[iplugin].state && (plugins_installed[iplugin].state.toLowerCase() === 'develop')">
+                      &nbsp; <fa-icon style="color: var(--shng-orange);" title="{{'PLUGIN.DEVELOP'|translate}}" [icon]="faCode"></fa-icon>
+                    </ng-container>
                   <td>&nbsp; &nbsp;
                     <ng-container *ngIf="plugins_installed[iplugin].multi_instance">
                       <i style="color: var(--shng-blue);" class="fa fa-check"></i>

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { faPlus, faPlusCircle, faPlusSquare, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import {faPlus, faPlusCircle, faPlusSquare, faExclamationTriangle, faCode} from '@fortawesome/free-solid-svg-icons';
 import { TranslateService } from '@ngx-translate/core';
 
 // import { DeleteConfigComponent } from './delete-config/delete-config.component';
@@ -38,7 +38,8 @@ export class PluginConfigComponent implements OnInit {
   faPlus = faPlus;
   faPlusCircle = faPlusCircle;
   faPlusSquare = faPlusSquare;
-  faExclamationTriangle = faExclamationTriangle;
+  faExclamationTriangle = faExclamationTriangle;  // signal deprecated plugin
+  faCode = faCode;                               // signal plugin in state "develop"
 
   configuredplugins: ConfiguredPlugin[];
   cols: any[];
@@ -130,6 +131,8 @@ ngOnInit() {
                     if (meta != null) {
                       if (meta.plugin.state && meta.plugin.state.toLowerCase() === 'deprecated') {
                         deprecated = '+';
+                      } else if (meta.plugin.state && meta.plugin.state.toLowerCase() === 'develop') {
+                          deprecated = 'd';
                       } else {
                         deprecated = '-';
                       }

@@ -41,6 +41,7 @@ input::-webkit-inner-spin-button {
   --shng-red: #c40808;
   --shng-green: green;
   --shng-warning: #e3d304;
+  --shng-orange: #FF8000;
 
   --shng-disabled: #bbb;
 /*  älter: --shng-border: #d9d9d9; */

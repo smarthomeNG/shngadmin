@@ -55,7 +55,10 @@
           <td class="py-1" (click)="details.show()">
             {{ plugin.pluginname }} &nbsp;
             <ng-container *ngIf="plugin.metadata.state && plugin.metadata.state.toLowerCase() === 'deprecated'">
-              <fa-icon style="color: var(--shng-warning);" [icon]="faExclamationTriangle"></fa-icon>
+            &nbsp; <fa-icon style="color: var(--shng-warning);" title="{{'PLUGIN.DEPRECATED'|translate}}" [icon]="faExclamationTriangle"></fa-icon>
+            </ng-container>
+            <ng-container *ngIf="plugin.metadata.state && plugin.metadata.state.toLowerCase() === 'develop'">
+            &nbsp; <fa-icon style="color: var(--shng-orange);" title="{{'PLUGIN.DEVELOP'|translate}}" [icon]="faCode"></fa-icon>
             </ng-container>
           </td>
           <td class="py-1" (click)="details.show()">{{ plugin.instancename }}</td>

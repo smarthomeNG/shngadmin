@@ -304,6 +304,7 @@
     "MULTI INSTANCE": "Instances multiples",
     "WEBIF": "Interface web",
     "HELP": "Aide",
+    "DEVELOP": "Le plugin est encore au stade de développement",
     "DEPRECATED": "Extension obsolète",
     "DEPRECATED_TEXT": "Cette extension est obsolète et sera probablement enlevée dans une prochaine version de SmartHomeNG. Si la fonctionnalité est encore nécessaire veuillez chercher un remplacement!",
 
