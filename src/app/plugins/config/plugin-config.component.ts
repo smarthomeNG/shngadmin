@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import {faPlus, faPlusCircle, faPlusSquare, faExclamationTriangle, faCode} from '@fortawesome/free-solid-svg-icons';
+import {faPlus, faPlusCircle, faPlusSquare, faExclamationTriangle, faCode, faLaptopCode} from '@fortawesome/free-solid-svg-icons';
 import { TranslateService } from '@ngx-translate/core';
 
 // import { DeleteConfigComponent } from './delete-config/delete-config.component';
@@ -39,7 +39,7 @@ export class PluginConfigComponent implements OnInit {
   faPlusCircle = faPlusCircle;
   faPlusSquare = faPlusSquare;
   faExclamationTriangle = faExclamationTriangle;  // signal deprecated plugin
-  faCode = faCode;                               // signal plugin in state "develop"
+  faCode = faLaptopCode;                               // signal plugin in state "develop"
 
   configuredplugins: ConfiguredPlugin[];
   cols: any[];
@@ -385,21 +385,21 @@ ngOnInit() {
           this.parameters.push(paramdata);
         }
       }
-      // Add an entry for the 'instance' attribute at the end, if it is a multi-instance plugin
-      const multiinstance = meta['plugin']['multi_instance'];
-      if (multiinstance) {
-        const instance = rowdata.instance;
-        const paramdata = {
-          'name': 'instance',
-          'type': 'str',
-          'valid_list': [],
-          'default': '',
-          'mandatory': false,
-          'value': instance,
-          'desc': this.translate.instant('PLUGIN.DESCRIPTION_INSTANCE_ATTRIBUTE')
-        };
-        this.parameters.push(paramdata);
-      }
+    }
+    // Add an entry for the 'instance' attribute at the end, if it is a multi-instance plugin
+    const multiinstance = meta['plugin']['multi_instance'];
+    if (multiinstance) {
+      const instance = rowdata.instance;
+      const paramdata = {
+        'name': 'instance',
+        'type': 'str',
+        'valid_list': [],
+        'default': '',
+        'mandatory': false,
+        'value': instance,
+        'desc': this.translate.instant('PLUGIN.DESCRIPTION_INSTANCE_ATTRIBUTE')
+      };
+      this.parameters.push(paramdata);
     }
 
 /*
