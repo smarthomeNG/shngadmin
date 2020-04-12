@@ -188,7 +188,7 @@ ngOnInit() {
       { field: 'enabled',  sfield: '',         header: '' },
       { field: 'type',     sfield: '',         header: '' },
       { field: 'confname', sfield: 'confname', header: 'PLUGIN.CONFIGNAME'},
-      { field: 'plugin',   sfield: 'plugin',   header: 'PLUGIN.PLUGINNAME'},
+      { field: 'plugin',   sfield: 'plugin',   header: 'PLUGIN.PLUGINNAME', min_width: '200px'},
       { field: 'instance', sfield: 'instance', header: 'PLUGIN.INSTANCE', min_width: '120px'},
       { field: 'desc',     sfield: '',         header: 'PLUGIN.DESCRIPTION'}
       ];
