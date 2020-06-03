@@ -84,32 +84,37 @@
     </tab>
 
     <tab customClass="tab-shng" heading="{{ 'SYSTEM.CHARTS'|translate }}">
+      <div class="shngcharts">
+        <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartSystemload [data]="chartdataLoad" [options]="chartoptionsSystem"></p-chart>
+        <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartThreads [data]="chartdataThreads" [options]="chartoptionsSystem"></p-chart>
+        <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartWorkerThreads [data]="chartdataWorkerThreads" [options]="chartoptionsScheduler"></p-chart>
+        <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartMemory [data]="chartdataMemory" [options]="chartoptionsSystem">></p-chart>
+        <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartDisk [data]="chartdataDisk" [options]="chartoptionsDisc"></p-chart>
+      </div>
         <table align="center" style="margin-top: 20px;" margin>
           <tr>
             <td>
-              <p-chart type="line" width="400px" height="250px" (click)="updateSystemloadData(chartSystemload)" #chartSystemload id="chartSystemload" [data]="chartdataLoad"></p-chart>
+              <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartSystemload [data]="chartdataLoad" [options]="chartoptionsSystem"></p-chart>
             </td>
-            <td width="20px">
+            <td width="15px">
             </td>
             <td>
-              <p-chart type="line" width="400px" height="250px" (click)="updateThreadsData(chartThreads)" #chartThreads [data]="chartdataThreads" [options]="chartoptions1"></p-chart>
-              <!--
-                          <p-chart type="line" width="450px" height="250px" [data]="chartdata1" [options]="chartoptions1"></p-chart>
-              -->
+              <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartThreads [data]="chartdataThreads" [options]="chartoptionsSystem"></p-chart>
+            </td>
+            <td width="15px">
+            <td>
+              <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartWorkerThreads [data]="chartdataWorkerThreads" [options]="chartoptionsScheduler"></p-chart>
             </td>
           </tr>
           <tr><td>&nbsp;</td></tr>
           <tr>
             <td>
-              <p-chart type="line" width="400px" height="250px" (click)="updateMemoryData(chartMemory)" #chartMemory [data]="chartdataMemory"></p-chart>
+              <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartMemory [data]="chartdataMemory" [options]="chartoptionsSystem">></p-chart>
             </td>
-            <td width="20px">
+            <td width="15px">
             </td>
             <td>
-              <p-chart type="line" width="400px" height="250px" (click)="updateDiskData(chartDisk)" #chartDisk [data]="chartdataDisk" [options]="chartoptions1"></p-chart>
-              <!--
-                          <p-chart type="line" width="450px" height="250px" [data]="chartdata1" [options]="chartoptions1"></p-chart>
-              -->
+              <p-chart type="line" width="360px" height="280px" (click)="drawCharts()" #chartDisk [data]="chartdataDisk" [options]="chartoptionsDisc"></p-chart>
             </td>
           </tr>
         </table>

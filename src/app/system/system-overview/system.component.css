@@ -5,3 +5,13 @@
 }
 
 
+.shngcharts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 400px);
+  grid-template-rows: 1fr 1fr;
+  grid-auto-flow: row;
+
+  justify-items: center;
+
+  background-color: #eeeeee;
+}

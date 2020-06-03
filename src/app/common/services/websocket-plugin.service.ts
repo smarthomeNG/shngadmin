@@ -73,6 +73,30 @@ export class WebsocketPluginService implements OnInit {
     'end': 'now',
     'count': 20
   };
+  private msgListenSeriesWorkerThreads = <Message> {
+    'cmd': 'series',
+    'item': 'env.core.scheduler.worker_threads',
+    'series': 'avg',
+    'start': '48h',
+    'end': 'now',
+    'count': 20
+  };
+  private msgListenSeriesIdleWorkerThreads = <Message> {
+    'cmd': 'series',
+    'item': 'env.core.scheduler.idle_threads',
+    'series': 'avg',
+    'start': '48h',
+    'end': 'now',
+    'count': 20
+  };
+  private msgListenSeriesActiveWorkerThreads = <Message> {
+    'cmd': 'series',
+    'item': 'env.core.scheduler.active_threads',
+    'series': 'avg',
+    'start': '48h',
+    'end': 'now',
+    'count': 20
+  };
   private msgListenSeriesDisk = <Message> {
     'cmd': 'series',
     'item': 'env.system.diskusagepercent',
@@ -98,6 +122,21 @@ export class WebsocketPluginService implements OnInit {
     'tsdiff': 0,
   };
 
+  workerThreads = {
+    'series': [],
+    'tsdiff': 0,
+  };
+
+  idleWorkerThreads = {
+    'series': [],
+    'tsdiff': 0,
+  };
+
+  activeWorkerThreads = {
+    'series': [],
+    'tsdiff': 0,
+  };
+
   disk = {
     'series': [],
     'tsdiff': 0,
@@ -112,6 +151,15 @@ export class WebsocketPluginService implements OnInit {
 
   private threadsSource = new Subject<void>();
   public threadsUpdate$ = this.threadsSource.asObservable();
+
+  private workerThreadsSource = new Subject<void>();
+  public workerThreadsUpdate$ = this.workerThreadsSource.asObservable();
+
+  private idleWorkerThreadsSource = new Subject<void>();
+  public idleWorkerThreadsUpdate$ = this.idleWorkerThreadsSource.asObservable();
+
+  private activeWorkerThreadsSource = new Subject<void>();
+  public activeWorkerThreadsUpdate$ = this.activeWorkerThreadsSource.asObservable();
 
   private diskSource = new Subject<void>();
   public diskUpdate$ = this.diskSource.asObservable();
@@ -232,6 +280,16 @@ export class WebsocketPluginService implements OnInit {
   }
 
 
+  getSeriesWorkerThreads(period = '24h', count = 100) {
+    this.msgListenSeriesWorkerThreads.start = period;
+    this.msgListenSeriesWorkerThreads.count = count;
+    this.sendMessage(this.msgListenSeriesWorkerThreads);
+
+    this.msgListenSeriesIdleWorkerThreads.start = period;
+    this.msgListenSeriesIdleWorkerThreads.count = count;
+    this.sendMessage(this.msgListenSeriesIdleWorkerThreads);
+  }
+
   getSeriesDisk(period = '24h', count = 100) {
     // this.msgListenSeriesDisk.item = 'env.system.diskfree';
     this.msgListenSeriesDisk.start = period;
@@ -311,6 +369,21 @@ export class WebsocketPluginService implements OnInit {
       // console.log('message received (threads-series):');
       this.updateSeries(this.threads, data);
       this.threadsSource.next();
+
+    } else if (data.sid.startsWith(this.msgListenSeriesWorkerThreads.item)) {
+      // console.log('message received (workerThreads-series):');
+      this.updateSeries(this.workerThreads, data);
+      this.workerThreadsSource.next();
+
+    } else if (data.sid.startsWith(this.msgListenSeriesIdleWorkerThreads.item)) {
+      // console.log('message received (idleWorkerThreads-series):');
+      this.updateSeries(this.idleWorkerThreads, data);
+      this.idleWorkerThreadsSource.next();
+
+    } else if (data.sid.startsWith(this.msgListenSeriesActiveWorkerThreads.item)) {
+      // console.log('message received (activeWorkerThreads-series):');
+      this.updateSeries(this.activeWorkerThreads, data);
+      this.activeWorkerThreadsSource.next();
 
     } else if (data.sid.startsWith(this.msgListenSeriesDisk.item)) {
       // console.log('message received (disk-series):');
