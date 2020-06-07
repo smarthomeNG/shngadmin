@@ -4,14 +4,78 @@
   color:rgb(160, 160, 160);
 }
 
+.shngbody {
+/*
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 100vh;
+  //overflow: hidden;
+  //height: calc(100vh - 55px);
+*/
 
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 55px;
+}
+/*
+.shngtabbody {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+*/
+
+/* css for System-Info tab */
+.shngsysinfo {
+  display: grid;
+  grid-template-columns: 110px minmax(140px, 280px) 1fr;
+  grid-auto-rows: minmax(50px, max-content);
+}
+
+.shngsysinfo>span>img {
+  margin-left: 50px;
+  width: 32px;
+  height: 32px;
+}
+
+.shngsysinfo>span
+{
+  min-height: 50px;
+  padding: 12px 0;
+  align-self: stretch;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Padding for Icons */
+.shngsysinfo>span:nth-child(6n+1),
+.shngsysinfo>span:nth-child(6n+4)
+{
+  padding: 8px;
+}
+
+/* Background color for every other line */
+.shngsysinfo>span:nth-child(6n+4),
+.shngsysinfo>span:nth-child(6n+5),
+.shngsysinfo>span:nth-child(6n+6)
+{
+  background: #f7f7f7;
+}
+
+
+
+
+/* css for SmartHomeNG Charts tab */
 .shngcharts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, 400px);
-  grid-template-rows: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(360px,1fr));
+  grid-auto-rows: 280px;
+  grid-gap: 15px;
   grid-auto-flow: row;
 
+  justify-content: center;
   justify-items: center;
 
-  background-color: #eeeeee;
+  //overflow-y: scroll;
+
+  //background-color: #eeeeee;
 }

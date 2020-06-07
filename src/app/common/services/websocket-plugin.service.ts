@@ -57,6 +57,22 @@ export class WebsocketPluginService implements OnInit {
     'end': 'now',
     'count': 10
   };
+  private msgListenSeriesSystemMemory = <Message> {
+    'cmd': 'series',
+    'item': 'env.system.memory.used',
+    'series': 'avg',
+    'start': '48h',
+    'end': 'now',
+    'count': 10
+  };
+  private msgListenSeriesSwap = <Message> {
+    'cmd': 'series',
+    'item': 'env.system.swap',
+    'series': 'avg',
+    'start': '48h',
+    'end': 'now',
+    'count': 10
+  };
   private msgListenSeriesMemory = <Message> {
     'cmd': 'series',
     'item': 'env.core.memory',
@@ -112,6 +128,16 @@ export class WebsocketPluginService implements OnInit {
     'tsdiff': 0,
   };
 
+  systemmemory = {
+    'series': [],
+    'tsdiff': 0,
+  };
+
+  systemswap = {
+    'series': [],
+    'tsdiff': 0,
+  };
+
   memory = {
     'series': [],
     'tsdiff': 0,
@@ -145,6 +171,12 @@ export class WebsocketPluginService implements OnInit {
 
   private systemloadSource = new Subject<void>();
   public systemloadUpdate$ = this.systemloadSource.asObservable();
+
+  private systemmemorySource = new Subject<void>();
+  public systemmemoryUpdate$ = this.systemmemorySource.asObservable();
+
+  private systemswapSource = new Subject<void>();
+  public systemswapUpdate$ = this.systemswapSource.asObservable();
 
   private memorySource = new Subject<void>();
   public memoryUpdate$ = this.memorySource.asObservable();
@@ -265,6 +297,18 @@ export class WebsocketPluginService implements OnInit {
     this.sendMessage(this.msgListenSeriesLoad);
   }
 
+  getSeriesSystemMemory(period = '24h', count = 100) {
+    this.msgListenSeriesSystemMemory.start = period;
+    this.msgListenSeriesSystemMemory.count = count;
+    this.sendMessage(this.msgListenSeriesSystemMemory);
+  }
+
+  getSeriesSwap(period = '24h', count = 100) {
+    this.msgListenSeriesSwap.start = period;
+    this.msgListenSeriesSwap.count = count;
+    this.sendMessage(this.msgListenSeriesSwap);
+  }
+
 
   getSeriesMemory(period = '24h', count = 100) {
     this.msgListenSeriesMemory.start = period;
@@ -354,11 +398,27 @@ export class WebsocketPluginService implements OnInit {
     if (data.sid.startsWith(this.msgListenSeriesMemory.item)) {
       this.convertMemorysize(data);
     }
+    if (data.sid.startsWith(this.msgListenSeriesSystemMemory.item)) {
+      this.convertMemorysize(data);
+    }
+    if (data.sid.startsWith(this.msgListenSeriesSwap.item)) {
+      this.convertMemorysize(data);
+    }
     this.convertTimestamps(data);
     if (data.sid.startsWith(this.msgListenSeriesLoad.item)) {
       // console.log('message received (load-series):');
       this.updateSeries(this.systemload, data);
       this.systemloadSource.next();
+
+    } else if (data.sid.startsWith(this.msgListenSeriesSystemMemory.item)) {
+      // console.log('message received (memory-series):');
+      this.updateSeries(this.systemmemory, data);
+      this.systemmemorySource.next();
+
+    } else if (data.sid.startsWith(this.msgListenSeriesSwap.item)) {
+      // console.log('message received (memory-series):');
+      this.updateSeries(this.systemswap, data);
+      this.systemswapSource.next();
 
     } else if (data.sid.startsWith(this.msgListenSeriesMemory.item)) {
       // console.log('message received (memory-series):');

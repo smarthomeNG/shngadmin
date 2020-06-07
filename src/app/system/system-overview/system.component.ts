@@ -34,6 +34,8 @@ export class SystemComponent implements OnDestroy, OnInit {
   loading: boolean = true;
 
   @ViewChildren('chrtSystemload') chartSystemload: UIChart;
+  @ViewChildren('chrtSystemMemory') chartSystemMemory: UIChart;
+  @ViewChildren('chrtSwap') chartSwap: UIChart;
   @ViewChildren('chrtMemory') chartMemory: UIChart;
   @ViewChildren('chrtThreads') chartThreads: UIChart;
   @ViewChildren('chrtWorkerThreads') chartWorkerThreads: UIChart;
@@ -52,10 +54,13 @@ export class SystemComponent implements OnDestroy, OnInit {
 
   chartoptions1: any;
   chartoptionsSystem: any;
+  chartoptionsShng: any;
   chartoptionsScheduler: any;
   chartoptionsDisc: any;
 
   chartdataLoad: any;
+  chartdataSystemMemory: any;
+  chartdataSwap: any;
   chartdataMemory: any;
   chartdataThreads: any;
   chartdataWorkerThreads: any;
@@ -66,6 +71,8 @@ export class SystemComponent implements OnDestroy, OnInit {
   varChartSystemload: any;
 
   systemloadUpdateSubscription: Subscription = null;
+  systemmemoryUpdateSubscription: Subscription = null;
+  systemswapUpdateSubscription: Subscription = null;
   memoryUpdateSubscription: Subscription = null;
   threadsUpdateSubscription: Subscription = null;
   workerThreadsUpdateSubscription: Subscription = null;
@@ -292,6 +299,27 @@ export class SystemComponent implements OnDestroy, OnInit {
       }
     };
 
+    this.chartoptionsShng = {
+      title: {
+        display: true,
+        text: 'SmartHomeNG',
+      },
+      scales: {
+        xAxes: [{
+//          type: 'time',
+          distribution: 'linear',
+          time: {
+            unit: 'minute'
+          },
+        }],
+        yAxes: [{
+          ticks: {
+            min: 0
+          }
+        }]
+      }
+    };
+
     this.chartoptionsScheduler = {
       title: {
         display: true,
@@ -316,7 +344,7 @@ export class SystemComponent implements OnDestroy, OnInit {
     this.chartoptionsDisc = {
       title: {
         display: true,
-        text: 'Disc',
+        text: 'System',
       },
       scales: {
         xAxes: [{
@@ -392,6 +420,36 @@ export class SystemComponent implements OnDestroy, OnInit {
       ]
     };
 
+    this.chartdataSystemMemory = {
+      labels: [],
+      datasets: [
+        {
+          label: 'Memory (MByte)',
+          data: [],
+          fill: false,
+          backgroundColor: '#709cc2',
+          borderColor: '#709cc2',
+          pointRadius: 0,
+
+        }
+      ]
+    };
+
+    this.chartdataSwap = {
+      labels: [],
+      datasets: [
+        {
+          label: 'Swap used (MByte)',
+          data: [],
+          fill: false,
+          backgroundColor: '#709cc2',
+          borderColor: '#709cc2',
+          pointRadius: 0,
+
+        }
+      ]
+    };
+
     this.chartdataMemory = {
       labels: [],
       datasets: [
@@ -411,7 +469,7 @@ export class SystemComponent implements OnDestroy, OnInit {
       labels: [],
       datasets: [
         {
-          label: '% usage',
+          label: '% disc usage',
           data: [],
           fill: false,
           backgroundColor: '#709cc2',
@@ -424,6 +482,8 @@ export class SystemComponent implements OnDestroy, OnInit {
 
     this.websocketPluginService.connect();
     this.websocketPluginService.getSeriesLoad();
+    this.websocketPluginService.getSeriesSystemMemory();
+    this.websocketPluginService.getSeriesSwap();
     this.websocketPluginService.getSeriesMemory();
     this.websocketPluginService.getSeriesThreads();
     this.websocketPluginService.getSeriesWorkerThreads();
@@ -437,6 +497,14 @@ export class SystemComponent implements OnDestroy, OnInit {
       // console.error('systemloadUpdate$');
       this.updateChartData(this.chartSystemload, this.chartdataLoad, this.websocketPluginService.systemload.series);
     });
+    this.systemmemoryUpdateSubscription = this.websocketPluginService.systemmemoryUpdate$.subscribe(() => {
+//      console.error('systemmemoryUpdate$');
+      this.updateChartData(this.chartSystemMemory, this.chartdataSystemMemory, this.websocketPluginService.systemmemory.series);
+    });
+    this.systemswapUpdateSubscription = this.websocketPluginService.systemswapUpdate$.subscribe(() => {
+//      console.error('systemswapUpdate$');
+      this.updateChartData(this.chartSwap, this.chartdataSwap, this.websocketPluginService.systemswap.series);
+    });
     this.memoryUpdateSubscription = this.websocketPluginService.memoryUpdate$.subscribe(() => {
 //      console.error('memoryUpdate$');
       this.updateChartData(this.chartMemory, this.chartdataMemory, this.websocketPluginService.memory.series);
@@ -447,17 +515,17 @@ export class SystemComponent implements OnDestroy, OnInit {
     });
     this.workerThreadsUpdateSubscription = this.websocketPluginService.workerThreadsUpdate$.subscribe(() => {
 //      console.error('workerThreadsUpdate$');
-    });
-    this.idleWorkerThreadsUpdateSubscription = this.websocketPluginService.idleWorkerThreadsUpdate$.subscribe(() => {
-//      console.error('idleWorkerThreadsUpdate$');
-      this.websocketPluginService.activeWorkerThreads.series = [];
-      this.websocketPluginService.activeWorkerThreads.tsdiff = this.websocketPluginService.idleWorkerThreads.tsdiff ;
-      for (let i = 0; i < this.websocketPluginService.workerThreads.series.length; i++) {
-        this.websocketPluginService.activeWorkerThreads.series.push(this.websocketPluginService.idleWorkerThreads.series[i]);
-        this.websocketPluginService.activeWorkerThreads.series[i][1] = this.websocketPluginService.workerThreads.series[i][1] - this.websocketPluginService.idleWorkerThreads.series[i][1];
-      }
-      this.updateChartData(this.chartWorkerThreads, this.chartdataWorkerThreads, this.websocketPluginService.workerThreads.series, this.websocketPluginService.activeWorkerThreads.series);
+        this.idleWorkerThreadsUpdateSubscription = this.websocketPluginService.idleWorkerThreadsUpdate$.subscribe(() => {
+    //      console.error('idleWorkerThreadsUpdate$');
+          this.websocketPluginService.activeWorkerThreads.series = [];
+          this.websocketPluginService.activeWorkerThreads.tsdiff = this.websocketPluginService.idleWorkerThreads.tsdiff ;
+          for (let i = 0; i < this.websocketPluginService.workerThreads.series.length; i++) {
+            this.websocketPluginService.activeWorkerThreads.series.push(this.websocketPluginService.idleWorkerThreads.series[i]);
+            this.websocketPluginService.activeWorkerThreads.series[i][1] = this.websocketPluginService.workerThreads.series[i][1] - this.websocketPluginService.idleWorkerThreads.series[i][1];
+          }
+          this.updateChartData(this.chartWorkerThreads, this.chartdataWorkerThreads, this.websocketPluginService.workerThreads.series, this.websocketPluginService.activeWorkerThreads.series);
 
+        });
     });
     this.diskUpdateSubscription = this.websocketPluginService.diskUpdate$.subscribe(() => {
 //      console.error('diskUpdate$');

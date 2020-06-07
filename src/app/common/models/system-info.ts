@@ -4,7 +4,7 @@
 //
 export interface SystemInfo {
   now: string;
-  system: string;
+  ostype?: string;
   sh_vers: string;
   sh_desc: string;
   plg_vers: string;
@@ -15,6 +15,8 @@ export interface SystemInfo {
   arch: string;
   user: string;
   freespace: number;
+  rasppi?: string;
+  hardware?: string;
   uptime: number;
   sh_uptime: number;
   pyversion: string;
