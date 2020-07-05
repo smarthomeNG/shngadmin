@@ -16,6 +16,8 @@ export interface ServerInfo {
   plugins_branch: string;
   websocket_host: string;
   websocket_port: string;
+  log_chunksize: number;
+  developer_mode: boolean;
   daemon_knx: string;
   daemon_ow: string;
   daemon_mqtt: string;

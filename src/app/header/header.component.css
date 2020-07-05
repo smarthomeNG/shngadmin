@@ -1,6 +1,35 @@
 
 :host ::ng-deep .ui-menubar-root-list {
+/*
   padding-left:145px;
+  padding-left:60px;
+ */
+  padding-left:145px;
+}
+
+/* css for System-Info tab */
+.navi {
+  display: grid;
+  /*grid-template-columns: 145px minmax(140px, 280px) 1fr;*/
+  grid-template-columns: minmax(50px, 150px) 1fr 135px;
+  grid-template-rows: 55px;
+  align-items: center;
+}
+
+.navi>span
+{
+  min-height: 55px;
+  padding: 12px 0;
+  //align-self: stretch;
+  //border-bottom: 1px solid #ddd;
+  background: #ddffee;
+  background: #eee;
+}
+.navi>p-menubar
+{
+  min-height: 55px;
+  padding-left: 0px;
+  padding-top: 2px;
 }
 
 img#logo {
@@ -9,12 +38,12 @@ img#logo {
   padding-left:20px;
 }
 
+
 /* The navigation bar */
 .fixednavbar {
   /* overflow: hidden; */
   position: fixed; /* Set the navbar to fixed position */
-  top: 0; /* Position the navbar at the top of the page */
+  top: 0px; /* Position the navbar at the top of the page */
   width: 100%; /* Full width */
   z-index: 2;
 }
-

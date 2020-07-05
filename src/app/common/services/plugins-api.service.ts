@@ -276,6 +276,52 @@ export class PluginsApiService {
           return of({});
         })
       );
+  }
+
+
+  // -----------------------------------------------------------
+  //  set plugin state to started/stopped
+  //
+  setPluginState(pluginConfigName, action, filename = '') {
+    // valid actions are: 'trigger', 'enable', 'disable', 'load', 'unload', 'reload', 'delete', 'create'
+    action = action.toLowerCase();
+    console.warn('PluginsApiService.setPluginState', {pluginConfigName}, {action});
+
+    const apiUrl = sessionStorage.getItem('apiUrl');
+    let url = apiUrl + 'plugin/' + pluginConfigName + '?action=' + action;
+    if (filename !== '') {
+      url += '&filename=' + filename;
+    }
+    if (apiUrl.includes('localhost')) {
+      console.warn('PluginsApiService.setPluginState', 'Cannot simulate setting states in dev environment\n', '- plugin', pluginConfigName, ', action', action);
+      return of(true);
+    }
+
+    return this.http.put(url, JSON.stringify(''))
+      .pipe(
+        map(response => {
+          const result = <any>response;
+
+          if (result) {
+            // console.log('PluginsApiService.setPluginState', '- config', config, '\nresult', {result});
+            if (result.result === 'ok') {
+              // console.log('PluginsApiService.setPluginState', 'success');
+              return true;
+            } else {
+              console.log('PluginsApiService.setPluginState', 'fail');
+              alert('PluginsApiService.setPluginState:\n' + result.result + '\n' + result.description);
+              return false;
+            }
+
+          } else {
+            console.log('PluginsApiService.setPluginState', 'fail: undefined result');
+          }
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('PluginsApiService.setPluginState: Could not set logic state' + ' - ' + err.error.error);
+          return of({});
+        })
+      );
 
   }
 

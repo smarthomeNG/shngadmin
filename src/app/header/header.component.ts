@@ -28,10 +28,11 @@ export class HeaderComponent implements OnInit {
   items: any;
 
   server_info: ServerInfo;
+  developerMode: boolean;
 
 
   constructor(private appComponent: AppComponent,
-              private dataService: ServerApiService,
+              private dataServiceServer: ServerApiService,
               private translate: TranslateService,
               protected router: Router,
               public authService: AuthService) {
@@ -43,14 +44,22 @@ export class HeaderComponent implements OnInit {
   ngOnInit() {
     // console.log('HeaderComponent.ngOnInit');
 
-    const credentials = {'username': '', 'password': ''};
-    // console.log('signIn', {credentials});
-    this.authService.login(credentials)
-      .subscribe((result: boolean) => {
-        // console.log('Anonymous login:', {result});
+    this.dataServiceServer.getServerinfo()
+      .subscribe(
+        (response) => {
+          this.developerMode = (sessionStorage.getItem('developer_mode') === 'true');
 
-        this.buildMenu();
-      });
+          const credentials = {'username': '', 'password': ''};
+          // console.log('signIn', {credentials});
+          this.authService.login(credentials)
+            .subscribe((result: boolean) => {
+              // console.log('Anonymous login:', {result});
+
+              this.buildMenu();
+            });
+
+        }
+      );
 
   }
 
@@ -79,24 +88,7 @@ export class HeaderComponent implements OnInit {
       {
         label: this.translate.instant('MENU.ITEMS'),
         routerLink: ['/items'],
-        items: [
-          {
-            label: this.translate.instant('MENU.ITEM_TREE'),
-            routerLink: ['/item_tree'],
-          },
-          {
-            label: this.translate.instant('MENU.ITEM_CONFIGURATION'),
-            routerLink: ['/items/config'],
-          },
-          {
-            label: this.translate.instant('MENU.ITEM_STRUCTS'),
-            routerLink: ['/items/structs'],
-          },
-          {
-            label: this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'),
-            routerLink: ['/items/struct_config'],
-          },
-        ]
+        items: []
       },
       {
         label: this.translate.instant('MENU.LOGICS'),
@@ -187,6 +179,15 @@ export class HeaderComponent implements OnInit {
                     },
       */
     ];
+
+    for (let i = 0; i < 4; i++) {
+      this.items[2].items.push({ label: '--dev--', routerLink: [''] });
+    }
+    if (this.developerMode) {
+      // Add another menu item if in developer mode
+      this.items[2].items.push({ label: '--dev--', routerLink: [''] });
+    }
+
   }
 
 
@@ -217,11 +218,26 @@ export class HeaderComponent implements OnInit {
       this.items[0].items[0].label = this.translate.instant('MENU.SYSTEM_PROPERTIES');
       this.items[0].items[1].label = this.translate.instant('MENU.CONFIGURATION');
       this.items[1].label = this.translate.instant('MENU.SERVICES');
+
       this.items[2].label = this.translate.instant('MENU.ITEMS');
       this.items[2].items[0].label = this.translate.instant('MENU.ITEM_TREE');
+      this.items[2].items[0].routerLink = ['/item_tree'];
       this.items[2].items[1].label = this.translate.instant('MENU.ITEM_CONFIGURATION');
-      this.items[2].items[2].label = this.translate.instant('MENU.ITEM_STRUCTS');
-      this.items[2].items[3].label = this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION');
+      this.items[2].items[1].routerLink = ['/items/config'];
+      if (this.items[2].items.length < 5) {
+        this.items[2].items[2].label = this.translate.instant('MENU.ITEM_STRUCTS');
+        this.items[2].items[2].routerLink = ['/items/structs'];
+        this.items[2].items[3].label = this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION');
+        this.items[2].items[3].routerLink = ['/items/struct_config'];
+      } else {
+        this.items[2].items[2].label = this.translate.instant('MENU.ITEM_CONFIGURATION') + ' (dev)';
+        this.items[2].items[2].routerLink = ['/items/config2'];
+        this.items[2].items[3].label = this.translate.instant('MENU.ITEM_STRUCTS');
+        this.items[2].items[3].routerLink = ['/items/structs'];
+        this.items[2].items[4].label = this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION');
+        this.items[2].items[4].routerLink = ['/items/struct_config'];
+      }
+
       this.items[3].label = this.translate.instant('MENU.LOGICS');
       this.items[4].label = this.translate.instant('MENU.SCHEDULERS');
       this.items[5].label = this.translate.instant('MENU.PLUGINS');

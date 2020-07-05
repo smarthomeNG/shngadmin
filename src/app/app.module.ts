@@ -62,6 +62,7 @@ import { JwtModule, JWT_OPTIONS } from '@auth0/angular-jwt';
 import { SystemConfigComponent } from './system/system-config/system-config.component';
 import { StructsComponent } from './items/structs/structs.component';
 import { ItemConfigurationComponent } from './items/item-configuration/item-configuration.component';
+import { ItemConfiguration2Component } from './items/item-configuration2/item-configuration2.component';
 import { StructConfigurationComponent } from './items/struct-configuration/struct-configuration.component';
 import { SceneConfigurationComponent } from './scenes/scene-configuration/scene-configuration.component';
 import { LogicsEditComponent } from './logics/logics-edit/logics-edit.component';
@@ -92,6 +93,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     SystemConfigComponent,
     StructsComponent,
     ItemConfigurationComponent,
+    ItemConfiguration2Component,
     StructConfigurationComponent,
     SceneConfigurationComponent,
     LogicsEditComponent

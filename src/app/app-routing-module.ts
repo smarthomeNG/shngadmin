@@ -6,6 +6,7 @@ import { SystemConfigComponent } from './system/system-config/system-config.comp
 import { ServicesComponent } from './services/services.component';
 import { ItemTreeComponent } from './items/item-tree/item-tree.component';
 import { ItemConfigurationComponent } from './items/item-configuration/item-configuration.component';
+import { ItemConfiguration2Component } from './items/item-configuration2/item-configuration2.component';
 import { StructsComponent } from './items/structs/structs.component';
 import { StructConfigurationComponent } from './items/struct-configuration/struct-configuration.component';
 import { LogicsListComponent } from './logics/logics-list/logics-list.component';
@@ -34,6 +35,7 @@ const appRoutes: Routes = [
 
   { path: 'item_tree', component: ItemTreeComponent, canActivate: [AuthGuardService] },
   { path: 'items/config', component: ItemConfigurationComponent, canActivate: [AuthGuardService] },
+  { path: 'items/config2', component: ItemConfiguration2Component, canActivate: [AuthGuardService] },
   { path: 'items/structs', component: StructsComponent, canActivate: [AuthGuardService] },
   { path: 'items/struct_config', component: StructConfigurationComponent, canActivate: [AuthGuardService] },
   { path: 'items', component: ItemTreeComponent, canActivate: [AuthGuardService] },

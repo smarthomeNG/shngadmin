@@ -11,31 +11,34 @@
 
         <span><img src="assets/img/logo_small_76x76.png"></span>
         <span>{{'SYSTEM.SHNG_VERSION'|translate}}:</span>
-        <span>{{ systeminfo.sh_vers }}&nbsp;{{ 'SYSTEM.IN'|translate }}&nbsp;{{ systeminfo.sh_dir }}&nbsp;&nbsp;-&nbsp;&nbsp; {{ systeminfo.sh_desc }}</span>
+        <span>{{ systeminfo.sh_vers }} &nbsp; {{ 'SYSTEM.IN'|translate }} &nbsp; {{ systeminfo.sh_dir }} &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ({{ systeminfo.sh_desc }})</span>
 
         <span><img src="assets/img/logo_small_76x76.png"></span>
         <span>{{'SYSTEM.SHNG_PLG_VERSION'|translate}}:</span>
-        <span>{{ systeminfo.plg_vers }}&nbsp;{{ 'SYSTEM.IN'|translate }}&nbsp;{{ systeminfo.sh_dir }}/plugins&nbsp;&nbsp;-&nbsp;&nbsp; {{ systeminfo.plg_desc }}</span>
+        <span>{{ systeminfo.plg_vers }} &nbsp; {{ 'SYSTEM.IN'|translate }} &nbsp; {{ systeminfo.sh_dir }}/plugins &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ({{ systeminfo.plg_desc }})</span>
 
         <span><img src="assets/img/python.png"></span>
         <span>{{ 'SYSTEM.PYTHON VERSION'|translate }}:</span>
-        <span>{{ systeminfo.pyversion }}</span>
+        <span>{{ systeminfo.pyversion }} &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ({{ systeminfo.pypath }})</span>
 
         <span><img src="assets/img/terminal-server.svg"></span>
         <span>{{ 'SYSTEM.HOST'|translate }}:</span>
         <span>{{ systeminfo.node }}
-          <span *ngIf="systeminfo.ip !== '0.0.0.0'">&nbsp; -&nbsp;&nbsp;IPv4: {{ systeminfo.ip }}</span>
-          <span *ngIf="systeminfo.ipv6 !== '::1'">&nbsp; -&nbsp;&nbsp;IPv6: {{ systeminfo.ipv6 }}</span>
+          <span *ngIf="systeminfo.ip !== '0.0.0.0'"> &nbsp; &nbsp; - &nbsp; &nbsp; IPv4: {{ systeminfo.ip }}</span>
+          <span *ngIf="systeminfo.ipv6 !== '::1'"> &nbsp; &nbsp; - &nbsp; &nbsp; IPv6: {{ systeminfo.ipv6 }}</span>
         </span>
 
-        <ng-container *ngIf="['linux','debian','raspian','macos','windows'].includes(systeminfo.ostype)">
+        <ng-container *ngIf="['linux','debian','raspbian','macos','windows'].includes(systeminfo.ostype)">
           <span><img src="assets/img/{{systeminfo.ostype}}.svg"></span>
         </ng-container>
-        <ng-container *ngIf="!(['linux','debian','raspian','macos','windows'].includes(systeminfo.ostype))">
+        <ng-container *ngIf="!(['linux','debian','raspbian','macos','windows'].includes(systeminfo.ostype))">
           <span><img src="assets/img/os.png"></span>
         </ng-container>
         <span>{{ 'SYSTEM.OS'|translate }}:</span>
+        <!--
         <span>{{ systeminfo.vers }}&nbsp;&nbsp;-&nbsp;&nbsp;{{ 'SYSTEM.ARCHITECTURE'|translate }}:&nbsp;{{ systeminfo.arch }}</span>
+        -->
+        <span>{{ systeminfo.vers }}</span>
 
         <span><img src="assets/img/tux_hdd.svg"></span>
         <span>{{ 'SYSTEM.PID'|translate }}:</span>

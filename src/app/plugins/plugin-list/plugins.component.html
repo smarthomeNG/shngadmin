@@ -7,12 +7,15 @@
       <th style="width: 30px; border-top: 0"></th>
       <th style="width: 150px; border-top: 0">{{ 'PLUGIN.TYPE'|translate }}</th>
       <th style="width: 200px; border-top: 0">{{ 'PLUGIN.CONFIGNAME'|translate }}</th>
-      <th style="width: 200px; border-top: 0">{{ 'PLUGIN.PLUGINNAME'|translate }}</th>
+      <th style="width: 210px; border-top: 0">{{ 'PLUGIN.PLUGINNAME'|translate }}</th>
       <th style="width: 160px; border-top: 0">{{ 'PLUGIN.INSTANCE'|translate }}</th>
       <th style="width: 150px; border-top: 0">{{ 'PLUGIN.VERSION'|translate }}</th>
       <th style="width: 110px; border-top: 0">{{ 'PLUGIN.MULTI  INSTANCE'|translate }}</th>
       <th style="width: 40px;  border-top: 0" >{{ 'PLUGIN.WEBIF'|translate }}</th>
       <th style="min-width: 140px; width: 200px; border-top: 0" >{{ 'PLUGIN.HELP'|translate }}</th>
+      <ng-container *ngIf="developerMode">
+        <th style="min-width: 140px; width: 200px; border-top: 0" >{{ 'PLUGIN.ACTIONS'|translate }}</th>
+      </ng-container>
     </tr>
     </thead>
     <tbody>
@@ -74,12 +77,6 @@
           <td class="py-1">
             <ng-container *ngIf="plugin.webif_url !== ''">
               <button name="webif" class="btn btn-outline-primary btn-sm" (click)="goToLink(plugin.webif_url);"><i class="fas fa-link" aria-hidden="true" title="{{'PLUGIN.OPEN_WEBIF'|translate}}" style="color: var(--shng-blue);"></i></button>
-
-              <!--
-              <a href="{{ plugin.webif_url }}" target="_blank">
-                <img src="assets/img/html.svg" style="width: 35px; padding-right: 10px; cursor: pointer;"/>
-              </a>
-              -->
             </ng-container>
             <ng-container *ngIf="plugin.webif_url === ''">
               <a style="padding-right: 35px;"></a>
@@ -120,6 +117,24 @@
               -->
             </ng-container>
           </td>
+
+          <ng-container *ngIf="developerMode">
+            <td class="py-1">
+              <ng-container *ngIf="plugin.stoppable; then pluginStoppableActions; else pluginNonStoppableActions"></ng-container>
+              <ng-template #pluginStoppableActions>
+                <ng-container *ngIf="plugin.stopped; then pluginStoppedActions; else pluginNotStoppedActions"></ng-container>
+                <ng-template #pluginNotStoppedActions>
+                  <button disabled="true" name="reload"  title="{{ 'PLUGIN.RELOAD'|translate }}" class="btn btn-outline-dark btn-sm mr-1" (click)="reloadPlugin(plugin.configname);"><i class="fas fa-sync"></i></button>
+                  <button name="disable" title="{{ 'PLUGIN.STOP'|translate }}" class="btn btn-outline-dark btn-sm mr-1" (click)="stopPlugin(plugin.configname);"><i class="fas fa-pause"></i></button>
+                </ng-template>
+                <ng-template #pluginStoppedActions>
+                  <button disabled="true" name="reload"  title="{{ 'PLUGIN.RELOAD'|translate }}" class="btn btn-outline-dark btn-sm mr-1" (click)="reloadPlugin(plugin.configname);"><i class="fas fa-sync"></i></button>
+                  <button name="enable"  title="{{ 'PLUGIN.START'|translate }}" class="btn btn-outline-dark btn-sm mr-1" (click)="startPlugin(plugin.configname);"><i class="fas fa-play"></i></button>
+                </ng-template>
+              </ng-template>
+            </td>
+          </ng-container>
+
         </tr>
 
         <!------------------------------------------>

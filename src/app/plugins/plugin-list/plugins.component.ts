@@ -11,6 +11,8 @@ import { PluginsApiService } from '../../common/services/plugins-api.service';
 import { OlddataService } from '../../common/services/olddata.service';
 import { SchedulerInfo } from '../../common/models/scheduler-info';
 import { PlugininfoType } from '../../common/models/plugin-info';
+import {ServerApiService} from '../../common/services/server-api.service';
+import {LogicsinfoType} from '../../common/models/logics-info';
 
 @Component({
   selector: 'app-plugins',
@@ -26,15 +28,47 @@ export class PluginsComponent implements OnInit {
   faCode = faLaptopCode;                               // signal plugin in state "develop"
 
   plugininfo: PlugininfoType[];
+  developerMode: boolean;
 
   modalRef: BsModalRef;
-  constructor(private http: HttpClient, private pluginsdataService: PluginsApiService, private modalService: BsModalService) {
+  constructor(private http: HttpClient,
+              private dataServiceServer: ServerApiService,
+              private pluginsDataService: PluginsApiService,
+              private modalService: BsModalService) {
   }
 
   ngOnInit() {
     console.log('PluginsComponent.ngOnInit');
 
-    this.pluginsdataService.getPluginsInfo()
+    this.dataServiceServer.getServerinfo()
+      .subscribe(
+        (response) => {
+          this.developerMode = (sessionStorage.getItem('developer_mode') === 'true');
+          this.getPlugins();
+        }
+      );
+/*
+    this.dataServiceServer.getServerinfo()
+      .subscribe(
+        (response) => {
+          this.developerMode = (sessionStorage.getItem('developer_mode') === 'true');
+
+          this.pluginsDataService.getPluginsInfo()
+            .subscribe(
+              (response2) => {
+                this.plugininfo = <any>response2;
+                this.plugininfo.sort(function (a, b) {return (a.pluginname + a.configname.toLowerCase() > b.pluginname + b.configname.
+                toLowerCase()) ? 1 : ((b.pluginname + b.configname.toLowerCase() > a.pluginname + a.configname.toLowerCase()) ? -1 : 0); });
+              }
+            );
+        }
+      );
+*/
+  }
+
+
+  getPlugins() {
+    this.pluginsDataService.getPluginsInfo()
       .subscribe(
         (response) => {
           this.plugininfo = <any>response;
@@ -42,9 +76,7 @@ export class PluginsComponent implements OnInit {
           toLowerCase()) ? 1 : ((b.pluginname + b.configname.toLowerCase() > a.pluginname + a.configname.toLowerCase()) ? -1 : 0); });
         }
       );
-
   }
-
 
 
   parameterLines(parameters) {
@@ -70,6 +102,42 @@ export class PluginsComponent implements OnInit {
 
   goToLink(url: string) {
     window.open(url, '_blank');
+  }
+
+
+  stopPlugin(pluginConfigName) {
+    // console.log('stopPlugin', {pluginConfigName});
+
+    this.pluginsDataService.setPluginState(pluginConfigName, 'stop')
+      .subscribe(
+        (response) => {
+          this.getPlugins();
+        }
+      );
+  }
+
+
+  startPlugin(pluginConfigName) {
+    // console.log('startPlugin', {pluginConfigName});
+
+    this.pluginsDataService.setPluginState(pluginConfigName, 'start')
+      .subscribe(
+        (response) => {
+          this.getPlugins();
+        }
+      );
+  }
+
+
+  reloadPlugin(pluginConfigName) {
+    // console.log('reloadPlugin', {pluginConfigName});
+
+    this.pluginsDataService.setPluginState(pluginConfigName, 'reload')
+      .subscribe(
+        (response) => {
+          this.getPlugins();
+        }
+      );
   }
 
 }

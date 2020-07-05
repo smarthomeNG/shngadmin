@@ -7,6 +7,7 @@ import { webSocket } from 'rxjs/webSocket'; // for RxJS 6, for v5 use Observable
 
 // import { SystemComponent } from '../system/system.component';
 
+import { AppComponent } from '../../app.component';
 import { WebsocketService } from './websocket.service';
 import { SharedService } from './shared.service';
 import {OlddataService} from './olddata.service';
@@ -199,14 +200,15 @@ export class WebsocketPluginService implements OnInit {
 
   constructor(private dataService: OlddataService,
               private websocketService: WebsocketService,
-              private shared: SharedService) {
+              private shared: SharedService,
+              private app: AppComponent) {
   }
 
   firstMsgSent = false;
   msgIdentity = <Message> {
     cmd: 'identity',
-    sw: 'shngAdmin',
-    ver: 'v0.2.1',
+    sw: this.app.APP_NAME,
+    ver: 'v' + this.app.APP_VERSION,
     browser: 'y',
     bver: ''
   };
@@ -229,8 +231,8 @@ export class WebsocketPluginService implements OnInit {
     const wsPort = sessionStorage.getItem('wsPort');
     const plugin_url = 'ws://' + wsHost + ':' + wsPort;
 
-    if (hostip === 'localhost') {
-      console.log({plugin_url}, '\nFür mockup Environment in \n\'testdata/serverinfo/default.json\' anpassen');
+    if (hostip === 'localhost' || hostip === null) {
+      console.log({plugin_url}, '\nFür mockup Environment in \n\'testdata/api/server/info/default.json\' anpassen');
     }
     this.wsService = new WebsocketService();
     this.subject = this.wsService.connect(plugin_url);
