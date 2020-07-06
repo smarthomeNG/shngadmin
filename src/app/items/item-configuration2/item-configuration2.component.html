@@ -2,51 +2,43 @@
 <div class="shngbody">
 
   <div class="button-row">
-    <ng-container *ngIf="myEditFilename !== ''">
-      {{ 'ITEM_CONFIG.CONFIG_FILE'|translate }}: <strong>../items/{{ myEditFilename }}.yaml</strong>
-    </ng-container>
     <button pButton label="{{ 'BUTTON.SAVE'|translate }}" type="button" [disabled]="(myEditFilename === '') || (myTextarea === myTextareaOrig)" icon="fa fa-check" style="margin-right: 0px;" (click)="saveConfig()" class="float-sm-right ui-button-success"></button>
     <button pButton label="{{ 'BUTTON.DISCARD'|translate }}" type="button" [disabled]="(myEditFilename === '') || (myTextarea === myTextareaOrig)" icon="fa fa-times" style="margin-right: 10px;" (click)="this.myTextarea = this.myTextareaOrig;" class="float-sm-right ui-button-secondary"></button>
     <button pButton label="{{ 'BUTTON.HELP'|translate }}" type="button" [disabled]="false" icon="fa fa-info" style="margin-right: 10px;" (click)="this.editorHelp_display = true;" class="float-sm-right ui-button-success"></button>
+    <ng-container *ngIf="myEditFilename !== ''">
+      {{ 'ITEM_CONFIG.CONFIG_FILE'|translate }}: <strong>../items/{{ myEditFilename }}.yaml</strong>
+    </ng-container>
   </div>
 
   <div class="items-filelist">
-    <div class="container-fluid" style="margin-top: 60px">
-      <div style="min-width: 260px;">
-        <button pButton label="{{ 'BUTTON.NEW_DEFINITION_FILE'|translate }}" type="button" [disabled]="!((myEditFilename === '') || (myTextarea === myTextareaOrig))" icon="far fa-file" style="margin-right: 10px;" (click)="newConfig()" class="float-sm-left ui-button-success"></button>
-        <button pButton type="button" [disabled]="myEditFilename === ''" icon="far fa-trash-alt" style="margin-right: 0px;" (click)="deleteConfig()" class="float-sm-left ui-button-danger"></button>
-      </div>
-      <br>
-      <br>
+    <button pButton label="{{ 'BUTTON.NEW_DEFINITION_FILE'|translate }}" type="button" [disabled]="!((myEditFilename === '') || (myTextarea === myTextareaOrig))" icon="far fa-file" style="margin-right: 10px;" (click)="newConfig()" class="float-sm-left ui-button-success"></button>
+    <button pButton type="button" [disabled]="myEditFilename === ''" icon="far fa-trash-alt" style="margin-right: 0px;" (click)="deleteConfig()" class="float-sm-left ui-button-danger"></button>
+    <br>
+    <br>
 
-      <div style="min-width: 260px;">
-        <i class="fa fa-sitemap" style="margin-left: 5px; color: #a2a2a2"></i>
-        <a style="margin-left: 5px; color: #727272">{{ 'ITEM_CONFIG.DEFINITION_FILES'|translate }}</a>
-      </div>
+    <i class="fa fa-sitemap" style="margin-left: 5px; color: #a2a2a2"></i>
+    <a style="margin-left: 5px; color: #727272">{{ 'ITEM_CONFIG.DEFINITION_FILES'|translate }}</a>
 
-      <p-listbox [options]="itemFiles"
-                 [(ngModel)]="selectedItemfile"
-                 [disabled]="!((myEditFilename === '') || (myTextarea === myTextareaOrig))"
-                 (onChange)="itemFileSelected()" optionLabel="label"
-                 [style]="{'min-width':'270px', 'max-width':'100%', 'width':'100%'}"
-                 [listStyle]="{'height': 'calc(100vh - 253px)', 'min-height':'200px'}">
-      </p-listbox>
-    </div>
+    <p-listbox [options]="itemFiles"
+               [(ngModel)]="selectedItemfile"
+               [disabled]="!((myEditFilename === '') || (myTextarea === myTextareaOrig))"
+               (onChange)="itemFileSelected()" optionLabel="label"
+               [style]="{'width':'100%'}"
+               [listStyle]="{'height': 'calc(100vh - 253px)', 'min-height':'200px'}">
+    </p-listbox>
   </div>
 
-
   <div class="items-fileeditor">
-          <div style="height: 100px; margin-top: 10px; padding-left: 10px; padding-right: 5px;">
-            <ngx-codemirror #codeeditor
-                            [options]="cmOptions"
-                            [(ngModel)]="myTextarea"
-                            [autoFocus]="true"
-            ></ngx-codemirror>
-            <a style="font-size: small">{{ 'RESTART FOR CHANGES'|translate }}</a>
-          </div>
+    <ngx-codemirror #codeeditor
+                    [options]="cmOptions"
+                    [(ngModel)]="myTextarea"
+                    [autoFocus]="true"
+    ></ngx-codemirror>
+    <a style="font-size: small">{{ 'RESTART FOR CHANGES'|translate }}</a>
   </div>
 
 </div>
+
 
 <!--
   -- Dialog for setting the name of the new item configuration file

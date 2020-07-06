@@ -220,7 +220,7 @@
   },
   "ITEM_CONFIG": {
     "DEFINITION_FILES": "Item Definitionsdateien",
-    "CONFIG_FILE": "Item Konfigurationsdatei",
+    "CONFIG_FILE": "Konfigurationsdatei",
     "FILE_NOT_FOUND": "Datei nicht gefunden!",
     "FILETYPE_UNSUPPORTED": "Dateityp nicht unterstützt!",
     "CONFIG_ERROR": "Konfigurations-Fehler - Konfiguration nicht gespeichert!",

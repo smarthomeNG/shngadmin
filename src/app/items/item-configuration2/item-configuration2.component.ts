@@ -72,6 +72,7 @@ export class ItemConfiguration2Component implements AfterViewChecked, OnInit {
     mode: 'yaml',
     lineWrapping: false,
     firstLineNumber: 1,
+    autofocus: false,
     autorefresh: true,
     fixedGutter: true,
     foldGutter: true,

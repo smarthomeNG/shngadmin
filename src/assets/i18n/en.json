@@ -218,7 +218,7 @@
   },
   "ITEM_CONFIG": {
     "DEFINITION_FILES": "Item-Definition Files",
-    "CONFIG_FILE": "Item Configuration-File",
+    "CONFIG_FILE": "Configuration-File",
     "FILE_NOT_FOUND": "File not found!",
     "FILETYPE_UNSUPPORTED": "Filetype not supported!",
     "CONFIG_ERROR": "Configuration Error - Configuration data not saved!",
