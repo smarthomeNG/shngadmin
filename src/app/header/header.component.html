@@ -1,7 +1,7 @@
 
 <!--
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="navbar-header">
+  <div class="navbar-hea r">
     <a routerLink="/system" class="navbar-brand"><img src="assets/img/logo_long.png" alt="SmartHomeNG"></a>
   </div>
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -23,13 +23,15 @@
 <!--
 <p-menubar [model]="items">
 -->
-<div id="example" style="position: relative; z-index: 10000;">
-  <p-menubar class="fixednavbar" [model]="getMenuItems()">
-<!--
-    <img id="logo" routerLink="/system" height="30" src="assets/img/logo_small_76x76.png"/>
-    <img id="logo" routerLink="/system" height="30" src="assets/img/logo_long.png"/>
--->
-    <img id="logo" routerLink="/system" src="assets/img/logo_long.png"/>
-    <button id="logoutButton" pButton label="{{'BUTTON.LOGOUT'|translate}}" (click)="logout()" [disabled]="!(authService.isLoggedIn() && authService.loginRequired())" icon="fa fa-sign-out-alt" style="margin-left:.25em" class="ui-button-success"></button>
+<div class="menubox" id="example" style="display: inline; position: relative; z-index: 10000;">
+  <p-menubar [model]="getMenuItems()">
+    <picture>
+      <source media="(min-width: 980px)" srcset="assets/img/logo_long.png">
+      <source media="(min-width: 480px)" srcset="assets/img/logo_small_32x32.png">
+      <img id="logo" style="display: inline; position: fixed" routerLink="/system" src="no.png"/>
+    </picture>
+
+    <button id="logoutButtonL" pButton label="{{'BUTTON.LOGOUT'|translate}}" (click)="logout()" [disabled]="!(authService.isLoggedIn() && authService.loginRequired())" icon="fa fa-sign-out-alt" style="margin-left:.25em" class="hide-on-small ui-button-success"></button>
+    <button id="logoutButtonS" pButton (click)="logout()" [disabled]="!(authService.isLoggedIn() && authService.loginRequired())" icon="fa fa-sign-out-alt" style="margin-left:.25em" class="hide-on-large ui-button-success"></button>
   </p-menubar>
 </div>

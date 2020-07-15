@@ -41,10 +41,10 @@ import { SystemComponent } from './system/system-overview/system.component';
 import { ServicesComponent } from './services/services.component';
 import { ItemTreeComponent } from './items/item-tree/item-tree.component';
 import { LogicsListComponent } from './logics/logics-list/logics-list.component';
-import { SchedulersComponent } from './schedulers/schedulers.component';
+import { SchedulersComponent } from './schedulers/schedulers/schedulers.component';
 import { PluginsComponent } from './plugins/plugin-list/plugins.component';
 import { ScenesComponent } from './scenes/scene-list/scenes.component';
-import { ThreadsComponent } from './threads/threads.component';
+import { ThreadsComponent } from './schedulers/threads/threads.component';
 import { LogDisplayComponent } from './logs/log-display/log-display.component';
 import { HeaderComponent } from './header/header.component';
 import { FormsModule } from '@angular/forms';
@@ -66,6 +66,7 @@ import { ItemConfiguration2Component } from './items/item-configuration2/item-co
 import { StructConfigurationComponent } from './items/struct-configuration/struct-configuration.component';
 import { SceneConfigurationComponent } from './scenes/scene-configuration/scene-configuration.component';
 import { LogicsEditComponent } from './logics/logics-edit/logics-edit.component';
+import { TopNavigationComponent } from './top-navigation/top-navigation.component';
 
 export function translateHttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
@@ -96,7 +97,8 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     ItemConfiguration2Component,
     StructConfigurationComponent,
     SceneConfigurationComponent,
-    LogicsEditComponent
+    LogicsEditComponent,
+    TopNavigationComponent
   ],
   imports: [
     BrowserModule,
@@ -146,7 +148,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
-        useFactory: (HttpLoaderFactory),
+        useFactory: HttpLoaderFactory,
         deps: [HttpClient]
       }
     })

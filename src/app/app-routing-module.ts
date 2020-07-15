@@ -10,11 +10,11 @@ import { ItemConfiguration2Component } from './items/item-configuration2/item-co
 import { StructsComponent } from './items/structs/structs.component';
 import { StructConfigurationComponent } from './items/struct-configuration/struct-configuration.component';
 import { LogicsListComponent } from './logics/logics-list/logics-list.component';
-import { SchedulersComponent } from './schedulers/schedulers.component';
+import { SchedulersComponent } from './schedulers/schedulers/schedulers.component';
 import { PluginsComponent } from './plugins/plugin-list/plugins.component';
 import { PluginConfigComponent } from './plugins/config/plugin-config.component';
 import { ScenesComponent } from './scenes/scene-list/scenes.component';
-import { ThreadsComponent } from './threads/threads.component';
+import { ThreadsComponent } from './schedulers/threads/threads.component';
 import { LogDisplayComponent } from './logs/log-display/log-display.component';
 import { LoggerListComponent } from './logs/logger-list/logger-list.component';
 import { LoggingConfigurationComponent } from './logs/logging-configuration/logging-configuration.component';

@@ -282,12 +282,17 @@
     "LOGIC SCHEDULERS": "Logik Scheduler",
     "PLUGIN SCHEDULERS": "Plugin Scheduler",
     "OTHER SCHEDULERS": "sonstige Scheduler",
+    "TRIGGERS": "Trigger",
     "SCHEDULER": "Scheduler",
+    "TRIGGER": "Trigger",
     "NEXT EXECUTION": "nächste Ausführung",
     "PRIO": "Prio",
     "VALUE": "Wert",
     "CYCLE": "Cycle",
-    "CRONTAB": "Crontab"
+    "CRONTAB": "Crontab",
+    "TRIGGERED_BY": "Getriggert durch",
+    "TASK_TYPE": "Task Typ",
+    "TASK_NAME": "Task Name"
   },
   "PLUGIN": {
     "INTERFACE": "Interface Plugin",

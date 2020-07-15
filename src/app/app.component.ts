@@ -25,7 +25,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 export class AppComponent implements OnInit {
 
   public APP_NAME = 'shngAdmin';
-  public APP_VERSION = '0.3.3';
+  public APP_VERSION = '0.3.6';
 
   title = 'app';
 
@@ -37,9 +37,14 @@ export class AppComponent implements OnInit {
 
     // console.log('AppComponent.constructor:');
 
-//    translate.setDefaultLang('de');
+    translate.addLangs(['en']);
+    translate.addLangs(['de']);
+    translate.addLangs(['fr']);
 
-//    this.dataService.getServerBasicinfo()
+    translate.setDefaultLang('de');
+    translate.use('de');
+
+    //    this.dataService.getServerBasicinfo()
     this.dataService.getServerBasicinfo()
       .subscribe(
         (response: ServerInfo) => {

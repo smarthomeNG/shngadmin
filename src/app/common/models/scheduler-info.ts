@@ -10,4 +10,7 @@ export interface SchedulerInfo {
   prio: number;
   active: boolean;
   value: any;
+  by: string;
+  task_type: string;
+  task_name: string;
 }

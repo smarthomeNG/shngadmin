@@ -1,6 +1,6 @@
 
-<div style="margin-left: 10px; margin-right: 10px; margin-top: 55px;">
-  <h4 style="margin-left: 15px; margin-top: 65px;">{{ 'ITEMS.STRUCT_TEMPLATES'|translate }}</h4>
+<div style="margin-left: 10px; margin-right: 10px;">
+  <h4 style="margin-left: 15px; margin-top: 5px;">{{ 'ITEMS.STRUCT_TEMPLATES'|translate }}</h4>
   <p-accordion [multiple]="true" (onOpen)="structExpanded[structsList[$event.index]]=true"  (onClose)="structExpanded[structsList[$event.index]]=false">
     <ng-container *ngFor="let struct of structsList">
       <p-accordionTab>

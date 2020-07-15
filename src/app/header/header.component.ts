@@ -28,7 +28,7 @@ export class HeaderComponent implements OnInit {
   items: any;
   menuInitialized: boolean;
 
-  server_info: ServerInfo;
+  // server_info: ServerInfo;
   developerMode: boolean;
 
 

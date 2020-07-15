@@ -1,5 +1,5 @@
 
-<div style="margin-left: 10px; margin-right: 10px; margin-top: 55px;">
+<div style="margin-left: 10px; margin-right: 10px; margin-top: 0px;">
   <tabset #staticTabs>
     <tab customClass="tab-shng" heading="{{ 'SERVICES.SERVICES'|translate }}">
       <div class="container-fluid"style="margin-top: 0px; margin-left: 10px; margin-right: 10px;"></div>
@@ -35,8 +35,8 @@
                 <td><img src="assets/img/backup.svg" alt="SmartHomeNG logo" width="48" height="48"></td>
                 <td style="padding-top:23px;">{{'SERVICES.BACKUP_CONFIG'|translate}}</td>
                 <td style="padding-top:23px;"><strong>{{shared.displayDateTime(serverInfo.last_backup)}}</strong></td>
-                <td style="padding-top:22px;">
-                  <button pButton type="button" icon="fa fa-download" [disabled]="backup_disabled || (shng_statuscode !== 20)" (click)="this.downloadBackup()" label="{{'BUTTON.DOWNLOAD'|translate}}" class="ui-button-success"></button>
+                <td style="padding-top:17px;">
+                  <button pButton type="button" icon="fa fa-download" style="margin: 5px 0px" [disabled]="backup_disabled || (shng_statuscode !== 20)" (click)="this.downloadBackup()" label="{{'BUTTON.DOWNLOAD'|translate}}" class="ui-button-success"></button>
                   &nbsp;
                   <button pButton type="button" icon="fa fa-upload" [disabled]="restore_disabled || (shng_statuscode !== 20)" (click)="this.restoreBackup()" label="{{'BUTTON.RESTORE'|translate}}" class="ui-button-success"></button>
                 </td>

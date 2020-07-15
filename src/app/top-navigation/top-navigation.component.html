@@ -1,0 +1,65 @@
+<div class="navbar">
+  <img class="logo" src="assets/img/logo_long.png"/>
+  <img class="logo-small" src="assets/img/logo_small_32x32.png"/>
+  <div class="topnav" id="myTopnav">
+    <!--
+        <div class="dropdown active">
+    -->
+    <!--
+    <div class="dropdown">
+      <button class="dropbtn"><span>{{this.menu[0].label}}
+        <div class="show-caret"><i class="fa fa-caret-down"></i></div></span>
+      </button>
+      <div class="dropdown-content">
+        <a href="#">System Eigenschaften</a>
+        < !--
+        <div class="dropright">
+          <button class="droprightbtn">System Eigenschaften
+          </button>
+          <div class="dropright-content">
+            <a href="#">Systemeigenschaften</a>
+            <a href="#">Resource Graphiken</a>
+            <a href="#">PyPI Check</a>
+            <a href="#">Urheberrechtshinweise</a>
+          </div>
+        </div>
+        -- >
+        <a href="#">Konfiguration</a>
+      </div>
+    </div>
+    -->
+
+    <ng-container *ngFor="let menuEntry of this.menu; index as i">
+      <ng-container *ngIf="menuEntry.visible === true && this.loggedIn">
+        <ng-container *ngIf="menuEntry.items.length === 0">
+          <a (click)="disableResponsiveMenu(menuEntry, false)" [routerLink]=menuEntry.routerLink>{{menuEntry.label}}</a>
+        </ng-container>
+        <ng-container *ngIf="menuEntry.items.length > 0">
+          <div class="dropdown">
+            <button (mouseenter)="enableDropdownMenu()" class="dropbtn"><span>{{menuEntry.label}}
+              <div class="show-caret"><i class="fa fa-caret-down"></i></div></span>
+            </button>
+            <div id="menu-{{menuEntry.label}}" class="dropdown-content">
+              <ng-container *ngFor="let submenuEntry of menuEntry.items">
+                <a (click)="disableResponsiveMenu(menuEntry)" [routerLink]=submenuEntry.routerLink>{{submenuEntry.label}}</a>
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+    </ng-container>
+
+    <ng-container *ngIf="!(authService.isLoggedIn() && authService.loginRequired())">
+      <a class="logout" style="color: #aaa"><i class="fas fa-sign-out-alt"></i>{{'BUTTON.LOGOUT'|translate}}</a>
+      <a class="logout-small" style="color: #aaa"><i class="fas fa-sign-out-alt"></i></a>
+    </ng-container>
+    <ng-container *ngIf="authService.isLoggedIn() && authService.loginRequired()">
+      <a class="logout" (click)="logout()"><i class="fas fa-sign-out-alt"></i>{{'BUTTON.LOGOUT'|translate}}</a>
+      <a class="logout-small" (click)="logout()"><i class="fas fa-sign-out-alt"></i></a>
+    </ng-container>
+
+    <a href="javascript:void(0);" style="font-size:15px;" class="icon" (click)="toggleResponsiveMenu()">&#9776;</a>
+
+  </div>
+
+</div>

@@ -279,12 +279,17 @@
     "LOGIC SCHEDULERS": "Planificateurs de logiques",
     "PLUGIN SCHEDULERS": "Planificateurs des extensions",
     "OTHER SCHEDULERS": "Autres planificateurs",
+    "TRIGGERS": "Déclenchers",
     "SCHEDULER": "Planificateur",
+    "TRIGGER": "Déclencher",
     "NEXT EXECUTION": "Prochaine exécution",
     "PRIO": "Prio",
     "VALUE": "Valeur",
     "CYCLE": "Cycle",
-    "CRONTAB": "Crontab"
+    "CRONTAB": "Crontab",
+    "TRIGGERED_BY": "Déclenchées par",
+    "TASK_TYPE": "Type de tâche",
+    "TASK_NAME": "Nom de la tâche"
   },
   "PLUGIN": {
     "INTERFACE": "Interface Plugin",
