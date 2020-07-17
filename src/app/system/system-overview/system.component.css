@@ -1,35 +1,118 @@
+
 ::ng-deep .tab-shng > a{
   border-bottom: none !important;
   outline: 0 !important;
   color:rgb(160, 160, 160);
 }
 
-.shngbody {
-/*
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 100vh;
-  //overflow: hidden;
-  //height: calc(100vh - 55px);
-*/
-
-  margin-left: 10px;
-  margin-right: 10px;
+.body {
+  margin: 0;
 }
+.shngbody {
+  width: 100vw;
+  height: calc(100vh - 60px);
+  margin: 0;
+  padding: 0;
+
+  padding-left: 10px;
+  padding-right: 10px;
+
+  display: grid;
+  grid-template-rows: auto;
+}
+
 /*
 .shngtabbody {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
+  height: calc(100vh - 60px - 41px);
+  //background-color: cornsilk;
 }
 */
 
 /* css for System-Info tab */
+
 .shngsysinfo {
+  height: calc(100vh - 60px - 41px);
+  width: calc(100vw - 20px);
+
   display: grid;
+  grid-template-rows: 50px auto 10px;
+  grid-template-columns: 1fr;
+
+  grid-template-areas: "header"
+                      "content"
+                      "footer";
+
+  grid-gap: 0px;
+  grid-auto-flow: row;
+}
+
+.info-header {
+  grid-area: header;
+  width: 100%;
+
+  display: grid;
+  overflow: auto;
+
   grid-template-columns: 110px minmax(140px, 280px) 1fr;
   grid-auto-rows: minmax(50px, max-content);
 }
+
+.info-content {
+  grid-area: content;
+  width: 100%;
+
+  display: grid;
+  overflow: auto;
+
+  grid-template-columns: 110px minmax(140px, 280px) 1fr;
+  grid-auto-rows: minmax(50px, max-content);
+}
+
+
+.info-footer {
+  grid-area: footer;
+  width: 100%;
+}
+
+.info-content>span>img {
+  margin-left: 50px;
+  width: 32px;
+  height: 32px;
+}
+
+.info-header>span
+{
+  min-height: 50px;
+  padding: 12px 0;
+  align-self: stretch;
+  border-bottom: 1px solid #ddd;
+  width: 100%;
+}
+
+.info-content>span
+{
+  min-height: 50px;
+  padding: 12px 0;
+  align-self: stretch;
+  border-bottom: 1px solid #ddd;
+  width: 100%;
+}
+
+/* Padding for Icons */
+.info-content>span:nth-child(6n+1),
+.info-content>span:nth-child(6n+4)
+{
+  padding: 8px;
+}
+
+/* Background color for every other line */
+.info-content>span:nth-child(6n+1),
+.info-content>span:nth-child(6n+2),
+.info-content>span:nth-child(6n+3)
+{
+  background: #f7f7f7;
+}
+
 
 .shngsysinfo>span>img {
   margin-left: 50px;
@@ -65,20 +148,116 @@
 
 /* css for SmartHomeNG Charts tab */
 .shngcharts {
+  height: calc(100vh - 60px - 41px);
+  width: calc(100vw - 20px);
+
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px,1fr));
-  grid-auto-rows: 280px;
-  grid-gap: 15px;
+  grid-template-rows: 0px auto 10px;
+  grid-template-columns: 1fr;
+
+  grid-template-areas: "header"
+                      "content"
+                      "footer";
+
+  grid-gap: 0px;
   grid-auto-flow: row;
-
-  justify-content: center;
-  justify-items: center;
-
-  //overflow-y: scroll;
-
-  //background-color: #eeeeee;
 }
 
-/* --------------------------------------- */
+.charts-header {
+  grid-area: header;
+  width: 100%;
+}
 
+.charts-content {
+  grid-area: content;
+  width: 100%;
+  padding-left: 5px;
+
+  display: grid;
+  overflow: auto;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-auto-rows: 280px;
+  justify-items: center;
+}
+
+.charts-footer {
+  grid-area: footer;
+  width: 100%;
+}
+
+
+/* css for SmartHomeNG PyPI check tab */
+.shngpypi {
+  height: calc(100vh - 60px - 41px);
+  width: calc(100vw - 20px);
+
+  display: grid;
+  grid-template-rows: 50px auto 10px;
+  grid-template-columns: 1fr;
+
+  grid-template-areas: "header"
+                      "content"
+                      "footer";
+
+  grid-gap: 0px;
+  grid-auto-flow: row;
+}
+
+.pypi-header {
+  grid-area: header;
+  width: 100%;
+  height: 50px;
+  padding-left: 5px;
+  padding-right: 15px;
+}
+
+.pypi-content {
+  grid-area: content;
+  width: 100%;
+  padding-left: 5px;
+
+  display: grid;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-auto-rows: 280px;
+  justify-items: center;
+}
+
+.pypi-footer {
+  grid-area: footer;
+  width: 100%;
+}
+
+
+.shngpypitable {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #212529;
+
+  border-color: grey;
+
+}
+.shngpypitable td {
+  border-top: 1px solid #dee2e6;
+  border-spacing: 2px;
+}
+
+
+
+.shngdisclosure {
+  overflow: hidden;
+  border-top: 0;
+  padding: 0px;
+  padding-top: 5px;
+}
+
+.shngdisclosure-text {
+  height: calc(100vh - 60px - 41px - 20px);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  background: white;
+  border: 1px solid #dee2e6;
+  padding: 5px;
+}
 

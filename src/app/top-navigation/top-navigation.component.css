@@ -206,8 +206,8 @@ body {
   margin-right: 4px;
 }
 
-/* Width less than 875px -> switch logo to small */
-@media screen and (max-width: 875px) {
+/* Width less than 885px -> switch logo to small */
+@media screen and (max-width: 885px) {
   .navbar  .logo {
     display: none;
   }
@@ -216,8 +216,8 @@ body {
   }
 }
 
-/* Width less than 780px -> switch logout to button without text */
-@media screen and (max-width: 780px) {
+/* Width less than 790px -> switch logout to button without text */
+@media screen and (max-width: 790px) {
   .topnav  .logout {
     display: none;
   }

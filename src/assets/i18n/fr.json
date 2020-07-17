@@ -52,9 +52,9 @@
 
     "PACKAGE": "Paquet",
     "PYTHON_PACKAGE": "Paquet Python",
-    "INSTALLED VERSION": "Version installée",
-    "MINIMUM VERSION": "Version minimale",
-    "MAXIMUM VERSION": "Version maximale",
+    "INSTALLED VERSION": "Vers. installée",
+    "MINIMUM VERSION": "Vers. minimale",
+    "MAXIMUM VERSION": "Vers. maximale",
     "REQUIREMENTS": "Exigences",
     "NEWEST VERSION": "Dernière version",
     "PACKAGES_REQ_PLUGINS": "Paquets nécessaires pour les extensions",

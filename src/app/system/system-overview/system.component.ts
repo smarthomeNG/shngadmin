@@ -90,18 +90,6 @@ export class SystemComponent implements OnDestroy, OnInit {
   }
 
 
-  static resizeDisclosure() {
-    const browserHeight = $(window).height();
-    const disclosure = $('#disclosuretext');
-    // const offsetTop = disclosure.offset().top;
-    // initially offsetTop is off by a number of pixels. Correction: a fixed offset
-    const offsetTop = 110;
-    const height = String(Math.round((-1) * (offsetTop) - 35 + browserHeight) + 'px');
-    disclosure.css('height', height);
-    disclosure.css('maxHeight', height);
-  }
-
-
   ngOnInit() {
     console.log('SystemComponent.ngOnInit:');
 
@@ -201,10 +189,6 @@ export class SystemComponent implements OnDestroy, OnInit {
     //
     this.initCharts();
 
-
-
-    window.addEventListener('resize', SystemComponent.resizeDisclosure, false);
-    SystemComponent.resizeDisclosure();
 
     let filepath = '/3rdpartylicenses.txt';
     const hostip = sessionStorage.getItem('hostIp');

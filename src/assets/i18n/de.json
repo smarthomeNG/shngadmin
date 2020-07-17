@@ -53,9 +53,9 @@
 
     "PACKAGE": "Paket",
     "PYTHON_PACKAGE": "Python Paket",
-    "INSTALLED VERSION": "Installierte Version",
-    "MINIMUM VERSION": "Minimale Version",
-    "MAXIMUM VERSION": "Maximale Version",
+    "INSTALLED VERSION": "Inst. Version",
+    "MINIMUM VERSION": "Min. Version",
+    "MAXIMUM VERSION": "Max. Version",
     "REQUIREMENTS": "Anforderungen",
     "NEWEST VERSION": "Neueste Version",
     "PACKAGES_REQ_PLUGINS": "Pakete die von Plugins benötigt werden",
