@@ -545,11 +545,14 @@ export class LogicsEditComponent implements AfterViewChecked, OnInit {
 
   ngAfterViewChecked() {
     const editor1 = this.codeEditor.codeMirror;
+
     if (editor1.getOption('fullScreen')) {
       editor1.setSize('100vw', '100vh');
     } else {
-      editor1.setSize('93vw', '74vh');
+      editor1.setSize('calc(100vw - 45px)', 'calc(100vh - 200px)');
+      // editor1.setSize('93vw', '74vh');
     }
+
     editor1.refresh();
 
     const editor2 = this.codeEditorWatchItems.codeMirror;
