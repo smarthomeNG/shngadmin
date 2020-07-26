@@ -301,6 +301,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     evalEditor1.refresh();
     evalEditor2.setSize('100%', 160);
     evalEditor2.refresh();
+
     const editor1 = this.codeEditor.codeMirror;
     const editor2 = this.codeEditor2.codeMirror;
     editor1.refresh();

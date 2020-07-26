@@ -255,7 +255,7 @@ body {
 
   .topnav.responsive {
     position: relative;
-    //z-index: 4;    /* 4 to stay on top of cscene list, etc. */
+    z-index: 4;    /* 4 to stay on top of item tree, scene list, etc. */
     overflow: hidden;
 
   }

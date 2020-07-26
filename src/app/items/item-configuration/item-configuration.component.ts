@@ -72,6 +72,7 @@ export class ItemConfigurationComponent implements AfterViewChecked, OnInit {
     mode: 'yaml',
     lineWrapping: false,
     firstLineNumber: 1,
+    autofocus: false,
     autorefresh: true,
     fixedGutter: true,
     foldGutter: true,
@@ -125,11 +126,14 @@ export class ItemConfigurationComponent implements AfterViewChecked, OnInit {
   ngAfterViewChecked() {
 
     const editor1 = this.codeEditor.codeMirror;
+
     if (editor1.getOption('fullScreen')) {
       editor1.setSize('100vw', '100vh');
     } else {
-      editor1.setSize('70vw', '78vh');
+      editor1.setSize('calc(100% - 10px)', 'calc(100vh - 160px)');
+      // width: min(80%, 100% - 280px);       calc(80vw - 90px)
     }
+
     editor1.refresh();
   }
 
