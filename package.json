@@ -37,7 +37,7 @@
     "core.js": "^0.4.2",
     "cypress": "^4.2.0",
     "file-saver": "^2.0.1",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "js-sha512": "^0.8.0",
     "loadash": "^1.0.0",
     "moment": "^2.24.0",
