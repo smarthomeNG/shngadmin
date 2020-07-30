@@ -483,6 +483,22 @@
             "en": "Size of blocks (chunks) read when displaying large logfiles",
             "fr": "Taille des morceaux lus lors de l'affichage de fichiers journaux volumineux"
           }
+        },
+        "developer_mode": {
+          "type": "bool",
+          "default": false,
+          "description": {
+            "de": "Entwickler Modus aktivieren",
+            "en": "Activate developer mode"
+          }
+        },
+        "click_dropdown_header": {
+          "type": "bool",
+          "default": false,
+          "description": {
+            "de": "Click auf Kopfeintrag von Dropdown Menüs erlauben",
+            "en": "Allow click on header of dropdown menus"
+          }
         }
       }
     }

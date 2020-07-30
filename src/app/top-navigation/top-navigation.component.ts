@@ -1,5 +1,5 @@
 
-import {Component, OnInit, DoCheck, SimpleChanges} from '@angular/core';
+import {Component, OnInit, DoCheck, SimpleChanges, HostListener} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {AppComponent} from '../app.component';
 import {ServerApiService} from '../common/services/server-api.service';
@@ -33,7 +33,7 @@ export class TopNavigationComponent implements OnInit {
 
   developerMode = false;
   lastLanguage = '-';
-
+  isTouchDevice = false;
 
 
   constructor(private appComponent: AppComponent,
@@ -45,6 +45,7 @@ export class TopNavigationComponent implements OnInit {
 
     console.log('TopNavigationComponent - constructor()');
   }
+
 
   ngDoCheck() {
     if (!(this.lastLanguage === sessionStorage.getItem('default_language'))) {
@@ -61,6 +62,7 @@ export class TopNavigationComponent implements OnInit {
       .subscribe(
         (response) => {
           this.developerMode = (sessionStorage.getItem('developer_mode') === 'true');
+          this.isTouchDevice = (sessionStorage.getItem('click_dropdown_header') === 'false');
           console.log('TopNavigationComponent.ngOnInit: getLangs()', this.translate.getLangs());
           console.log('TopNavigationComponent.ngOnInit: getDefaultLang()', this.translate.getDefaultLang());
           this.translate.use(sessionStorage.getItem('default_language'));
@@ -79,7 +81,6 @@ export class TopNavigationComponent implements OnInit {
           this.authService.login(credentials)
             .subscribe((result: boolean) => {
               // console.log('Anonymous login:', {result});
-
               this.buildMenu();
             });
 
@@ -140,7 +141,7 @@ export class TopNavigationComponent implements OnInit {
 
     console.log('TopNavigationComponent.buildMenu: default_language', sessionStorage.getItem('default_language'));
 
-    this.setMenuEntry(0, this.translate.instant('MENU.SYSTEM'));
+    this.setMenuEntry(0, this.translate.instant('MENU.SYSTEM'), ['/system/systemproperties']);
     this.setSubmenuEntry(0, 0, this.translate.instant('MENU.SYSTEM_PROPERTIES'), ['/system/systemproperties']);
     this.setSubmenuEntry(0, 1, this.translate.instant('MENU.CONFIGURATION'), ['/system/config']);
 
@@ -161,19 +162,19 @@ export class TopNavigationComponent implements OnInit {
 
     this.setMenuEntry(3, this.translate.instant('MENU.LOGICS'), ['/logics']);
 
-    this.setMenuEntry(4, this.translate.instant('MENU.PLUGINS'));
+    this.setMenuEntry(4, this.translate.instant('MENU.PLUGINS'), ['/plugins_list']);
     this.setSubmenuEntry(4, 0, this.translate.instant('MENU.PLUGINS_LIST'), ['/plugins_list']);
     this.setSubmenuEntry(4, 1, this.translate.instant('MENU.CONFIGURATION'), ['/plugins/config']);
 
-    this.setMenuEntry(5, this.translate.instant('MENU.SCENES'));
+    this.setMenuEntry(5, this.translate.instant('MENU.SCENES'), ['/scenes/list']);
     this.setSubmenuEntry(5, 0, this.translate.instant('MENU.SCENE_LIST'), ['/scenes/list']);
     this.setSubmenuEntry(5, 1, this.translate.instant('MENU.SCENE_CONFIGURATION'), ['/scenes/config']);
 
-    this.setMenuEntry(6, this.translate.instant('MENU.SCHEDULERS'));
+    this.setMenuEntry(6, this.translate.instant('MENU.SCHEDULERS'), ['/schedulers']);
     this.setSubmenuEntry(6, 0, this.translate.instant('MENU.SCHEDULERS'), ['/schedulers']);
     this.setSubmenuEntry(6, 1, this.translate.instant('MENU.THREADS'), ['/threads']);
 
-    this.setMenuEntry(7, this.translate.instant('MENU.LOGS'));
+    this.setMenuEntry(7, this.translate.instant('MENU.LOGS'), ['/logs/display']);
     this.setSubmenuEntry(7, 0, this.translate.instant('MENU.LOGS_DISPLAY'), ['/logs/display']);
     this.setSubmenuEntry(7, 1, this.translate.instant('MENU.LOGGER_LIST'), ['/logs/logger-list']);
     this.setSubmenuEntry(7, 2, this.translate.instant('MENU.CONFIGURATION'), ['/logs/logging-configuration']);

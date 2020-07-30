@@ -198,7 +198,9 @@
     "cron": "-",
     "prio": 3,
     "active": true,
-    "value": null
+    "value": null,
+    "task_type": "plugin method",
+    "task_name": "avm._update_loop()"
   },
   {
     "group": "other",

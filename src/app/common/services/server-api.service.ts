@@ -149,6 +149,7 @@ export class ServerApiService {
           sessionStorage.setItem('core_branch', this.shng_serverinfo.core_branch);
           sessionStorage.setItem('plugins_branch', this.shng_serverinfo.plugins_branch);
           sessionStorage.setItem('developer_mode', this.shng_serverinfo.developer_mode.toString());
+          sessionStorage.setItem('click_dropdown_header', this.shng_serverinfo.click_dropdown_header.toString());
 
           sessionStorage.setItem('fallback_language_order', JSON.stringify(this.shng_serverinfo.fallback_language_order.split(',')));
 

@@ -18,6 +18,7 @@ export interface ServerInfo {
   websocket_port: string;
   log_chunksize: number;
   developer_mode: boolean;
+  click_dropdown_header: boolean;
   daemon_knx: string;
   daemon_ow: string;
   daemon_mqtt: string;

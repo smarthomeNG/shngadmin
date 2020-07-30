@@ -36,9 +36,16 @@
         </ng-container>
         <ng-container *ngIf="menuEntry.items.length > 0">
           <div class="dropdown">
-            <button (mouseenter)="enableDropdownMenu()" class="dropbtn"><span>{{menuEntry.label}}
-              <div class="show-caret"><i class="fa fa-caret-down"></i></div></span>
-            </button>
+            <ng-container *ngIf="isTouchDevice === true">
+              <button (mouseenter)="enableDropdownMenu()" class="dropbtn"><span>{{menuEntry.label}}
+                <div class="show-caret"><i class="fa fa-caret-down"></i></div></span>
+              </button>
+            </ng-container>
+            <ng-container *ngIf="isTouchDevice === false">
+              <button (mouseenter)="enableDropdownMenu()" class="dropbtn" (click)="disableResponsiveMenu(menuEntry, false)" [routerLink]=menuEntry.routerLink><span>{{menuEntry.label}}
+                <div class="show-caret"><i class="fa fa-caret-down"></i></div></span>
+              </button>
+            </ng-container>
             <div id="menu-{{menuEntry.label}}" class="dropdown-content">
               <ng-container *ngFor="let submenuEntry of menuEntry.items">
                 <a (click)="disableResponsiveMenu(menuEntry)" [routerLink]=submenuEntry.routerLink>{{submenuEntry.label}}</a>
