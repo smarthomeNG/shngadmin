@@ -22,6 +22,7 @@ import { SharedService } from '../../common/services/shared.service';
 import {ItemDetails} from '../../common/models/item-details';
 // import {ServerInfo} from '../../common/models/server-info';
 import {ServerApiService} from '../../common/services/server-api.service';
+import {statsToString} from '@angular-devkit/build-angular/src/angular-cli-files/utilities/stats';
 
 
 @Component({
@@ -150,6 +151,14 @@ export class ItemTreeComponent implements OnInit {
   updateValue(item_path, item_value, item_type, item_oldvalue, dialog) {
 
     console.log('ItemTreeComponent.updateValue:');
+    console.log({item_path}, {item_value});
+
+    if (typeof(item_value) === 'boolean') {
+      item_value = item_value.toString();
+      console.log('--> updateValue (bool): ' + item_value);
+      this.dataService.changeItemValue(item_path, item_value);
+      return;
+    }
 
     if (item_type === 'num' || item_type === 'scene') {
       if (isNaN(item_value.value as any)) {

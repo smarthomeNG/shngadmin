@@ -127,6 +127,67 @@
 
 
 
+      <tab customClass="tab-shng" heading="{{ 'SYSTEM.WEBSOCKET_SETTINGS'|translate }}">
+        <div class="tab-content">
+          <p-table [columns]="websocket_parameter_cols" [value]="websocket_parameters" selectionMode="single">
+            <ng-template pTemplate="header" let-columns>
+              <tr>
+                <th *ngFor="let col of columns" [pSortableColumn]="col.field" [ngStyle]="{'width': col.width}">
+                  {{col.header|translate}}
+                  <p-sortIcon *ngIf="col.field !== ''" [field]="col.field" ariaLabel="Activate to sort" ariaLabelDesc="Activate to sort in descending order" ariaLabelAsc="Activate to sort in ascending order"></p-sortIcon>
+                </th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-rowData let-columns="columns">
+              <tr>
+                <td *ngFor="let col of columns">
+
+                  <ng-container *ngIf="dialog_readonly === false && col.field === 'value'">
+                    <ng-container *ngIf="rowData.valid_list.length > 0">
+                      <p-dropdown [options]="rowData.valid_list" [showClear]="true" placeholder="{{rowData.default}}" [(ngModel)]="rowData[col.field]" (ngModelChange)="rowData[col.field] = $event; check_values()"></p-dropdown>
+                    </ng-container>
+
+                    <ng-container *ngIf="(['int','num','float','scene'].indexOf(rowData.type) > -1) && rowData.valid_list.length === 0">
+                      <input [(ngModel)]="rowData[col.field]" (ngModelChange)="check_values()" type="number" min="{{rowData.valid_min}}" max="{{rowData.valid_max}}" pInputText placeholder="{{rowData.default}}" pInputText name="{{col.field}}" [ngStyle]="{'width': col.iwidth}"/>
+                    </ng-container>
+
+                    <ng-container *ngIf="rowData.type !== 'bool' && ['int','num','float','scene', 'password'].indexOf(rowData.type) === -1 && rowData.valid_list.length === 0">
+                      <ng-container  *ngIf="rowData.gui_type !== 'wide_str'">
+                        <input [(ngModel)]="rowData[col.field]" type="text" (ngModelChange)="check_values('str')" pInputText placeholder="{{rowData.default}}" name="{{col.field}}" [ngStyle]="{'width': col.iwidth}"/>
+                      </ng-container>
+                      <ng-container  *ngIf="rowData.gui_type == 'wide_str'">
+                        <input [(ngModel)]="rowData[col.field]" type="text" (ngModelChange)="check_values('str')" pInputText placeholder="{{rowData.default}}" name="{{col.field}}" [ngStyle]="{'width': col.iwidthwide}"/>
+                      </ng-container>
+                    </ng-container>
+
+                    <ng-container *ngIf="rowData.type === 'password' && rowData[col.field] === null">
+                      <button pButton type="button" class="float-sm-left btn-shng btn btn-sm ui-button-secondary" (click)="change_password_dialog($event, rowData, col.field)" style="margin-left: 5px;" label="{{ 'SYSTEM.SET_PASSWORD'|translate }}"></button>
+                    </ng-container>
+                    <ng-container *ngIf="rowData.type === 'password' && rowData[col.field] !== null">
+                      <button pButton type="button" class="float-sm-left btn-shng btn btn-sm ui-button-secondary" (click)="change_password_dialog($event, rowData, col.field)" style="margin-left: 5px;" label="{{ 'SYSTEM.CHANGE_PASSWORD'|translate }}"></button>
+                    </ng-container>
+
+                  </ng-container>
+
+                  <ng-container *ngIf="dialog_readonly === true || col.field !== 'value'">
+                    <ng-container *ngIf="col.field !== 'desc' || rowData.gui_type !== 'wide_str'">
+                      <div [innerHTML]="rowData[col.field]"></div>
+                    </ng-container>
+                    <ng-container *ngIf="col.field == 'desc' && rowData.gui_type == 'wide_str'">
+                      <div [ngStyle]="{'padding-left': col.paddingleft}">
+                        <div [innerHTML]="rowData[col.field]"></div>
+                      </div>
+                    </ng-container>
+                  </ng-container>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </tab>
+
+
+
       <tab customClass="tab-shng" heading="{{ 'SYSTEM.ADMIN_SETTINGS'|translate }}">
         <div class="tab-content">
           <p-table [columns]="admin_parameter_cols" [value]="admin_parameters" selectionMode="single">

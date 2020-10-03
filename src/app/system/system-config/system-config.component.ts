@@ -31,6 +31,10 @@ export class SystemConfigComponent implements OnInit {
   http_parameter_cols: any[];
   http_parameters_beforeEdit: any[];
 
+  websocket_parameters: any[];
+  websocket_parameter_cols: any[];
+  websocket_parameters_beforeEdit: any[];
+
   admin_parameters: any[];
   admin_parameter_cols: any[];
   admin_parameters_beforeEdit: any[];
@@ -97,6 +101,7 @@ export class SystemConfigComponent implements OnInit {
   fillDialogData() {
     this.fillCommonDialogData();
     this.fillHttpDialogData();
+    this.fillWebsocketDialogData();
     this.fillAdminDialogData();
     this.fillMqttDialogData();
   }
@@ -273,6 +278,56 @@ export class SystemConfigComponent implements OnInit {
   }
 
   // ---------------------------------------------------------
+  // Fill the mask with webocket parameter data
+  //
+  fillWebsocketDialogData() {
+    this.lang = sessionStorage.getItem('default_language');
+
+    this.websocket_parameter_cols = this.columnDefinitions();
+    this.websocket_parameters = [];
+
+    const meta = this.config.websocket.meta;
+    const data = this.config.websocket.data;
+
+    // if plain password is defined, create a hashed password and delete the plain password
+    if (data.password !== undefined && data.password !== null) {
+      if (data.password !== '') {
+        if (data.hashed_password === undefined || data.hashed_password === null || data.hashed_password === '') {
+          data.hashed_password = sha512(data.password);
+          data.password = null;
+        }
+      }
+    }
+
+    // if plain service-password is defined, create a hashed service-password and delete the plain service-password
+    if (data.service_password !== undefined && data.service_password !== null) {
+      if (data.service_password !== '') {
+        if (data.service_hashed_password === undefined || data.service_hashed_password === null || data.service_hashed_password === '') {
+          data.service_hashed_password = sha512(data.service_password);
+          data.service_password = null;
+        }
+      }
+    }
+
+    for (const param in meta.parameters) {
+      if (meta.parameters.hasOwnProperty(param)) {
+
+        // ignore plain text password fields
+        if (['password', 'service_password'].indexOf(param) === -1) {
+          // Fill ParamData for display/editing of parameters
+          const paramdata = this.fillParamData(meta, param, data);
+          // add to the table of configured plugins
+          this.websocket_parameters.push(paramdata);
+        }
+
+      }
+    }
+    // deepcopy form data
+    this.websocket_parameters_beforeEdit = JSON.parse(JSON.stringify(this.websocket_parameters));
+
+  }
+
+  // ---------------------------------------------------------
   // Fill the mask with admin parameter data
   //
   fillAdminDialogData() {
@@ -398,6 +453,14 @@ export class SystemConfigComponent implements OnInit {
         }
       }
     }
+    for (const p in this.websocket_parameters) {
+      if (this.websocket_parameters.hasOwnProperty(p)) {
+        if (this.websocket_parameters[p].value !== this.websocket_parameters_beforeEdit[p].value) {
+          this.data_changed = true;
+          // console.log(this.websocket_parameters[p]);
+        }
+      }
+    }
     for (const p in this.admin_parameters) {
       if (this.admin_parameters.hasOwnProperty(p)) {
         if (this.admin_parameters[p].value !== this.admin_parameters_beforeEdit[p].value) {
@@ -503,6 +566,13 @@ export class SystemConfigComponent implements OnInit {
         }
       }
     }
+    for (const p in this.websocket_parameters) {
+      if (this.websocket_parameters.hasOwnProperty(p)) {
+        if (!this.check_value_restrictions(this.websocket_parameters[p])) {
+          errors_found = true;
+        }
+      }
+    }
     for (const p in this.admin_parameters) {
       if (this.admin_parameters.hasOwnProperty(p)) {
         if (!this.check_value_restrictions(this.admin_parameters[p])) {
@@ -529,6 +599,9 @@ export class SystemConfigComponent implements OnInit {
     data['common']['data'] = {};
     for (const p in this.common_parameters) {
       if (this.common_parameters.hasOwnProperty(p)) {
+        if ((this.common_parameters[p].value === '') && (this.common_parameters[p].type === 'str')) {
+          this.common_parameters[p].value = null;
+        }
         data['common']['data'][this.common_parameters[p].name] = this.common_parameters[p].value;
       }
     }
@@ -537,6 +610,9 @@ export class SystemConfigComponent implements OnInit {
     data['http']['data'] = {};
     for (const p in this.http_parameters) {
       if (this.http_parameters.hasOwnProperty(p)) {
+        if ((this.http_parameters[p].value === '') && (this.http_parameters[p].type === 'str')) {
+          this.http_parameters[p].value = null;
+        }
         data['http']['data'][this.http_parameters[p].name] = this.http_parameters[p].value;
       }
     }
@@ -544,10 +620,24 @@ export class SystemConfigComponent implements OnInit {
     data['http']['data']['password'] = null;
     data['http']['data']['service_password'] = null;
 
+    data['websocket'] = {};
+    data['websocket']['data'] = {};
+    for (const p in this.websocket_parameters) {
+      if (this.websocket_parameters.hasOwnProperty(p)) {
+        if ((this.websocket_parameters[p].value === '') && (this.websocket_parameters[p].type === 'str')) {
+          this.websocket_parameters[p].value = null;
+        }
+        data['websocket']['data'][this.websocket_parameters[p].name] = this.websocket_parameters[p].value;
+      }
+    }
+
     data['admin'] = {};
     data['admin']['data'] = {};
     for (const p in this.admin_parameters) {
-      if (this.common_parameters.hasOwnProperty(p)) {
+      if (this.admin_parameters.hasOwnProperty(p)) {
+        if ((this.admin_parameters[p].value === '') && (this.admin_parameters[p].type === 'str')) {
+          this.admin_parameters[p].value = null;
+        }
         data['admin']['data'][this.admin_parameters[p].name] = this.admin_parameters[p].value;
       }
     }
@@ -555,8 +645,12 @@ export class SystemConfigComponent implements OnInit {
     data['mqtt'] = {};
     data['mqtt']['data'] = {};
     for (const p in this.mqtt_parameters) {
-      if (this.common_parameters.hasOwnProperty(p)) {
+      if (this.mqtt_parameters.hasOwnProperty(p)) {
+        if ((this.mqtt_parameters[p].value === '') && (this.mqtt_parameters[p].type === 'str')) {
+          this.mqtt_parameters[p].value = null;
+        }
         data['mqtt']['data'][this.mqtt_parameters[p].name] = this.mqtt_parameters[p].value;
+        // console.warn(this.mqtt_parameters[p].name, this.mqtt_parameters[p].type, this.mqtt_parameters[p].value);
       }
     }
 
@@ -568,6 +662,7 @@ export class SystemConfigComponent implements OnInit {
 
           this.common_parameters_beforeEdit = JSON.parse(JSON.stringify(this.common_parameters));
           this.http_parameters_beforeEdit = JSON.parse(JSON.stringify(this.http_parameters));
+          this.websocket_parameters_beforeEdit = JSON.parse(JSON.stringify(this.websocket_parameters));
           this.admin_parameters_beforeEdit = JSON.parse(JSON.stringify(this.admin_parameters));
           this.mqtt_parameters_beforeEdit = JSON.parse(JSON.stringify(this.mqtt_parameters));
 

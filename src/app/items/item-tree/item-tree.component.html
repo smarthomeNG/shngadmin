@@ -109,8 +109,7 @@
                 </div>
                 <div class="card-body p-1" style="position: relative;">
                   <div class="card-text" style="">
-                    <div id="cardOverlay" class="cardOverlay">
-                      <style="position: relative; top: 45%; left:45%;">
+                    <div id="cardOverlay" class="cardOverlay" style="position: relative; top: 45%; left:45%;">
                         <span id="reload-element" class="fas fa-sync fa-4x"></span>
                     </div>
                     <div id="tree_detail" class="data-container refresh-data pre-scrollable" style="overflow-x: auto;">
@@ -133,8 +132,13 @@
                           <tr [ngSwitch]="itemdetails.type">
                             <td class="py-1">{{'ITEMS.VALUE'|translate}}</td>
                             <td class="py-1">
+                              <!-- handle bool values -->
                               <ng-container *ngSwitchCase="'bool'">
-                                <select class="form-control" #item_value (blur)="updateValue(itemdetails.path, item_value, itemdetails.type, '#myalert')" id="item_value">
+                                <!--
+                                <select class="form-control" #item_value
+                                        (onChange)="updateValue(itemdetails.path, item_value, itemdetails.type, itemdetails.value, '#myalert')">
+                                        (blur)="updateValue(itemdetails.path, item_value, itemdetails.type, itemdetails.value, '#myalert')"
+                                        id="item_value">
                                   <ng-container *ngIf="itemdetails.value === true">
                                     <option selected>true</option><option>false</option>
                                   </ng-container>
@@ -142,9 +146,13 @@
                                     <option>true</option><option selected>false</option>
                                   </ng-container>
                                 </select>
+                                -->
+                                <p-inputSwitch [(ngModel)]="itemdetails.value"
+                                               (onChange)="updateValue(itemdetails.path, itemdetails.value, itemdetails.type, itemdetails.value, myalert)">
+                                </p-inputSwitch>
                               </ng-container>
                               <ng-container *ngSwitchCase="itemdetails.type === 'str' || itemdetails.type === 'list' || itemdetails.type === 'dict' ? itemdetails.type : '' ">
-                                <textarea type="text" class="form-control" #item_value (blur)="updateValue(itemdetails.path, item_value, itemdetails.type)" id="item_value">{{itemdetails.value}}</textarea>
+                                <textarea type="text" class="form-control" #item_value (blur)="updateValue(itemdetails.path, item_value, itemdetails.type, itemdetails.value, myalert)" id="item_value">{{itemdetails.value}}</textarea>
                               </ng-container>
                               <ng-container *ngSwitchCase="itemdetails.type === 'num' || itemdetails.type === 'scene' ? itemdetails.type : '' ">
                                 <input type="text" class="form-control" #item_value (blur)="updateValue(itemdetails.path, item_value, itemdetails.type, itemdetails.value, myalert)" id="item_value" value="{{itemdetails.value}}"/>

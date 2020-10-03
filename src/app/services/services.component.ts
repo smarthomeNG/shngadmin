@@ -404,7 +404,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     // duration in seconds
     const interval1 = 5000;    // standard polling: every 5 seconds
     const interval2 = 1000;    // polling while (re)starting: every second
-    const interval3 = 2000;    // polling while in error state (shng not running)
+    const interval3 = 3000;    // polling while in error state (shng not running)
     this.dataServiceServer.getShngServerStatus()
       .subscribe(
         (response) => {
@@ -413,14 +413,14 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
             // shng is not running
             this.status_errorcount += 1;
             console.log('getShngStatus', 'SmartHomeNG not running');
-            this.shng_status = '';
+            this.shng_status =  this.translate_shngStatus('waiting') + '...';
           } else {
             // console.log('getShngStatus', res.code, res.text);
             this.shng_statuscode = res.code;
             this.shng_status = this.translate_shngStatus(res.text);
             this.status_errorcount = 0;
           }
-          if (this.status_errorcount < 10) {
+          if (this.status_errorcount < 15) {
             // schedule next status check
             let interval = interval1;
             if (res.code !== 20) {
