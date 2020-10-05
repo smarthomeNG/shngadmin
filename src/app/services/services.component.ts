@@ -74,8 +74,8 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   // -----------------------------------------------------
   //  Vars for the EVAL syntax checker
   //
-  @ViewChild('evalcodeeditor') private evalCodeEditor;
-  @ViewChild('evalcodeeditor2') private evalCodeEditor2;
+  @ViewChild('evalcodeeditor', { static: true }) private evalCodeEditor;
+  @ViewChild('evalcodeeditor2', { static: true }) private evalCodeEditor2;
 
   myEvalTextarea = '';
   myRelativeTo = '';
@@ -123,8 +123,8 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   // -----------------------------------------------------
   //  Vars for the YAML syntax checker
   //
-  @ViewChild('codeeditor') private codeEditor;
-  @ViewChild('codeeditor2') private codeEditor2;
+  @ViewChild('codeeditor', { static: true }) private codeEditor;
+  @ViewChild('codeeditor2', { static: true }) private codeEditor2;
 
   myTextarea = '';
   cmOptions = {
@@ -169,8 +169,8 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   // -----------------------------------------------------
   //  Vars for the YAML converter
   //
-  @ViewChild('convertercodeeditor') private converterCodeEditor;
-  @ViewChild('convertercodeeditor2') private converterCodeEditor2;
+  @ViewChild('convertercodeeditor', { static: true }) private converterCodeEditor;
+  @ViewChild('convertercodeeditor2', { static: true }) private converterCodeEditor2;
 
   myConverterTextarea = '';
   cmConveterOptions = {

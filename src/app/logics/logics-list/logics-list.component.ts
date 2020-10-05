@@ -8,7 +8,7 @@ import { BsModalService} from 'ngx-bootstrap/modal';
 import {LogicsApiService} from '../../common/services/logics-api.service';
 import {LogicsinfoType} from '../../common/models/logics-info';
 import {OlddataService} from '../../common/services/olddata.service';
-import {Log} from '@angular/core/testing/src/logger';
+// import {Log} from '@angular/core/testing/src/logger';
 import {ActivatedRoute, Router} from '@angular/router';
 
 @Component({

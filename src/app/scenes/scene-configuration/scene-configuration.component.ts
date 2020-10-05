@@ -28,7 +28,7 @@ export class SceneConfigurationComponent implements AfterViewChecked, OnInit {
   // -----------------------------------------------------
   //  Vars for the YAML syntax checker
   //
-  @ViewChild('codeeditor') private codeEditor;
+  @ViewChild('codeeditor', { static: true }) private codeEditor;
 
   filelist: string[];
   sceneFiles: SelectItem[];

@@ -22,7 +22,7 @@ interface DropDownEntry {
 })
 export class LogDisplayComponent implements AfterViewChecked, OnInit {
 
-  @ViewChild('codeeditor') private codeEditor;
+  @ViewChild('codeeditor', { static: true }) private codeEditor;
 
   loglevels: DropDownEntry[] = [];
 

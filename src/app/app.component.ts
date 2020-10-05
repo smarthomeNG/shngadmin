@@ -35,7 +35,7 @@ export class AppComponent implements OnInit {
               private shared: SharedService,
               public authService: AuthService) {
 
-    // console.log('AppComponent.constructor:');
+    console.log('AppComponent.constructor:');
 
     translate.addLangs(['en']);
     translate.addLangs(['de']);
