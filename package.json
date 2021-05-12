@@ -35,7 +35,7 @@
     "@types/jquery": "^3.3.29",
     "angular-tree-component": "^8.2.0",
     "bootstrap": "^4.4.1",
-    "chart.js": "^2.7.3",
+    "chart.js": "^2.9.4",
     "codemirror": "^5.43.0",
     "core-js": "^2.6.11",
     "core.js": "^0.4.2",
