@@ -1,11 +1,9 @@
-
-
 //
 // Datatype for <shng-server>:<port>/api/installed
 //
 export interface PluginInstalled {
   type: string;
-  description: string;
+  description: Record<string, string> | string;
   version: string;
   state: string;
   documentation: string;
@@ -16,4 +14,3 @@ export interface PluginInstalled {
 export interface PluginsInstalled {
   [key: string]: PluginInstalled;
 }
-

@@ -1,12 +1,11 @@
-
-import {LogicsWatchItem} from './logics-watch-item';
+import { LogicsWatchItem } from './logics-watch-item';
 
 //
 // Datatype for <shng-server>:<port>/api/logics
 //
 export interface LogicsinfoType {
   crontab: any;
-  cycle: string;
+  cycle: string | null;
   enabled: boolean;
   filename: string;
   last_run: string;
@@ -14,6 +13,8 @@ export interface LogicsinfoType {
   group?: any;
   name: string;
   logic_description?: string;
+  description?: string;
+  watch_item_list?: LogicsWatchItem[];
   next_exec: string;
   pathname: string;
   userlogic: boolean;

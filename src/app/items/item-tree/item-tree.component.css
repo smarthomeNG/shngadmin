@@ -1,41 +1,7 @@
-::ng-deep .tab-shng > a{
+::ng-deep .tab-shng > a {
   border-bottom: none !important;
   outline: 0 !important;
-  color:rgb(160, 160, 160);
+  color: rgb(160, 160, 160);
 }
 
-
-/*
-    Styling for PrimeNG <p-tee>
-*/
-
-:host ::ng-deep .ui-tree {
-  border: none;
-  width: auto;
-}
-
-:host ::ng-deep .ui-treenode-content-selected {
-  background-color: #709cc2;
-}
-
-
-:host ::ng-deep .ui-tree-container {
-  background: #ffffff;
-  overflow: visible;
-}
-
-
-:host ::ng-deep .ui-state-highlight {
-  border-color: #709cc2;
-  background-color: #709cc2;
-  color: #ffffff;
-}
-
-
-/*
-:host ::ng-deep .ui-treenode-content {
-  color: blue;
-}
-*/
-
-
+/* p-tree base styles are in global styles.css */

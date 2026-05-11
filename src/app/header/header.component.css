@@ -1,11 +1,10 @@
-
 :host ::ng-deep .ui-menubar-root-list {
   /*
     padding-left:145px;
     padding-left:60px;
    */
   padding-left: 52px;
-  padding-right: 0px;
+  padding-right: 0;
 }
 
 @media screen and (min-width: 980px) {
@@ -13,7 +12,6 @@
     padding-left: 145px;
   }
 }
-
 
 /* css for System-Info tab */
 .navi {
@@ -24,8 +22,7 @@
   align-items: center;
 }
 
-.navi>span
-{
+.navi > span {
   min-height: 55px;
   padding: 12px 0;
   /* align-self: stretch; */
@@ -33,25 +30,23 @@
   background: #ddffee;
   background: #eee;
 }
-.navi>p-menubar
-{
+.navi > p-menubar {
   min-height: 55px;
-  padding-left: 0px;
+  padding-left: 0;
   padding-top: 2px;
 }
 
 img#logo {
-  position:absolute;
-  left:0;
-  padding-left:20px;
+  position: absolute;
+  left: 0;
+  padding-left: 20px;
 }
-
 
 /* The navigation bar */
 .fixednavbar {
   /* overflow: hidden; */
   position: fixed; /* Set the navbar to fixed position */
-  top: 0px; /* Position the navbar at the top of the page */
+  top: 0; /* Position the navbar at the top of the page */
   width: 100%; /* Full width */
   z-index: 2;
 }
@@ -60,8 +55,12 @@ img#logo {
   display: none;
 }
 @media screen and (min-width: 0px) and (max-width: 887px) {
-  .hide-on-small { display: none;}
-  .hide-on-large { display: unset;}
+  .hide-on-small {
+    display: none;
+  }
+  .hide-on-large {
+    display: unset;
+  }
 }
 
 .menubox {

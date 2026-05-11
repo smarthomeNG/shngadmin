@@ -1,86 +1,38 @@
-
 //import {APP_BASE_HREF} from '@angular/common';
-import {Inject, Injectable, OnInit} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {ItemDetails} from '../models/item-details';
-import {TranslateService} from '@ngx-translate/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, InjectionToken, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { take } from 'rxjs/operators';
 //import {SystemInfo} from '../models/system-info';
-import {ServerInfo} from '../models/server-info';
+// import {ServerInfo} from '../models/server-info';
 
-let url_start : string = 'http://';
-let host_ip : string = '';
+let url_start: string = 'http://';
+let host_ip: string = '';
 // let shng_serverinfo: ServerInfo = <ServerInfo>{'itemtree_fullpath': true};
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-
-export class OlddataService implements OnInit {
-
-  baseUrl: string;
-  shng_serverinfo: ServerInfo = <ServerInfo>{'itemtree_fullpath': true};
+export class OlddataService {
+  private http = inject(HttpClient);
+  private translate = inject(TranslateService);
+  baseUrl = inject<string>('BASE_URL' as unknown as InjectionToken<string>);
 
   href = '';
 
-  constructor(private http: HttpClient, private translate: TranslateService, @Inject('BASE_URL') baseUrl: string) {
-
-    console.log('OlddataService.constructor:');
-
-    // this language will be used as a fallback when a translation isn't found in the current language
-    translate.setDefaultLang('en');
-
-    console.log('OlddataService.constructor using ', {baseUrl});
-    this.baseUrl = baseUrl;
+  constructor() {
+    this.translate.setDefaultLang('en');
 
     if (host_ip === '') {
       host_ip = location.host;
-      if (host_ip === 'localhost:4200') {
-        //url_start = (baseUrl + '/assets/testdata/').replace(/\/+/g, '/');  // replace double slashes from pathes;
-        url_start = new URL('/assets/testdata/', baseUrl).toString();
-      } else {
-        url_start = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
-      }
-      console.log('OlddataService.constructor ', {url_start}, {host_ip});
+      url_start = this.baseUrl.endsWith('/') ? this.baseUrl : this.baseUrl + '/'; // + 'admin/';
     }
   }
-
-
-  ngOnInit() {
-    console.log('OlddataService.ngOnInit:');
-  }
-
-
-  getconfigDefaultLanguage() {
-//    console.log('getconfigDefaultLanguage: default_language=' + shng_serverinfo.default_language);
-    if (this.shng_serverinfo.default_language === undefined) {
-      console.warn('OlddataService.getconfigDefaultLanguage: is undefined! (en used)');
-      return 'en';
-    }
-    const result = sessionStorage.getItem('default_language');
-    if (result !== undefined) {
-      return result;
-    }
-    return this.shng_serverinfo.default_language;
-  }
-
-
-  getconfig(key) {
-    if (this.shng_serverinfo[key] === undefined) {
-      console.log('OlddataService.getconfig: key ' + key + ' is undefined!');
-    }
-    return this.shng_serverinfo[key];
-  }
-
-
-
-
   getSysteminfo() {
     const url = url_start + 'systeminfo.json\\';
     console.log('OlddataService.getSysteminfo: url: ' + url);
     return this.http.get(url);
   }
-
 
   getPypiinfo() {
     const url = url_start + 'pypi.json\\';
@@ -96,52 +48,43 @@ export class OlddataService implements OnInit {
     return this.http.get(url);
   }
 
-
-  getItemDetails(itempath) {
-//    const url = this.url_start + 'item_detail_json.html?item_path=';
-//    const url = 'http://10.0.0.174:1234/admin/item_detail_json.html?item_path=beoremote';
+  getItemDetails(itempath: string) {
+    //    const url = this.url_start + 'item_detail_json.html?item_path=';
+    //    const url = 'http://10.0.0.174:1234/admin/item_detail_json.html?item_path=beoremote';
 
     const url = url_start + 'item_detail_json.html?item_path=' + itempath;
     console.log('OlddataService.getItemDetails: url: ' + url);
     console.log('OlddataService.getItemDetails: itempath: ' + itempath);
-    if (host_ip === 'localhost:4200') {
-      if (itempath === 'beoremote.beo4command' || itempath === 'beoremote.beo4commandnum' ||
-          itempath === 'test.string' || itempath === 'test.number') {
-      } else {
-        console.log('getItemDetails: url: <' + itempath + '>');
-        return itempath;
-      }
-    }
     return this.http.get(url);
-
   }
-
 
   // --------------------------------
   //  Change value of specified item
   //
-  changeItemValue(itempath, value) {
-    const url = url_start + 'item_change_value.html?item_path=' + itempath + '&value=' + encodeURIComponent(value);
+  changeItemValue(itempath: string, value: string | number | boolean) {
+    const url =
+      url_start +
+      'item_change_value.html?item_path=' +
+      itempath +
+      '&value=' +
+      encodeURIComponent(value);
     console.log('OlddataService.changeItemValue: url: ' + url);
-    if (host_ip === 'localhost:4200') {
-      alert('changeItemValue ' + itempath + ': Value not set, because running on localhost');
-    } else {
-      this.http.get(url)
-        .subscribe(
-          (response: ItemDetails[]) => {
-            console.log('updateValue:');
-            console.log({response});
-          },
-          (error) => {
-            console.log('ERROR: OlddataServicechangeItemValue(',{itempath}, ',',{value},')');
-            console.log(error);
-          }
-        );
-    }
+    this.http
+      .get(url)
+      .pipe(take(1))
+      .subscribe(
+        (response: unknown) => {
+          console.log('updateValue:');
+          console.log({ response });
+        },
+        (error) => {
+          console.log('ERROR: OlddataServicechangeItemValue(', { itempath }, ',', { value }, ')');
+          console.log(error);
+        },
+      );
   }
 
-
-/*
+  /*
   // -----------------------------------------------------------
   //  Update config of one plugin in etc/plugin.yaml on backend
   //
@@ -154,7 +97,7 @@ export class OlddataService implements OnInit {
     } else {
       this.http.get(url)
         .subscribe(
-          (response: any[]) => {
+          (response: unknown[]) => {
             console.log('updateConfig:');
             console.log({response});
           },
@@ -166,7 +109,4 @@ export class OlddataService implements OnInit {
     }
   }
 */
-
 }
-
-

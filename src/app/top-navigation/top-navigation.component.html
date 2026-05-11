@@ -1,6 +1,6 @@
 <div class="navbar">
-  <img class="logo" src="assets/img/logo_long.png"/>
-  <img class="logo-small" src="assets/img/logo_small_32x32.png"/>
+  <img class="logo" ngSrc="assets/img/logo_long.png" height="29" width="125" />
+  <img class="logo-small" ngSrc="assets/img/logo_small_32x32.png" height="32" width="32" />
   <div class="topnav" id="myTopnav">
     <!--
         <div class="dropdown active">
@@ -29,44 +29,42 @@
     </div>
     -->
 
-    <ng-container *ngFor="let menuEntry of this.menu; index as i">
-      <ng-container *ngIf="menuEntry.visible === true && this.loggedIn">
-        <ng-container *ngIf="menuEntry.items.length === 0">
-          <a (click)="disableResponsiveMenu(menuEntry, false)" [routerLink]=menuEntry.routerLink>{{menuEntry.label}}</a>
-        </ng-container>
-        <ng-container *ngIf="menuEntry.items.length > 0">
+    @for (menuEntry of this.menu; track $index; let i = $index) {
+      @if (menuEntry.visible === true && this.loggedIn) {
+        @if (menuEntry.items.length === 0) {
+          <a (click)="disableResponsiveMenu(menuEntry, false)" [routerLink]="menuEntry.routerLink">{{
+            menuEntry.label
+          }}</a>
+        }
+        @if (menuEntry.items.length > 0) {
           <div class="dropdown">
-            <ng-container *ngIf="isTouchDevice === true">
-              <button (mouseenter)="enableDropdownMenu()" class="dropbtn"><span>{{menuEntry.label}}
-                <div class="show-caret"><i class="fa fa-caret-down"></i></div></span>
-              </button>
-            </ng-container>
-            <ng-container *ngIf="isTouchDevice === false">
-              <button (mouseenter)="enableDropdownMenu()" class="dropbtn" (click)="disableResponsiveMenu(menuEntry, false)" [routerLink]=menuEntry.routerLink><span>{{menuEntry.label}}
-                <div class="show-caret"><i class="fa fa-caret-down"></i></div></span>
-              </button>
-            </ng-container>
-            <div id="menu-{{menuEntry.label}}" class="dropdown-content">
-              <ng-container *ngFor="let submenuEntry of menuEntry.items">
-                <a (click)="disableResponsiveMenu(menuEntry)" [routerLink]=submenuEntry.routerLink>{{submenuEntry.label}}</a>
-              </ng-container>
+            <button (mouseenter)="enableDropdownMenu()" class="dropbtn" (click)="onMenuHeaderClick(menuEntry)">
+              <span
+                >{{ menuEntry.label }}
+                <div class="show-caret"><i class="fa fa-caret-down"></i></div
+              ></span>
+            </button>
+            <div id="menu-{{ menuEntry.label }}" class="dropdown-content">
+              @for (submenuEntry of menuEntry.items; track $index) {
+                <a (click)="disableResponsiveMenu(menuEntry)" [routerLink]="submenuEntry.routerLink">{{
+                  submenuEntry.label
+                }}</a>
+              }
             </div>
           </div>
-        </ng-container>
-      </ng-container>
-    </ng-container>
+        }
+      }
+    }
 
-    <ng-container *ngIf="!(authService.isLoggedIn() && authService.loginRequired())">
-      <a class="logout" style="color: #aaa"><i class="fas fa-sign-out-alt"></i>{{'BUTTON.LOGOUT'|translate}}</a>
+    @if (!(loggedIn && loginRequired)) {
+      <a class="logout" style="color: #aaa"><i class="fas fa-sign-out-alt"></i>{{ 'BUTTON.LOGOUT' | translate }}</a>
       <a class="logout-small" style="color: #aaa"><i class="fas fa-sign-out-alt"></i></a>
-    </ng-container>
-    <ng-container *ngIf="authService.isLoggedIn() && authService.loginRequired()">
-      <a class="logout" (click)="logout()"><i class="fas fa-sign-out-alt"></i>{{'BUTTON.LOGOUT'|translate}}</a>
+    }
+    @if (loggedIn && loginRequired) {
+      <a class="logout" (click)="logout()"><i class="fas fa-sign-out-alt"></i>{{ 'BUTTON.LOGOUT' | translate }}</a>
       <a class="logout-small" (click)="logout()"><i class="fas fa-sign-out-alt"></i></a>
-    </ng-container>
+    }
 
-    <a href="javascript:void(0);" style="font-size:15px;" class="icon" (click)="toggleResponsiveMenu()">&#9776;</a>
-
+    <a href="javascript:void(0);" style="font-size: 15px" class="icon" (click)="toggleResponsiveMenu()">&#9776;</a>
   </div>
-
 </div>

@@ -1,4 +1,3 @@
-
 //
 // Datatype (subtype) for <shng-server>:<port>/api/plugins/info
 //
@@ -15,4 +14,5 @@ export interface PluginMetadata {
   classname: string;
   sh_minversion: string;
   sh_maxversion: string;
+  state?: string;
 }
