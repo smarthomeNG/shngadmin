@@ -21,7 +21,9 @@ import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { TranslateDirective, TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Bind } from 'primeng/bind';
 import { Dialog } from 'primeng/dialog';
+import { ProgressSpinner } from 'primeng/progressspinner';
 import { PlugininfoType } from '../../common/models/plugin-info';
+import { LogService } from '../../common/services/log.service';
 import { PluginsApiService } from '../../common/services/plugins-api.service';
 import { ServerApiService } from '../../common/services/server-api.service';
 
@@ -36,6 +38,7 @@ import { ServerApiService } from '../../common/services/server-api.service';
     NgOptimizedImage,
     Bind,
     Dialog,
+    ProgressSpinner,
     TranslateDirective,
     UpperCasePipe,
     TranslatePipe,
@@ -49,6 +52,7 @@ export class PluginsComponent implements OnInit {
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
 
   faPlayCircle = faPlayCircle;
   faPauseCircle = faPauseCircle;
@@ -57,6 +61,7 @@ export class PluginsComponent implements OnInit {
 
   plugininfo: PlugininfoType[];
   developerMode: boolean;
+  loading = true;
 
   showPluginDetails = false;
   selectedPlugin: PlugininfoType | null = null;
@@ -66,7 +71,7 @@ export class PluginsComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log('PluginsComponent.ngOnInit');
+    this.log.log('PluginsComponent.ngOnInit');
 
     this.dataServiceServer
       .getServerinfo()
@@ -97,6 +102,8 @@ export class PluginsComponent implements OnInit {
   }
 
   getPlugins() {
+    this.loading = true;
+    this.cdr.markForCheck();
     this.pluginsDataService
       .getPluginsInfo()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -110,10 +117,7 @@ export class PluginsComponent implements OnInit {
               ? -1
               : 0;
         });
-        // detectChanges() rather than markForCheck(): the nested HTTP call
-        // (getServerinfo → getPlugins) means the zone has already quiesced
-        // by the time this response arrives, so no automatic tick is scheduled.
-        // detectChanges() forces a synchronous CD run on this subtree.
+        this.loading = false;
         this.cdr.detectChanges();
       });
   }
@@ -139,7 +143,7 @@ export class PluginsComponent implements OnInit {
   }
 
   stopPlugin(pluginConfigName) {
-    // console.log('stopPlugin', {pluginConfigName});
+    // this.log.log('stopPlugin', {pluginConfigName});
 
     this.pluginsDataService
       .setPluginState(pluginConfigName, 'stop')
@@ -150,7 +154,7 @@ export class PluginsComponent implements OnInit {
   }
 
   startPlugin(pluginConfigName) {
-    // console.log('startPlugin', {pluginConfigName});
+    // this.log.log('startPlugin', {pluginConfigName});
 
     this.pluginsDataService
       .setPluginState(pluginConfigName, 'start')
@@ -161,7 +165,7 @@ export class PluginsComponent implements OnInit {
   }
 
   reloadPlugin(pluginConfigName) {
-    // console.log('reloadPlugin', {pluginConfigName});
+    // this.log.log('reloadPlugin', {pluginConfigName});
 
     this.pluginsDataService
       .setPluginState(pluginConfigName, 'reload')

@@ -4,8 +4,10 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  ElementRef,
   inject,
   OnInit,
+  ViewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -13,6 +15,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AppConfigService } from '../common/services/app-config.service';
 import { AuthService } from '../common/services/auth.service';
+import { LogService } from '../common/services/log.service';
 import { ServerApiService } from '../common/services/server-api.service';
 import { SharedService } from '../common/services/shared.service';
 
@@ -44,6 +47,9 @@ export class TopNavigationComponent implements OnInit {
   public authService = inject(AuthService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
+
+  @ViewChild('topnav') private topnavEl: ElementRef<HTMLElement>;
 
   labels: string[] = [];
   menu: MenuItem[] = [];
@@ -54,11 +60,11 @@ export class TopNavigationComponent implements OnInit {
   isTouchDevice = false;
 
   constructor() {
-    console.log('TopNavigationComponent - constructor()');
+    this.log.log('TopNavigationComponent - constructor()');
   }
 
   ngOnInit() {
-    console.log('TopNavigationComponent.ngOnInit() entered');
+    this.log.log('TopNavigationComponent.ngOnInit() entered');
 
     // One-shot initialisation: load server config, set up translate, attempt
     // anonymous login.  After this the component reacts purely via observables.
@@ -72,12 +78,12 @@ export class TopNavigationComponent implements OnInit {
         this.setTitle(this.translate.instant('SmartHomeNG'));
 
         const credentials = { username: '', password: '' };
-        console.log('signIn', { credentials });
+        this.log.log('signIn', { credentials });
         this.authService
           .login(credentials)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((result: boolean) => {
-            console.log('Anonymous login:', { result });
+            this.log.log('Anonymous login:', { result });
             // loggedIn$ will fire from AuthService.login() on success,
             // triggering buildMenu() + markForCheck() via the subscription below.
           });
@@ -104,7 +110,7 @@ export class TopNavigationComponent implements OnInit {
       this.cdr.markForCheck();
     });
 
-    console.log('TopNavigationComponent.ngOnInit() leaving');
+    this.log.log('TopNavigationComponent.ngOnInit() leaving');
   }
 
   // Label of the section whose dropdown is currently forced open (touch mode).
@@ -115,9 +121,9 @@ export class TopNavigationComponent implements OnInit {
   }
 
   toggleResponsiveMenu() {
-    console.log('TopNavigationComponent.toggleResponsiveMenu');
-    const x = document.getElementById('myTopnav');
-    if (x === null) return;
+    this.log.log('TopNavigationComponent.toggleResponsiveMenu');
+    const x = this.topnavEl?.nativeElement;
+    if (!x) return;
 
     if (x.className === 'topnav') {
       x.className += ' responsive';
@@ -137,8 +143,8 @@ export class TopNavigationComponent implements OnInit {
     this.closeTouchDropdown();
 
     // disable dropped down menu if in mobile mode
-    const m = document.getElementById('myTopnav');
-    if (m === null) return;
+    const m = this.topnavEl?.nativeElement;
+    if (!m) return;
 
     m.className = 'topnav';
 
@@ -200,8 +206,8 @@ export class TopNavigationComponent implements OnInit {
   }
 
   buildMenu() {
-    console.log('TopNavigationComponent.buildMenu entering');
-    console.log(
+    this.log.log('TopNavigationComponent.buildMenu entering');
+    this.log.log(
       'TopNavigationComponent.buildMenu: default_language=',
       this.appConfig.defaultLanguage,
     );
@@ -268,7 +274,7 @@ export class TopNavigationComponent implements OnInit {
     this.setSubmenuEntry(7, 2, this.translate.instant('MENU.LOGGING_CONFIGURATION'), [
       '/logs/logging-configuration',
     ]);
-    console.log('TopNavigationComponent.buildMenu leaving');
+    this.log.log('TopNavigationComponent.buildMenu leaving');
   }
 
   logout() {

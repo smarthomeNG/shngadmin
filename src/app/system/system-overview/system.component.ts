@@ -27,6 +27,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { APP_NAME, APP_VERSION } from '../../app.component';
 import { PypiInfo } from '../../common/models/pypi-info';
 import { SystemInfo } from '../../common/models/system-info';
+import { LogService } from '../../common/services/log.service';
 import { OlddataService } from '../../common/services/olddata.service';
 import { ServerApiService } from '../../common/services/server-api.service';
 import { SharedService } from '../../common/services/shared.service';
@@ -64,6 +65,7 @@ export class SystemComponent implements OnDestroy, OnInit {
   public shared = inject(SharedService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
 
   faCheckCircle = faCheckCircle;
 
@@ -156,7 +158,7 @@ export class SystemComponent implements OnDestroy, OnInit {
   }
 
   ngOnInit() {
-    console.log('SystemComponent.ngOnInit:');
+    this.log.log('SystemComponent.ngOnInit:');
 
     this.dataServiceServer!.getServerinfo()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -178,19 +180,19 @@ export class SystemComponent implements OnDestroy, OnInit {
     this.dataService
       .getSysteminfo()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(
-        (response: SystemInfo) => {
+      .subscribe({
+        next: (response: SystemInfo) => {
           this.systeminfo = response;
 
           this.os_uptime = this.shared.ageToString(this.systeminfo.uptime);
           this.sh_uptime = this.shared.ageToString(this.systeminfo.sh_uptime);
           this.cdr.markForCheck();
         },
-        (error) => {
-          console.log('SystemComponent: dataService.getSysteminfo():');
-          console.log(error);
+        error: (error) => {
+          this.log.log('SystemComponent: dataService.getSysteminfo():');
+          this.log.log(error);
         },
-      );
+      });
 
     // -----------------------------------
     // Initialize Pypi info
@@ -198,8 +200,8 @@ export class SystemComponent implements OnDestroy, OnInit {
     this.dataService
       .getPypiinfo()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(
-        (response: PypiInfo[]) => {
+      .subscribe({
+        next: (response: PypiInfo[]) => {
           this.pypiinfo = response;
           this.loading = false;
 
@@ -245,8 +247,8 @@ export class SystemComponent implements OnDestroy, OnInit {
           }
           this.cdr.markForCheck();
         },
-        (error) => console.log('SystemComponent: dataService.getPypiinfo():' + error),
-      );
+        error: (error) => this.log.log('SystemComponent: dataService.getPypiinfo():' + error),
+      });
 
     // -----------------------------------
     // Initialize info for the graph-tab
@@ -261,20 +263,20 @@ export class SystemComponent implements OnDestroy, OnInit {
     this.http
       .get(filepath, { responseType: 'text' })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(
-        (response) => {
+      .subscribe({
+        next: (response) => {
           const message = response.toString();
           if (disclosureText) {
             disclosureText.textContent = message;
           }
         },
-        (error) => {
+        error: (error) => {
           if (disclosureText) {
             disclosureText.textContent =
               '\nERROR ' + error.status + ':\n\n    ' + error.url + '   ' + error.statusText;
           }
         },
-      );
+      });
   }
 
   // ===================================
@@ -322,7 +324,7 @@ export class SystemComponent implements OnDestroy, OnInit {
   // -----------------------------------
   //
   initCharts() {
-    console.log('initCharts()');
+    this.log.log('initCharts()');
 
     this.chartdataLoad = {
       labels: [],
@@ -442,7 +444,7 @@ export class SystemComponent implements OnDestroy, OnInit {
   }
 
   drawCharts() {
-    console.log('DrawCharts()');
+    this.log.log('DrawCharts()');
     this.websocketPluginService.systemloadUpdate$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
@@ -533,7 +535,7 @@ export class SystemComponent implements OnDestroy, OnInit {
     const data1: number[] = [];
 
     for (let i = 0; i < dataseries.length; i++) {
-      labels.push(String(dataseries[i][2].time.substr(0, 5)));
+      labels.push(String(dataseries[i][2].time.slice(0, 5)));
       data0.push(dataseries[i][1]);
       if (dataseries2 != null) {
         data1.push(dataseries2[i][1]);

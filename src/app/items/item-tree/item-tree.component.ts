@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  ElementRef,
   inject,
   OnDestroy,
   OnInit,
@@ -32,6 +33,7 @@ import { PrimeTemplate, TreeNode } from 'primeng/api';
 
 import { ItemDetails } from '../../common/models/item-details';
 import { ItemTree } from '../../common/models/item-tree';
+import { LogService } from '../../common/services/log.service';
 import { OlddataService } from '../../common/services/olddata.service';
 import { ServerApiService } from '../../common/services/server-api.service';
 import { SharedService } from '../../common/services/shared.service';
@@ -85,6 +87,8 @@ type MonitoredItem = [string, Record<string, unknown>];
 export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   @ViewChild('vc', { read: ViewContainerRef, static: true }) vc: ViewContainerRef;
   @ViewChild('tpl', { read: TemplateRef, static: true }) tpl: TemplateRef<any>;
+  @ViewChild('treeEl') private treeEl: ElementRef<HTMLElement>;
+  @ViewChild('treeDetailEl') private treeDetailEl: ElementRef<HTMLElement>;
 
   childViewRef: ViewRef;
 
@@ -135,15 +139,18 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   public shared = inject(SharedService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
 
   monitoredItemsUpdateSubscription: Subscription | null = null;
 
   showItemAlert = false;
 
-  static resizeItemTree() {
+  private readonly resizeHandler = () => this.resizeItemTree();
+
+  resizeItemTree() {
     const browserHeight = window.innerHeight;
-    const tree = document.getElementById('tree');
-    const treeDetail = document.getElementById('tree_detail');
+    const tree = this.treeEl?.nativeElement;
+    const treeDetail = this.treeDetailEl?.nativeElement;
 
     // initially offsetTop is off by a number of pixels — correction via fixed offset
     const offsetTop = 167;
@@ -158,10 +165,11 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
     }
   }
 
-  static htmlDecode(input): string {
-    const e = document.createElement('div');
-    e.innerHTML = input;
-    return e.childNodes.length === 0 ? '' : (e.childNodes[0].nodeValue ?? '');
+  static htmlDecode(input: string): string {
+    if (!input) return '';
+    // DOMParser creates an inert document — scripts are not executed and
+    // resources are not loaded. textContent extracts plain text only.
+    return new DOMParser().parseFromString(input, 'text/html').documentElement.textContent ?? '';
   }
 
   public setTitle(newTitle: string) {
@@ -169,7 +177,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    console.log('ItemTreeComponent.ngOnInit:');
+    this.log.log('ItemTreeComponent.ngOnInit:');
 
     this.dataServiceServer
       .getServerinfo()
@@ -179,8 +187,8 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
         this.getItemtree();
       });
 
-    window.addEventListener('resize', ItemTreeComponent.resizeItemTree, false);
-    ItemTreeComponent.resizeItemTree();
+    window.addEventListener('resize', this.resizeHandler, false);
+    this.resizeItemTree();
 
     this.websocketPluginService.connect();
   }
@@ -210,7 +218,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('resize', ItemTreeComponent.resizeItemTree, false);
+    window.removeEventListener('resize', this.resizeHandler, false);
     this.monitoredItemsUpdateSubscription?.unsubscribe();
     this.websocketPluginService.disconnect();
   }
@@ -219,28 +227,28 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
     this.dataService
       .getItemtree()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(
-        (response: [number, ItemTree]) => {
+      .subscribe({
+        next: (response: [number, ItemTree]) => {
           this.itemcount = response[0];
           this.filesTree0 = response[1] as unknown as {}[];
           this.filterNodes('');
           this.searchStart_param = { number: String(this.appConfig.itemtreeSearchstart) };
           this.cdr.markForCheck();
         },
-        (error) => {
-          console.log('ERROR: ItemsComponent: dataService.getItemtree():');
-          console.log(error);
+        error: (error) => {
+          this.log.log('ERROR: ItemsComponent: dataService.getItemtree():');
+          this.log.log(error);
         },
-      );
+      });
   }
 
   updateValue(item_path, item_value, item_type, item_oldvalue) {
-    console.log('ItemTreeComponent.updateValue:');
-    console.log({ item_path }, { item_value });
+    this.log.log('ItemTreeComponent.updateValue:');
+    this.log.log({ item_path }, { item_value });
 
     if (typeof item_value === 'boolean') {
       item_value = item_value.toString();
-      console.log('--> updateValue (bool): ' + item_value);
+      this.log.log('--> updateValue (bool): ' + item_value);
       this.dataService.changeItemValue(item_path, item_value);
       return;
     }
@@ -259,7 +267,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
         return;
       }
     }
-    console.log('--> updateValue: ' + item_value.value);
+    this.log.log('--> updateValue: ' + item_value.value);
     this.dataService.changeItemValue(item_path, item_value.value);
   }
 
@@ -303,7 +311,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   monitorItem(path: string, monitorIt: boolean) {
     // path = 'wohnung.buero.schreibtischleuchte.onoff';
 
-    console.log('monitorItem: path=' + path + ', monitorIt=' + String(monitorIt));
+    this.log.log('monitorItem: path=' + path + ', monitorIt=' + String(monitorIt));
     if (monitorIt) {
       // start monitoring the item
 
@@ -344,27 +352,27 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   }
 
   getMonitoredValues() {
-    console.log('getMonitoredValues()');
+    this.log.log('getMonitoredValues()');
     this.monitoredItemsUpdateSubscription?.unsubscribe();
     this.monitoredItemsUpdateSubscription = this.websocketPluginService.monitoredItemsUpdate$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        console.error('monitoredItemsUpdate$');
-        console.log(this.websocketPluginService.monitor.items);
+        this.log.error('monitoredItemsUpdate$');
+        this.log.log(this.websocketPluginService.monitor.items);
       });
   }
 
   getDetails(path: string) {
-    console.log('ItemTreeComponent.getDetails: ' + path);
-    console.warn('- this', this);
+    this.log.log('ItemTreeComponent.getDetails: ' + path);
+    this.log.warn('- this', this);
     if (path !== undefined) {
       this.dataService
         .getItemDetails(path)
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(
-          (response: ItemDetails[]) => {
+        .subscribe({
+          next: (response: ItemDetails[]) => {
             const details = response[0];
-            details.value = ItemTreeComponent.htmlDecode(details.value);
+            details.value = ItemTreeComponent.htmlDecode(String(details.value));
             details.last_value = ItemTreeComponent.htmlDecode(details.last_value);
             details.previous_value = ItemTreeComponent.htmlDecode(details.previous_value);
 
@@ -387,22 +395,22 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
             }
             this.showDetails(details);
 
-            console.warn('getDetails', details.logics);
+            this.log.warn('getDetails', details.logics);
             this.cdr.markForCheck();
           },
-          (error) => {
-            console.log('ERROR: ItemsComponent: dataService.getItemDetails():');
-            console.log(error);
+          error: (error) => {
+            this.log.log('ERROR: ItemsComponent: dataService.getItemDetails():');
+            this.log.log(error);
           },
-        );
+        });
     } else {
       this.showDetails();
     }
   }
 
   showDetails(response?) {
-    console.log('showDetails:');
-    console.log({ response });
+    this.log.log('showDetails:');
+    this.log.log({ response });
 
     if (response === undefined) {
       this.itemdetails = <ItemDetails>{};
@@ -471,7 +479,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   }
 
   nodeSelect(event) {
-    console.log('Node Selected: ' + event.node.label);
+    this.log.log('Node Selected: ' + event.node.label);
     this.itemdetailsloaded = false;
     this.getDetails(event.node.path);
   }

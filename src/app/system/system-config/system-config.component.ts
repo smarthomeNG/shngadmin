@@ -12,6 +12,7 @@ import { AppConfigService } from '../../common/services/app-config.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { ConfigApiService } from '../../common/services/config-api.service';
+import { LogService } from '../../common/services/log.service';
 import { ServerApiService } from '../../common/services/server-api.service';
 
 import { ConfigParameter, TableColumn } from '../../common/models/interfaces';
@@ -32,7 +33,29 @@ import { TableModule } from 'primeng/table';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { DynamicFieldComponent } from '../../common/components/dynamic-field/dynamic-field.component';
 
-type SystemConfig = any;
+interface ParameterMeta {
+  type: string;
+  gui_type?: string;
+  valid_list?: unknown[];
+  valid_min?: unknown;
+  valid_max?: unknown;
+  default?: unknown;
+  mandatory?: boolean;
+  description?: Record<string, string>;
+}
+
+interface ConfigSection {
+  meta: { parameters: Record<string, ParameterMeta> };
+  data: Record<string, unknown>;
+}
+
+interface SystemConfig {
+  common: ConfigSection;
+  http: ConfigSection;
+  websocket: ConfigSection;
+  admin: ConfigSection;
+  mqtt: ConfigSection;
+}
 
 @Component({
   selector: 'app-system-config',
@@ -68,6 +91,7 @@ export class SystemConfigComponent implements OnInit {
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
 
   config: SystemConfig;
   lang: string;
@@ -95,7 +119,6 @@ export class SystemConfigComponent implements OnInit {
   data_changed = false;
   restart_core_button = false;
 
-  rowclicked_foredit: any = false;
   dialog_readonly = false;
 
   pwd_change_dialog_display = false;
@@ -122,7 +145,7 @@ export class SystemConfigComponent implements OnInit {
   }
 
   ngOnInit() {
-    // console.log('SystemConfigComponent.ngOnInit');
+    // this.log.log('SystemConfigComponent.ngOnInit');
 
     this.dataServiceServer
       .getServerinfo()
@@ -134,8 +157,8 @@ export class SystemConfigComponent implements OnInit {
           .getConfig()
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe((configResponse) => {
-            this.config = configResponse;
-            // console.log({response}, {configResponse});
+            this.config = configResponse as SystemConfig;
+            // this.log.log({response}, {configResponse});
             this.fillDialogData();
             this.cdr.markForCheck();
           });
@@ -252,9 +275,9 @@ export class SystemConfigComponent implements OnInit {
     const meta = this.config.common.meta;
     const data = this.config.common.data;
 
-    // console.log({data});
+    // this.log.log({data});
     for (const param in meta.parameters) {
-      // console.log({param}, data[param]);
+      // this.log.log({param}, data[param]);
       if (meta.parameters.hasOwnProperty(param)) {
         // Fill ParamData for display/editing of parameters
         const paramdata = this.fillParamData(meta, param, data);
@@ -286,7 +309,7 @@ export class SystemConfigComponent implements OnInit {
           data.hashed_password === null ||
           data.hashed_password === ''
         ) {
-          data.hashed_password = sha512(data.password);
+          data.hashed_password = sha512(data.password as string);
           data.password = null;
         }
       }
@@ -300,7 +323,7 @@ export class SystemConfigComponent implements OnInit {
           data.service_hashed_password === null ||
           data.service_hashed_password === ''
         ) {
-          data.service_hashed_password = sha512(data.service_password);
+          data.service_hashed_password = sha512(data.service_password as string);
           data.service_password = null;
         }
       }
@@ -341,7 +364,7 @@ export class SystemConfigComponent implements OnInit {
           data.hashed_password === null ||
           data.hashed_password === ''
         ) {
-          data.hashed_password = sha512(data.password);
+          data.hashed_password = sha512(data.password as string);
           data.password = null;
         }
       }
@@ -355,7 +378,7 @@ export class SystemConfigComponent implements OnInit {
           data.service_hashed_password === null ||
           data.service_hashed_password === ''
         ) {
-          data.service_hashed_password = sha512(data.service_password);
+          data.service_hashed_password = sha512(data.service_password as string);
           data.service_password = null;
         }
       }
@@ -428,8 +451,8 @@ export class SystemConfigComponent implements OnInit {
   // change password
   //
   change_password_dialog($event, rowData, col_field) {
-    console.log('change_password_dialog()');
-    console.log('hash', rowData[col_field]);
+    this.log.log('change_password_dialog()');
+    this.log.log('hash', rowData[col_field]);
     this.pwd_hash_old = rowData[col_field];
     this.pwd_rowData = rowData;
     this.pwd_col = col_field;
@@ -442,7 +465,7 @@ export class SystemConfigComponent implements OnInit {
   }
 
   change_password($event) {
-    console.log('change_password()');
+    this.log.log('change_password()');
     this.pwd_old_is_empty = false;
     this.pwd_old_is_wrong = false;
     this.pwd_new_not_identical = false;
@@ -464,14 +487,14 @@ export class SystemConfigComponent implements OnInit {
       return;
     }
 
-    console.log('pwd_new1', this.pwd_new1);
-    console.log('pwd_new2', this.pwd_new2);
+    this.log.log('pwd_new1', this.pwd_new1);
+    this.log.log('pwd_new2', this.pwd_new2);
 
     this.pwd_hash_new = null;
     if (this.pwd_new1 !== null) {
       this.pwd_hash_new = sha512(this.pwd_new1);
     }
-    console.log('pwd_hash_new', this.pwd_hash_new);
+    this.log.log('pwd_hash_new', this.pwd_hash_new);
 
     this.pwd_rowData![this.pwd_col!] = this.pwd_hash_new;
     this.pwd_change_dialog_display = false;
@@ -484,7 +507,7 @@ export class SystemConfigComponent implements OnInit {
       if (this.common_parameters.hasOwnProperty(p)) {
         if (this.common_parameters[p].value !== this.common_parameters_beforeEdit[p].value) {
           this.data_changed = true;
-          // console.log(this.common_parameters[p]);
+          // this.log.log(this.common_parameters[p]);
         }
       }
     }
@@ -492,7 +515,7 @@ export class SystemConfigComponent implements OnInit {
       if (this.http_parameters.hasOwnProperty(p)) {
         if (this.http_parameters[p].value !== this.http_parameters_beforeEdit[p].value) {
           this.data_changed = true;
-          // console.log(this.http_parameters[p]);
+          // this.log.log(this.http_parameters[p]);
         }
       }
     }
@@ -500,7 +523,7 @@ export class SystemConfigComponent implements OnInit {
       if (this.websocket_parameters.hasOwnProperty(p)) {
         if (this.websocket_parameters[p].value !== this.websocket_parameters_beforeEdit[p].value) {
           this.data_changed = true;
-          // console.log(this.websocket_parameters[p]);
+          // this.log.log(this.websocket_parameters[p]);
         }
       }
     }
@@ -508,7 +531,7 @@ export class SystemConfigComponent implements OnInit {
       if (this.admin_parameters.hasOwnProperty(p)) {
         if (this.admin_parameters[p].value !== this.admin_parameters_beforeEdit[p].value) {
           this.data_changed = true;
-          // console.log(this.admin_parameters[p]);
+          // this.log.log(this.admin_parameters[p]);
         }
       }
     }
@@ -516,7 +539,7 @@ export class SystemConfigComponent implements OnInit {
       if (this.mqtt_parameters.hasOwnProperty(p)) {
         if (this.mqtt_parameters[p].value !== this.mqtt_parameters_beforeEdit[p].value) {
           this.data_changed = true;
-          // console.log(this.admin_parameters[p]);
+          // this.log.log(this.admin_parameters[p]);
         }
       }
     }
@@ -526,7 +549,7 @@ export class SystemConfigComponent implements OnInit {
     let error_found = false;
     let error_text = '';
 
-    // console.log('check_value_restrictions', {parameter});
+    // this.log.log('check_value_restrictions', {parameter});
 
     if (parameter['value'] === undefined) {
       parameter['value'] = null;
@@ -593,7 +616,7 @@ export class SystemConfigComponent implements OnInit {
       this.validation_dialog_parameter = parameter['name'];
 
       this.validation_dialog_display = true;
-      console.warn('Parameter ' + "'" + parameter['name'] + "'", error_text);
+      this.log.warn('Parameter ' + "'" + parameter['name'] + "'", error_text);
       return false;
     }
     return true;
@@ -703,7 +726,7 @@ export class SystemConfigComponent implements OnInit {
           this.mqtt_parameters[p].value = null;
         }
         data['mqtt']['data'][this.mqtt_parameters[p].name] = this.mqtt_parameters[p].value;
-        // console.warn(this.mqtt_parameters[p].name, this.mqtt_parameters[p].type, this.mqtt_parameters[p].value);
+        // this.log.warn(this.mqtt_parameters[p].name, this.mqtt_parameters[p].type, this.mqtt_parameters[p].value);
       }
     }
 
@@ -712,7 +735,7 @@ export class SystemConfigComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result: boolean) => {
         if (result) {
-          console.log('saveSettings', 'success');
+          this.log.log('saveSettings', 'success');
 
           this.common_parameters_beforeEdit = JSON.parse(JSON.stringify(this.common_parameters));
           this.http_parameters_beforeEdit = JSON.parse(JSON.stringify(this.http_parameters));
@@ -726,7 +749,7 @@ export class SystemConfigComponent implements OnInit {
           this.restart_core_button = true;
           this.cdr.markForCheck();
         } else {
-          console.warn('saveSettings', 'fail');
+          this.log.warn('saveSettings', 'fail');
         }
       });
   }
@@ -737,7 +760,7 @@ export class SystemConfigComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
         const res = response as { result?: string };
-        console.log('restartShng', res.result);
+        this.log.log('restartShng', res.result);
       });
     this.restart_core_button = false;
   }

@@ -1,87 +1,47 @@
-//import {APP_BASE_HREF} from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Injectable, InjectionToken, inject } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
+import { Injectable, inject } from '@angular/core';
 import { take } from 'rxjs/operators';
-//import {SystemInfo} from '../models/system-info';
-// import {ServerInfo} from '../models/server-info';
-
-let url_start: string = 'http://';
-let host_ip: string = '';
-// let shng_serverinfo: ServerInfo = <ServerInfo>{'itemtree_fullpath': true};
+import { LogService } from './log.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OlddataService {
   private http = inject(HttpClient);
-  private translate = inject(TranslateService);
-  baseUrl = inject<string>('BASE_URL' as unknown as InjectionToken<string>);
+  private readonly log = inject(LogService);
 
-  href = '';
-
-  constructor() {
-    this.translate.setDefaultLang('en');
-
-    if (host_ip === '') {
-      host_ip = location.host;
-      url_start = this.baseUrl.endsWith('/') ? this.baseUrl : this.baseUrl + '/'; // + 'admin/';
-    }
-  }
   getSysteminfo() {
-    const url = url_start + 'systeminfo.json\\';
-    console.log('OlddataService.getSysteminfo: url: ' + url);
-    return this.http.get(url);
+    return this.http.get('/admin/systeminfo.json');
   }
 
   getPypiinfo() {
-    const url = url_start + 'pypi.json\\';
-    console.log('OlddataService.getPypiinfo: url: ' + url);
-    return this.http.get(url);
+    return this.http.get('/admin/pypi.json');
   }
 
-  // --------------------------------------------------------------------------
-
   getItemtree() {
-    const url = url_start + 'items.json\\';
-    console.log('OlddataService.getItemtree: url: ' + url);
-    return this.http.get(url);
+    return this.http.get('/admin/items.json');
   }
 
   getItemDetails(itempath: string) {
-    //    const url = this.url_start + 'item_detail_json.html?item_path=';
-    //    const url = 'http://10.0.0.174:1234/admin/item_detail_json.html?item_path=beoremote';
-
-    const url = url_start + 'item_detail_json.html?item_path=' + itempath;
-    console.log('OlddataService.getItemDetails: url: ' + url);
-    console.log('OlddataService.getItemDetails: itempath: ' + itempath);
-    return this.http.get(url);
+    return this.http.get('/admin/item_detail_json.html?item_path=' + itempath);
   }
 
-  // --------------------------------
-  //  Change value of specified item
-  //
   changeItemValue(itempath: string, value: string | number | boolean) {
     const url =
-      url_start +
-      'item_change_value.html?item_path=' +
-      itempath +
-      '&value=' +
-      encodeURIComponent(value);
-    console.log('OlddataService.changeItemValue: url: ' + url);
+      '/admin/item_change_value.html?item_path=' + itempath + '&value=' + encodeURIComponent(value);
     this.http
       .get(url)
       .pipe(take(1))
-      .subscribe(
-        (response: unknown) => {
-          console.log('updateValue:');
-          console.log({ response });
+      .subscribe({
+        next: (response: unknown) => {
+          this.log.log('updateValue:');
+          this.log.log({ response });
         },
-        (error) => {
-          console.log('ERROR: OlddataServicechangeItemValue(', { itempath }, ',', { value }, ')');
-          console.log(error);
+        error: (error) => {
+          this.log.log('ERROR: OlddataServicechangeItemValue(', { itempath }, ',', { value }, ')');
+          this.log.log(error);
         },
-      );
+      });
   }
 
   /*
@@ -91,19 +51,19 @@ export class OlddataService {
   setPluginConfig(pluginsection, config) {
     const configstr = JSON.stringify(config);
     const url = url_start + 'plugin_set_config.html?plugin_section=' + pluginsection + '&config=' + configstr;
-    console.warn('setPluginConfig: url: ' + url);
+    this.log.warn('setPluginConfig: url: ' + url);
     if (host_ip === 'localhost:4200') {
       alert('setPluginConfig ' + pluginsection + ': Nothing saved, because running on localhost');
     } else {
       this.http.get(url)
         .subscribe(
           (response: unknown[]) => {
-            console.log('updateConfig:');
-            console.log({response});
+            this.log.log('updateConfig:');
+            this.log.log({response});
           },
           (error) => {
-            console.log('ERROR: dataService.setPluginConfig():');
-            console.log(error);
+            this.log.log('ERROR: dataService.setPluginConfig():');
+            this.log.log(error);
           }
         );
     }

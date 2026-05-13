@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Subject, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 import { APP_NAME, APP_VERSION } from '../../app.component';
 import { AppConfigService } from './app-config.service';
+import { LogService } from './log.service';
 import { SharedService } from './shared.service';
 import { WebsocketService } from './websocket.service';
 
@@ -20,10 +22,10 @@ export interface Message {
   ver?: string;
   browser?: string;
   bver?: string;
-  rawdata: any;
+  rawdata: unknown;
 }
 
-type SeriesCallback = (series: any) => void;
+type SeriesCallback = (series: unknown) => void;
 
 // ------------------------------------------------------------------
 
@@ -34,6 +36,7 @@ export class WebsocketPluginService {
   private appConfig = inject(AppConfigService);
   private websocketService = inject(WebsocketService);
   private shared = inject(SharedService);
+  private readonly log = inject(LogService);
   monitorCallbackFunction: ((data: unknown) => void) | undefined = undefined;
 
   private msgMonitorItems: Message = {
@@ -160,8 +163,7 @@ export class WebsocketPluginService {
   private diskSource = new Subject<void>();
   public diskUpdate$ = this.diskSource.asObservable();
 
-  private msgSubscription: Subscription;
-  private openSubscription: Subscription;
+  private readonly stop$ = new Subject<void>();
 
   private msgIdentity = <Message>{
     cmd: 'identity',
@@ -175,7 +177,7 @@ export class WebsocketPluginService {
     const adm_url = 'ws://' + this.appConfig.wsHost + ':' + this.appConfig.wsPort + '/adm';
 
     if (this.appConfig.hostIp === null) {
-      console.log(
+      this.log.log(
         { adm_url },
         "Für mockup Environment ip und port in 'testdata/api/server/info/default.json' anpassen",
       );
@@ -183,22 +185,28 @@ export class WebsocketPluginService {
 
     this.websocketService.connect(adm_url);
 
-    this.msgSubscription = this.websocketService.messages$.subscribe(
-      (msg) => {
-        const data = JSON.parse(msg.data);
+    this.websocketService.messages$.pipe(takeUntil(this.stop$)).subscribe({
+      next: (msg) => {
+        let data: Message;
+        try {
+          data = JSON.parse(msg.data);
+        } catch (e) {
+          this.log.warn('WebsocketPluginService: failed to parse message', msg.data, e);
+          return;
+        }
         if (data.cmd === 'item') {
           this.handleResponseItem(data);
         } else if (data.cmd === 'series') {
           this.handleResponseSeries(data);
         } else {
-          console.log('message received:', data);
+          this.log.log('message received:', data);
         }
       },
-      (err) => console.log(err),
-    );
+      error: (err) => this.log.log(err),
+    });
 
     // Send identity on every (re)connect
-    this.openSubscription = this.websocketService.open$.subscribe(() => {
+    this.websocketService.open$.pipe(takeUntil(this.stop$)).subscribe(() => {
       const browser = this.shared.getBrowser();
       this.websocketService.sendMessage({
         ...this.msgIdentity,
@@ -209,8 +217,7 @@ export class WebsocketPluginService {
   }
 
   disconnect() {
-    this.msgSubscription?.unsubscribe();
-    this.openSubscription?.unsubscribe();
+    this.stop$.next();
     this.websocketService.close();
   }
 
@@ -221,7 +228,7 @@ export class WebsocketPluginService {
     this.monitoredItems.next();
   }
 
-  sendMessage(message: any) {
+  sendMessage(message: unknown) {
     this.websocketService.sendMessage(message);
   }
 
@@ -340,7 +347,7 @@ export class WebsocketPluginService {
       this.updateSeries(this.disk, data);
       this.diskSource.next();
     } else {
-      console.warn('message received (UNKNOWN series):', data);
+      this.log.warn('message received (UNKNOWN series):', data);
     }
   }
 }
