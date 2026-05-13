@@ -1,11 +1,10 @@
-
 .shngbody {
   /*
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 100vh;
-    //overflow: hidden;
-    //height: calc(100vh - 55px);
+    REMARK overflow: hidden;
+    REMARK height: calc(100vh - 55px);
   */
 
   margin-left: 10px;
@@ -38,12 +37,11 @@
   float: right;
 }
 
-.tab-shng > a{
+.tab-shng > a {
   border-bottom: none !important;
   outline: 0 !important;
-  color:rgb(160, 160, 160);
+  color: rgb(160, 160, 160);
 }
-
 
 /*
 .CodeMirror {
@@ -56,4 +54,3 @@
   height:70vh;
 }
 */
-

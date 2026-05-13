@@ -1,177 +1,141 @@
-
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 
-import { map, catchError } from 'rxjs/operators';
-import {of} from 'rxjs';
-
-
+import { of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { AppConfigService } from './app-config.service';
+import { LogService } from './log.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FilesApiService {
-
-  constructor(private http: HttpClient) { }
-
+  private http = inject(HttpClient);
+  private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
 
   readFile(filetype, filename = '') {
-    // console.log('FilesApiService.readFile()', {filename});
+    // this.log.log('FilesApiService.readFile()', {filename});
 
-    const apiUrl = sessionStorage.getItem('apiUrl');
+    const apiUrl = this.appConfig.apiUrl;
     let url = apiUrl + 'files/' + filetype + '/';
-
-    if (apiUrl.includes('localhost')) {
-      if (filename === '') {
-        url += 'default' + '.txt';
-      } else {
-        url += filename + '.txt';
-      }
-    } else {
-      if (filename !== '') {
-        url += '?filename=' + filename;
-      }
-    }
-
-    return this.http.get(url, { responseType: 'text' })
-      .pipe(
-        map(response => {
-          const result = response;
-          return result;
-        }),
-        catchError((err: HttpErrorResponse) => {
-          console.error({err});
-          if (filename === '') {
-            console.error('FilesApiService (readFile): Could not read filetype \'' + filetype + '\' - error: ' + err.error.error);
-          } else {
-            console.error('FilesApiService (readFile): Could not read filetype \'' + filetype + '\', filename \'' + filename + '\' - error: ' + err.error.error);
-          }
-
-          return of('');
-        })
-      );
-  }
-
-
-  saveFile(filetype, filename = '', content = '') {
-    // console.log('FilesApiService.saveFile');
-
-    const apiUrl = sessionStorage.getItem('apiUrl');
-    let url = apiUrl + 'files/' + filetype + '/';
-    if (apiUrl.includes('localhost')) {
-      if (filename === '') {
-        url += 'default' + '.txt';
-      } else {
-        url += filename + '.txt';
-      }
-    }
-
     if (filename !== '') {
       url += '?filename=' + filename;
     }
+    return this.http.get(url, { responseType: 'text' }).pipe(
+      map((response) => {
+        const result = response;
+        return result;
+      }),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error({ err });
+        if (filename === '') {
+          this.log.error(
+            "FilesApiService (readFile): Could not read filetype '" +
+              filetype +
+              "' - error: " +
+              err.error.error,
+          );
+        } else {
+          this.log.error(
+            "FilesApiService (readFile): Could not read filetype '" +
+              filetype +
+              "', filename '" +
+              filename +
+              "' - error: " +
+              err.error.error,
+          );
+        }
 
-    if (apiUrl.includes('localhost')) {
-      if (filename === '') {
-        console.warn('FilesApiService.saveFile', 'Cannot save file in dev environment\n', '- filetype: ', filetype);
-      } else {
-        console.error('FilesApiService.saveFile: Cannot save file in dev environment filetype \'' + filetype + '\', filename \'' + filename + '\'');
-      }
-
-      return this.http.get(url, { responseType: 'text' })
-        .pipe(
-          map(response => {
-            const result = response;
-            return result;
-          }),
-          catchError((err: HttpErrorResponse) => {
-            console.error('FilesApiService.saveFile: Could not read result data' + ' - ' + err.error.error);
-            return of({});
-          })
-        );
-    }
-
-    return this.http.put(url, content, { responseType: 'text' })
-      .pipe(
-        map(response => {
-          const result = <any>response;
-
-          if (result) {
-            // console.log('ServicesApiService.CheckYamlText', '- config:', yamlText, '\nresult', {result});
-            return result;
-          } else {
-            console.log('FilesApiService.saveFile', 'fail: undefined result');
-          }
-        }),
-        catchError((err: HttpErrorResponse) => {
-          console.error('FilesApiService.saveFile: Could not save config data' + ' - ' + err.error.error);
-          return of({});
-        })
-      );
-
+        return of('');
+      }),
+    );
   }
 
+  saveFile(filetype, filename = '', content = '') {
+    // this.log.log('FilesApiService.saveFile');
+
+    const apiUrl = this.appConfig.apiUrl;
+    let url = apiUrl + 'files/' + filetype + '/';
+    if (filename !== '') {
+      url += '?filename=' + filename;
+    }
+    return this.http.put(url, content, { responseType: 'text' }).pipe(
+      map((response) => {
+        const result = response;
+
+        if (result) {
+          // this.log.log('ServicesApiService.CheckYamlText', '- config:', yamlText, '\nresult', {result});
+          return result;
+        } else {
+          this.log.log('FilesApiService.saveFile', 'fail: undefined result');
+        }
+      }),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error(
+          'FilesApiService.saveFile: Could not save config data' + ' - ' + err.error.error,
+        );
+        return of({});
+      }),
+    );
+  }
 
   deleteFile(filetype, filename = '') {
-    console.log('FilesApiService.deleteFile()', {filename});
+    this.log.log('FilesApiService.deleteFile()', { filename });
 
-    const apiUrl = sessionStorage.getItem('apiUrl');
+    const apiUrl = this.appConfig.apiUrl;
     let url = apiUrl + 'files/' + filetype + '/';
-
-    if (apiUrl.includes('localhost')) {
-      if (filename === '') {
-        url += 'default' + '.txt';
-      } else {
-        url += filename + '.txt';
-      }
-    } else {
-      if (filename !== '') {
-        url += '?filename=' + filename;
-      }
+    if (filename !== '') {
+      url += '?filename=' + filename;
     }
+    this.log.log('FilesApiService.deleteFile()', { url });
 
-    console.log('FilesApiService.deleteFile()', {url});
+    return this.http.delete(url, { responseType: 'text' }).pipe(
+      map((response) => {
+        const result = response;
+        return result;
+      }),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error({ err });
+        if (filename === '') {
+          this.log.error(
+            "FilesApiService.deleteFile(): Could not delete filetype '" +
+              filetype +
+              "' - error: " +
+              err.error.error,
+          );
+        } else {
+          this.log.error(
+            "FilesApiService.deleteFile(): Could not delete filetype '" +
+              filetype +
+              "', filename '" +
+              filename +
+              "' - error: " +
+              err.error.error,
+          );
+        }
 
-    return this.http.delete(url, { responseType: 'text' })
-      .pipe(
-        map(response => {
-          const result = response;
-          return result;
-        }),
-        catchError((err: HttpErrorResponse) => {
-          console.error({err});
-          if (filename === '') {
-            console.error('FilesApiService.deleteFile(): Could not delete filetype \'' + filetype + '\' - error: ' + err.error.error);
-          } else {
-            console.error('FilesApiService.deleteFile(): Could not delete filetype \'' + filetype + '\', filename \'' + filename + '\' - error: ' + err.error.error);
-          }
-
-          return of('');
-        })
-      );
+        return of('');
+      }),
+    );
   }
-
 
   getfileList(filetype) {
-    console.log('FilesApiService.getfileList()', {filetype});
+    this.log.log('FilesApiService.getfileList()', { filetype });
 
-    const apiUrl = sessionStorage.getItem('apiUrl');
+    const apiUrl = this.appConfig.apiUrl;
     let url = apiUrl + 'files/' + filetype + '/';
-    if (apiUrl.includes('localhost')) {
-      url += 'default.json';
-    }
-    return this.http.get(url)
-      .pipe(
-        map(response => {
-          const result = response;
-          return result;
-        }),
-        catchError((err: HttpErrorResponse) => {
-          console.error('FilesApiService.getfileList: Could not read file list' + ' - ' + err.error.error);
-          return of({});
-        })
-      );
+    return this.http.get(url).pipe(
+      map((response) => {
+        const result = response;
+        return result;
+      }),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error(
+          'FilesApiService.getfileList: Could not read file list' + ' - ' + err.error.error,
+        );
+        return of({});
+      }),
+    );
   }
-
 }
-
-

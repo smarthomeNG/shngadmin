@@ -1,10 +1,10 @@
-
 //
 // Datatype for <shng-server>:<port>/api/logs
 //
 
 export interface LoggersType {
-  [key: string]: any;
+  // TODO: define proper shape once the API contract is documented
+  [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 /*

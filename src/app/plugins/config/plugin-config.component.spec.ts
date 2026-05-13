@@ -1,19 +1,56 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
+import { of } from 'rxjs';
+import {
+  createMockAppConfigService,
+  createMockAuthService,
+  createMockOlddataService,
+  translateTestingModule,
+} from '../../../testing/test-helpers';
+import { AppConfigService } from '../../common/services/app-config.service';
+import { AuthService } from '../../common/services/auth.service';
+import { OlddataService } from '../../common/services/olddata.service';
+import { ServerApiService } from '../../common/services/server-api.service';
 import { PluginConfigComponent } from './plugin-config.component';
 
 describe('PluginConfigComponent', () => {
   let component: PluginConfigComponent;
   let fixture: ComponentFixture<PluginConfigComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ PluginConfigComponent ]
-    })
-    .compileComponents();
-  }));
+  beforeEach(async () => {
+    const mockServerApi = {
+      getServerBasicinfo: () => of({}),
+      getServerinfo: () => of({}),
+      restartShngServer: () => of({ result: 'ok' }),
+      shng_serverinfo: {},
+    };
 
-  beforeEach(() => {
+    const mockOlddata = {
+      ...createMockOlddataService(),
+      getSysteminfo: () => of({}),
+      getPypiinfo: () => of([]),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [PluginConfigComponent, translateTestingModule],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ServerApiService, useValue: mockServerApi },
+        { provide: AuthService, useValue: createMockAuthService() },
+        { provide: AppConfigService, useValue: createMockAppConfigService() },
+        { provide: OlddataService, useValue: mockOlddata },
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
+    })
+      .overrideComponent(PluginConfigComponent, { set: { imports: [TranslatePipe] } })
+      .compileComponents();
+
     fixture = TestBed.createComponent(PluginConfigComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

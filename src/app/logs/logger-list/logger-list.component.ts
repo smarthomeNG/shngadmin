@@ -1,26 +1,71 @@
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  ViewEncapsulation,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 
-import {Component, OnInit, ViewEncapsulation} from '@angular/core';
-import {Router} from '@angular/router';
-
+import { FormsModule } from '@angular/forms';
+import { Title } from '@angular/platform-browser';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { PrimeTemplate } from 'primeng/api';
+import { Bind } from 'primeng/bind';
+import { ButtonDirective } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
+import { Message } from 'primeng/message';
+import { Ripple } from 'primeng/ripple';
+import { Select } from 'primeng/select';
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { LoggersType } from '../../common/models/loggers-info';
+import { LogService } from '../../common/services/log.service';
 import { LoggersApiService } from '../../common/services/loggers-api.service';
-import {TranslateService} from '@ngx-translate/core';
-import {Title} from '@angular/platform-browser';
-import {ServerApiService} from '../../common/services/server-api.service';
+import { ServerApiService } from '../../common/services/server-api.service';
+import { LoggerLineComponent } from '../logger-line/logger-line.component';
 
 @Component({
   selector: 'app-logger-list',
   templateUrl: './logger-list.component.html',
   styleUrls: ['./logger-list.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    Bind,
+    Tabs,
+    TabList,
+    Ripple,
+    Tab,
+    TabPanels,
+    TabPanel,
+    ButtonDirective,
+    LoggerLineComponent,
+    Dialog,
+    PrimeTemplate,
+    Select,
+    FormsModule,
+    Message,
+    TranslatePipe,
+  ],
 })
 export class LoggerListComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private dataService = inject(LoggersApiService);
+  private dataServiceServer = inject(ServerApiService);
+  protected router = inject(Router);
+  private translate = inject(TranslateService);
+  private titleService = inject(Title);
+  private readonly log = inject(LogService);
 
   loggers: LoggersType;
-  active_plugins: any[];
-  active_logics: any[];
-  loggersList: any[];
-  definedHandlers: {};
+  active_plugins: string[];
+  active_logics: string[];
+  loggersList: string[] = [];
+  definedHandlers: string[] = [];
 
   loggerOptions: {}[] = [];
 
@@ -29,46 +74,38 @@ export class LoggerListComponent implements OnInit {
   newlogger_filename: string = '';
   newlogger_add_enabled: boolean = false;
   noLoggerToAdd: boolean = false;
-//  confirmdelete_display: boolean = false;
-//  delete_param: {};
-
+  //  confirmdelete_display: boolean = false;
+  //  delete_param: {};
 
   levelDefault: string = '?';
-
-  constructor(private dataService: LoggersApiService,
-              private dataServiceServer: ServerApiService,
-              protected router: Router,
-              private translate: TranslateService,
-              private titleService: Title) {
-  }
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
   }
 
   ngOnInit() {
-    console.log('LoggerListComponent.ngOnInit');
+    this.log.log('LoggerListComponent.ngOnInit');
 
-    this.dataServiceServer.getServerinfo()
-        .subscribe(
-            (response) => {
-              this.setTitle(this.translate.instant('MENU.LOGGER_CONFIGURATION'));
+    this.dataServiceServer
+      .getServerinfo()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.setTitle(this.translate.instant('MENU.LOGGER_CONFIGURATION'));
 
-              this.dataService.getLoggers()
-                  .subscribe(
-                      (response2: LoggersType) => {
-                        this.loggers = response2.loggers;
-                        this.active_plugins = response2.active_plugins;
-                        this.active_logics = response2.active_logics;
-                        this.loggersList = Object.keys(response2.loggers);
-                        this.loggersList = this.loggersList.sort();
-                        this.definedHandlers = response2.defined_handlers;
-                        console.log('ngOnInit: response2', response2);
-                      }
-                  );
-            }
-        );
-
+        this.dataService
+          .getLoggers()
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((response2: LoggersType) => {
+            this.loggers = response2['loggers'];
+            this.active_plugins = response2['active_plugins'];
+            this.active_logics = response2['active_logics'];
+            this.loggersList = Object.keys(response2['loggers']);
+            this.loggersList = this.loggersList.sort();
+            this.definedHandlers = response2['defined_handlers'];
+            this.log.log('ngOnInit: response2', response2);
+            this.cdr.markForCheck();
+          });
+      });
   }
 
   baseName(str, withExtension = true) {
@@ -84,30 +121,31 @@ export class LoggerListComponent implements OnInit {
     if (level === null) {
       this.loggers[logger].active.level = this.levelDefault;
     }
-    console.log('levelChanged: Logger \'' + logger + '\' from ', this.loggers[logger].level + ' to ' + level);
+    this.log.log(
+      "levelChanged: Logger '" + logger + "' from ",
+      this.loggers[logger].level + ' to ' + level,
+    );
     this.loggers[logger].level = this.loggers[logger].active.level;
 
-    this.dataService.setLoggerLevel(logger, level)
-      .subscribe(
-        (response) => {
-          const result = response['result'];
-          const description = response['description'];
-          if (result === 'error') {
-            console.warn('dataService.setLoggerLevel ERROR', {description});
-          }
+    this.dataService
+      .setLoggerLevel(logger, level)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const result = response['result'];
+        const description = response['description'];
+        if (result === 'error') {
+          this.log.warn('dataService.setLoggerLevel ERROR', { description });
         }
-      );
+      });
 
     this.loggers[logger].level = this.loggers[logger].active.level;
   }
-
 
   // ------------------------------------------------------------------------------
   //   Logic-logger specific functions
   // ------------------------------------------------------------------------------
 
   logic_loaded(logger) {
-
     if (logger === 'logics') {
       return true;
     }
@@ -119,30 +157,26 @@ export class LoggerListComponent implements OnInit {
     return false;
   }
 
-
   newLogicLogger() {
-
-    this.loggerOptions = [{label: '', value: ''}];
+    this.loggerOptions = [{ label: '', value: '' }];
     for (let i = 0; i < this.active_logics.length; i++) {
       const lg = 'logics.' + this.active_logics[i];
       if (!this.loggersList.includes(lg) || this.loggers[lg].not_conf === true) {
-        this.loggerOptions.push({label: lg, value: lg});
+        this.loggerOptions.push({ label: lg, value: lg });
       }
     }
 
     this.newlogger_name = '';
     this.newlogger_filename = '';
     this.newlogger_display = true;
-    this.noLoggerToAdd = (this.loggerOptions.length === 1);
+    this.noLoggerToAdd = this.loggerOptions.length === 1;
   }
-
 
   // ------------------------------------------------------------------------------
   //   Plugin-logger specific functions
   // ------------------------------------------------------------------------------
 
   plugin_loaded(logger) {
-
     if (logger === 'plugins') {
       return true;
     }
@@ -154,28 +188,24 @@ export class LoggerListComponent implements OnInit {
     return false;
   }
 
-
   newPluginLogger() {
-
-    this.loggerOptions = [{label: '', value: ''}];
+    this.loggerOptions = [{ label: '', value: '' }];
     for (let i = 0; i < this.active_plugins.length; i++) {
       const lg = 'plugins.' + this.active_plugins[i];
       if (!this.loggersList.includes(lg) || this.loggers[lg].not_conf === true) {
-        this.loggerOptions.push({label: lg, value: lg});
+        this.loggerOptions.push({ label: lg, value: lg });
       }
     }
 
     this.newlogger_name = '';
     this.newlogger_filename = '';
     this.newlogger_display = true;
-    this.noLoggerToAdd = (this.loggerOptions.length === 1);
+    this.noLoggerToAdd = this.loggerOptions.length === 1;
   }
 
-
   pluginLoggerIsDeletable(logger) {
-
     if (logger === 'plugins') {
-        return false;
+      return false;
     }
     if (logger.startsWith('plugins.')) {
       if (this.loggersList.includes(logger)) {
@@ -185,20 +215,19 @@ export class LoggerListComponent implements OnInit {
     return false;
   }
 
-
   // ------------------------------------------------------------------------------
   //   Item-logger specific functions
   // ------------------------------------------------------------------------------
 
   newItemLogger() {
-    console.log('newItemLogger');
+    this.log.log('newItemLogger');
 
-    this.loggerOptions = [{label: '', value: ''}];
+    this.loggerOptions = [{ label: '', value: '' }];
     for (let i = 0; i < this.loggersList.length; i++) {
-      if (this.loggersList[i].startsWith('items.') ) {
+      if (this.loggersList[i].startsWith('items.')) {
         const lg = this.loggersList[i];
         if (this.loggers[lg].level === undefined || this.loggers[lg].not_conf === true) {
-          this.loggerOptions.push({label: lg, value: lg});
+          this.loggerOptions.push({ label: lg, value: lg });
         }
       }
     }
@@ -206,23 +235,24 @@ export class LoggerListComponent implements OnInit {
     this.newlogger_name = '';
     this.newlogger_filename = '';
     this.newlogger_display = true;
-    this.noLoggerToAdd = (this.loggerOptions.length === 1);
+    this.noLoggerToAdd = this.loggerOptions.length === 1;
   }
-
 
   // ------------------------------------------------------------------------------
   //   Advanced-logger specific functions
   // ------------------------------------------------------------------------------
 
   newAdvancedLogger() {
-
-    this.loggerOptions = [{label: '', value: ''}];
+    this.loggerOptions = [{ label: '', value: '' }];
     for (let i = 0; i < this.loggersList.length; i++) {
-      if (this.loggersList[i].startsWith('functions.') || this.loggersList[i].startsWith('lib.') ||
-          this.loggersList[i].startsWith('modules.')) {
+      if (
+        this.loggersList[i].startsWith('functions.') ||
+        this.loggersList[i].startsWith('lib.') ||
+        this.loggersList[i].startsWith('modules.')
+      ) {
         const lg = this.loggersList[i];
         if (this.loggers[lg].level === undefined || this.loggers[lg].not_conf === true) {
-          this.loggerOptions.push({label: lg, value: lg});
+          this.loggerOptions.push({ label: lg, value: lg });
         }
       }
     }
@@ -230,9 +260,8 @@ export class LoggerListComponent implements OnInit {
     this.newlogger_name = '';
     this.newlogger_filename = '';
     this.newlogger_display = true;
-    this.noLoggerToAdd = (this.loggerOptions.length === 1);
+    this.noLoggerToAdd = this.loggerOptions.length === 1;
   }
-
 
   // ------------------------------------------------------------------------------
   //   Functions for all loggers
@@ -244,107 +273,98 @@ export class LoggerListComponent implements OnInit {
     return parts.join('.');
   }
 
-
   newLoggerSelected(loggerOption) {
-    this.newlogger_add_enabled = (loggerOption !== '');
+    this.newlogger_add_enabled = loggerOption !== '';
   }
-
 
   createLogger() {
     this.newlogger_display = false;
 
-    this.dataService.addLogger(this.newlogger_name)
-        .subscribe(
-            (response) => {
-              const result = response['result'];
-              const description = response['description'];
-              if (result === 'error') {
-                console.warn('dataService.addLogger ERROR', {description});
-              }
+    this.dataService
+      .addLogger(this.newlogger_name)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const result = response['result'];
+        const description = response['description'];
+        if (result === 'error') {
+          this.log.warn('dataService.addLogger ERROR', { description });
+        }
 
-              if (result === 'ok') {
-                this.dataService.getLoggers()
-                    .subscribe(
-                        (response2: LoggersType) => {
-                          this.loggers = response2.loggers;
-                          this.active_plugins = response2.active_plugins;
-                          this.active_logics = response2.active_logics;
-                          this.loggersList = Object.keys(response2.loggers);
-                          this.loggersList = this.loggersList.sort();
-                        }
-                    );
-
-              }
-            }
-        );
+        if (result === 'ok') {
+          this.dataService
+            .getLoggers()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((response2: LoggersType) => {
+              this.loggers = response2['loggers'];
+              this.active_plugins = response2['active_plugins'];
+              this.active_logics = response2['active_logics'];
+              this.loggersList = Object.keys(response2['loggers']);
+              this.loggersList = this.loggersList.sort();
+              this.cdr.markForCheck();
+            });
+        }
+      });
   }
-
 
   loggerDelete(loggerName) {
-    // console.log('list: loggerDelete', loggerName);
+    // this.log.log('list: loggerDelete', loggerName);
 
-    this.dataService.deleteLogger(loggerName)
-      .subscribe(
-        (response) => {
-          const result = response['result'];
-          const description = response['description'];
-          if (result === 'error') {
-            console.warn('dataService.deleteLogger ERROR', {description});
-          }
-
-          if (result === 'ok') {
-            this.dataService.getLoggers()
-              .subscribe(
-                (response2: LoggersType) => {
-                  this.loggers = response2.loggers;
-                  this.active_plugins = response2.active_plugins;
-                  this.active_logics = response2.active_logics;
-                  this.loggersList = Object.keys(response2.loggers);
-                  this.loggersList = this.loggersList.sort();
-                  this.definedHandlers = response2.defined_handlers;
-                  console.log('loggerDelete: response2', response2);
-                }
-              );
-
-          }
+    this.dataService
+      .deleteLogger(loggerName)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const result = response['result'];
+        const description = response['description'];
+        if (result === 'error') {
+          this.log.warn('dataService.deleteLogger ERROR', { description });
         }
-      );
-  }
 
+        if (result === 'ok') {
+          this.dataService
+            .getLoggers()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((response2: LoggersType) => {
+              this.loggers = response2['loggers'];
+              this.active_plugins = response2['active_plugins'];
+              this.active_logics = response2['active_logics'];
+              this.loggersList = Object.keys(response2['loggers']);
+              this.loggersList = this.loggersList.sort();
+              this.definedHandlers = response2['defined_handlers'];
+              this.log.log('loggerDelete: response2', response2);
+              this.cdr.markForCheck();
+            });
+        }
+      });
+  }
 
   modifyHandlers(logger, handlers) {
+    this.log.log("modifyHandlers: Logger '" + logger + "' " + " to '" + handlers + "'");
 
-    console.log('modifyHandlers: Logger \'' + logger + '\' ' + ' to \'' + handlers + '\'');
-
-    this.dataService.setHandlers(logger, handlers)
-      .subscribe(
-        (response) => {
-          const result = response['result'];
-          const description = response['description'];
-          if (result === 'error') {
-            console.warn('dataService.setHandlers ERROR', {description});
-          }
-
-          if (result === 'ok') {
-            this.dataService.getLoggers()
-              .subscribe(
-                (response2: LoggersType) => {
-                  this.loggers = response2.loggers;
-                  this.active_plugins = response2.active_plugins;
-                  this.active_logics = response2.active_logics;
-                  this.loggersList = Object.keys(response2.loggers);
-                  this.loggersList = this.loggersList.sort();
-                  this.definedHandlers = response2.defined_handlers;
-                  console.log('loggerDelete: response2', response2);
-                }
-              );
-
-          }
+    this.dataService
+      .setHandlers(logger, handlers)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const result = response['result'];
+        const description = response['description'];
+        if (result === 'error') {
+          this.log.warn('dataService.setHandlers ERROR', { description });
         }
-      );
 
+        if (result === 'ok') {
+          this.dataService
+            .getLoggers()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((response2: LoggersType) => {
+              this.loggers = response2['loggers'];
+              this.active_plugins = response2['active_plugins'];
+              this.active_logics = response2['active_logics'];
+              this.loggersList = Object.keys(response2['loggers']);
+              this.loggersList = this.loggersList.sort();
+              this.definedHandlers = response2['defined_handlers'];
+              this.log.log('loggerDelete: response2', response2);
+              this.cdr.markForCheck();
+            });
+        }
+      });
   }
-
-
 }
-

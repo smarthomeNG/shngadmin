@@ -1,7 +1,6 @@
-
-import {PluginMetadata} from './plugin-metadata';
-import {PluginItemAttribute} from './plugin-item-attribute';
-import {PluginParameter} from './plugin-parameter';
+import { PluginItemAttribute } from './plugin-item-attribute';
+import { PluginMetadata } from './plugin-metadata';
+import { PluginParameter } from './plugin-parameter';
 
 //
 // Datatype for <shng-server>:<port>/api/plugins/info
@@ -19,6 +18,7 @@ export interface PlugininfoType {
   blog_url: string;
   parameters: PluginParameter[];
   arttibutes: PluginItemAttribute[];
+  attributes?: PluginItemAttribute[];
   metadata: PluginMetadata;
   documentation_config_doc: string;
   documentation_user_doc: string;
@@ -26,4 +26,3 @@ export interface PlugininfoType {
   stopped: boolean;
   triggers: string[];
 }
-

@@ -1,66 +1,55 @@
-
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 
-import { map, catchError } from 'rxjs/operators';
-import {of} from 'rxjs';
-import {JwtHelperService} from '@auth0/angular-jwt';
-
-
+import { of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { AppConfigService } from './app-config.service';
+import { LogService } from './log.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ConfigApiService {
-
-  constructor(private http: HttpClient) { }
-
+  private http = inject(HttpClient);
+  private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
 
   getConfig() {
-    // console.log('ConfigApiService.getConfig');
+    // this.log.log('ConfigApiService.getConfig');
 
-    const apiUrl = sessionStorage.getItem('apiUrl');
+    const apiUrl = this.appConfig.apiUrl;
     let url = apiUrl + 'config/';
-    if (apiUrl.includes('localhost')) {
-      url += 'default.json';
-    }
-    return this.http.get(url)
-      .pipe(
-        map(response => {
-          const result = response;
-          return result;
-        }),
-        catchError((err: HttpErrorResponse) => {
-          console.error('ConfigApiService (getConfig): Could not read schedulers data' + ' - ' + err.error.error);
-          return of({});
-        })
-      );
+    return this.http.get(url).pipe(
+      map((response) => {
+        const result = response;
+        return result;
+      }),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error(
+          'ConfigApiService (getConfig): Could not read schedulers data' + ' - ' + err.error.error,
+        );
+        return of({});
+      }),
+    );
   }
 
   saveConfig(data) {
-    // console.log('ConfigApiService.saveConfig');
+    // this.log.log('ConfigApiService.saveConfig');
 
-    const apiUrl = sessionStorage.getItem('apiUrl');
+    const apiUrl = this.appConfig.apiUrl;
     const url = apiUrl + 'config/core/';
-    if (apiUrl.includes('localhost')) {
-      console.log('ConfigApiService.saveConfig', 'Cannot simulate saving data in dev environment');
-      return of(true);
-    }
-
-    return this.http.put(url, JSON.stringify(data))
-      .pipe(map(response => {
-        const result = <any>response;
+    return this.http.put(url, JSON.stringify(data)).pipe(
+      map((response) => {
+        const result = response;
 
         if (result) {
-          console.log('ConfigApiService.saveConfig', 'success', {result});
+          this.log.log('ConfigApiService.saveConfig', 'success', { result });
           return true;
         } else {
-          console.log('ConfigApiService.saveConfig', 'fail');
+          this.log.log('ConfigApiService.saveConfig', 'fail');
           return false;
         }
-      }));
-
+      }),
+    );
   }
 }
-
-

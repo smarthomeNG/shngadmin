@@ -1,89 +1,90 @@
+<div class="shngbody">
+  <div>
+    @if (sceneList.length === 0) {
+      <p style="margin-left: 15px; margin-top: 15px; color: #888">{{ 'SCENES.NO_SCENES' | translate }}</p>
+    }
+    <p-accordion [multiple]="true">
+      @for (scene of sceneList; track $index) {
+        <p-accordion-panel [value]="$index">
+          <p-accordion-header>
+            <span style="font-size: large; font-weight: bold">{{ scene['path'] }}</span>
+            @if (scene['name'] && scene['name'] !== '') {
+              &nbsp; &nbsp; ({{ scene['name'] }})
+            }
+          </p-accordion-header>
+          <p-accordion-content>
+            <div style="margin-left: 17px">
+              <table class="table table-striped table-hover" style="border: 1px solid #ddd">
+                <colgroup>
+                  <col width="15px" />
+                  <col width="50px" />
+                  <col width="80px" />
+                  <col width="400px" />
+                  <col minwidth="300px" />
+                </colgroup>
+                <thead>
+                  <tr class="shng_heading">
+                    <th colspan="2">{{ 'SCENES.SCENE' | translate }}</th>
+                    <th style="padding-left: 0">{{ 'SCENES.LEARN' | translate }}</th>
+                    <th style="padding-left: 0">{{ 'SCENES.ITEM' | translate }}</th>
+                    <th style="padding-left: 0">{{ 'SCENES.VALUE' | translate }}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (value of scene['values']; track $index) {
+                    @for (action of value['action_list']; track $index) {
+                      @if (action === value['action_list'][0] && value['action_name'] !== '') {
+                        <tr>
+                          <td class="p-1"></td>
+                          <td class="p-1" colspan="3">
+                            <strong>{{ value['action'] }}</strong
+                            >: {{ value['action_name'] }}
+                          </td>
+                          <td class="p-1"></td>
+                          <td class="p-1"></td>
+                        </tr>
+                      }
 
+                      <tr>
+                        <td class="p-1"></td>
+                        <td class="p-1">
+                          @if (action === value['action_list'][0] && value['action_name'] === '') {
+                            <strong>{{ value['action'] }}</strong
+                            >:
+                          }
+                        </td>
 
-<div class="body-content">
-  <p-accordion [multiple]="true">
-    <ng-container *ngFor="let scene of sceneList">
-      <p-accordionTab>
-        <p-header>
-          <span style="font-size: large; font-weight: bold; ">{{scene['path']}}</span>
-          <ng-container *ngIf="scene['name'] && scene['name'] !== ''">
-            &nbsp;  &nbsp; ({{scene['name']}})
-          </ng-container>
-        </p-header>
-        <div style="margin-left: 17px;">
-          <table class="table table-striped table-hover" style="border: 1px solid #ddd; ">
-          <colgroup>
-            <col width="15px">
-            <col width="50px">
-            <col width="80px">
-            <col width="400px">
-            <col minwidth="300px">
-          </colgroup>
-          <thead>
-          <tr class="shng_heading">
-            <th colspan="2">{{ 'SCENES.SCENE'|translate }}</th>
-            <th style="padding-left: 0px;">{{ 'SCENES.LEARN'|translate }}</th>
-            <th style="padding-left: 0px;">{{ 'SCENES.ITEM'|translate }}</th>
-            <th style="padding-left: 0px;">{{ 'SCENES.VALUE'|translate }}</th>
-            <th></th>
-          </tr>
-          </thead>
-          <tbody>
+                        <td class="p-1">
+                          @if (action[2]) {
+                            {{ 'ja' | translate }}
+                          }
+                          @if (!action[2]) {
+                            {{ 'nein' | translate }}
+                          }
+                        </td>
 
-          <ng-container *ngFor="let value of scene['values']">
-          <ng-container *ngFor="let action of value['action_list']">
+                        <td class="p-1">{{ action[0] }}</td>
 
-            <ng-container *ngIf="(action === value['action_list'][0]) && (value['action_name'] !== '')">
-              <tr>
-                <td class="p-1"></td>
-                <td class="p-1" colspan="3"><strong>{{ value['action'] }}</strong>: {{ value['action_name'] }}</td>
-                <td class="p-1"></td>
-                <td class="p-1"></td>
-              </tr>
-            </ng-container>
+                        <td class="p-1">
+                          @if (!action[3] || action[3] === action[1]) {
+                            {{ action[1] }}
+                          }
+                          @if (!(!action[3] || action[3] === action[1])) {
+                            {{ action[3] }} (default: {{ action[1] }})
+                          }
+                        </td>
 
-            <tr>
-              <td class="p-1"></td>
-              <td class="p-1">
-                <ng-container *ngIf="action === value['action_list'][0] && value['action_name'] === ''" >
-                  <strong>{{ value['action'] }}</strong>:
-                </ng-container>
-              </td>
-
-              <td class="p-1">
-                <ng-container *ngIf="action[2]" >
-                  {{ 'ja'|translate }}
-                </ng-container>
-                <ng-container *ngIf="!action[2]" >
-                  {{ 'nein'|translate }}
-                </ng-container>
-              </td>
-
-              <td class="p-1">{{ action[0] }}</td>
-
-              <td class="p-1">
-                <ng-container *ngIf="!action[3] || action[3] === action[1]" >
-                  {{ action[1] }}
-                </ng-container>
-                <ng-container *ngIf="!(!action[3] || action[3] === action[1])" >
-                  {{ action[3] }} (default: {{ action[1] }})
-                </ng-container>
-              </td>
-
-              <td class="p-1">
-              </td>
-
-            </tr>
-
-          </ng-container>
-          </ng-container>
-
-          </tbody>
-        </table>
-        </div>
-      </p-accordionTab>
-    </ng-container>
-  </p-accordion>
+                        <td class="p-1"></td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
+    </p-accordion>
+  </div>
 </div>
-
-

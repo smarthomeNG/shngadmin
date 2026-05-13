@@ -1,70 +1,75 @@
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AppConfigService } from '../common/services/app-config.service';
+// import { isSuccess } from '@angular/http/src/http_utils';
 
-import { Component, OnInit } from '@angular/core';
-import { isSuccess } from '@angular/http/src/http_utils';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { MenuItem } from 'primeng/api';
 
-import { TranslateService } from '@ngx-translate/core';
-// import { MenuItem } from 'primeng/api';
-
-import { ServerInfo } from '../common/models/server-info';
-import { ServerApiService } from '../common/services/server-api.service';
+import { NgOptimizedImage } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
+import { Bind } from 'primeng/bind';
+import { ButtonDirective } from 'primeng/button';
+import { Menubar } from 'primeng/menubar';
 import { AuthService } from '../common/services/auth.service';
-import { AppComponent } from '../app.component';
-import { Router } from '@angular/router';
-
+import { ServerApiService } from '../common/services/server-api.service';
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
-  providers: []
+  providers: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Bind, Menubar, NgOptimizedImage, RouterLink, ButtonDirective, TranslatePipe],
 })
-
-
 export class HeaderComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private dataServiceServer = inject(ServerApiService);
+  private translate = inject(TranslateService);
+  protected router = inject(Router);
+  public authService = inject(AuthService);
+  private appConfig = inject(AppConfigService);
 
-//  faCircleNotch = faCircleNotch;
+  //  faCircleNotch = faCircleNotch;
 
-//  items: MenuItem[];
-  items: any;
+  items: MenuItem[];
   menuInitialized: boolean;
 
   // server_info: ServerInfo;
   developerMode: boolean;
 
-
-  constructor(private appComponent: AppComponent,
-              private dataServiceServer: ServerApiService,
-              private translate: TranslateService,
-              protected router: Router,
-              public authService: AuthService) {
-
-  }
-
-
-
   ngOnInit() {
     // console.log('HeaderComponent.ngOnInit');
 
-    this.dataServiceServer.getServerinfo()
-      .subscribe(
-        (response) => {
-          this.developerMode = (sessionStorage.getItem('developer_mode') === 'true');
-          this.buildMenu();
+    this.dataServiceServer
+      .getServerinfo()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.developerMode = this.appConfig.developerMode;
+        this.buildMenu();
+        this.cdr.markForCheck();
 
-          const credentials = {'username': '', 'password': ''};
-          // console.log('signIn', {credentials});
-          this.authService.login(credentials)
-            .subscribe((result: boolean) => {
-              // console.log('Anonymous login:', {result});
+        const credentials = { username: '', password: '' };
+        // console.log('signIn', {credentials});
+        this.authService
+          .login(credentials)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe((result: boolean) => {
+            // console.log('Anonymous login:', {result});
 
-              this.buildMenu();
-            });
-
-        }
-      );
-
+            this.buildMenu();
+            this.cdr.markForCheck();
+          });
+      });
   }
-
 
   buildMenu() {
     // console.log('HeaderComponent.buildMenu');
@@ -80,8 +85,8 @@ export class HeaderComponent implements OnInit {
           {
             label: this.translate.instant('MENU.CONFIGURATION'),
             routerLink: ['/system/config'],
-          }
-        ]
+          },
+        ],
       },
       {
         label: this.translate.instant('MENU.SERVICES'),
@@ -90,13 +95,13 @@ export class HeaderComponent implements OnInit {
       {
         label: this.translate.instant('MENU.ITEMS'),
         routerLink: ['/items'],
-        items: []
+        items: [],
       },
       {
         label: this.translate.instant('MENU.LOGICS'),
         routerLink: ['/logics'],
       },
-/*
+      /*
       {
         label: this.translate.instant('MENU.SCHEDULERS'),
         routerLink: ['/schedulers'],
@@ -113,8 +118,8 @@ export class HeaderComponent implements OnInit {
           {
             label: this.translate.instant('MENU.CONFIGURATION'),
             routerLink: ['/plugins/config'],
-          }
-        ]
+          },
+        ],
       },
       {
         label: this.translate.instant('MENU.SCENES'),
@@ -127,8 +132,8 @@ export class HeaderComponent implements OnInit {
           {
             label: this.translate.instant('MENU.SCENE_CONFIGURATION'),
             routerLink: ['/scenes/config'],
-          }
-        ]
+          },
+        ],
       },
       {
         label: this.translate.instant('MENU.SCHEDULERS'),
@@ -141,8 +146,8 @@ export class HeaderComponent implements OnInit {
           {
             label: this.translate.instant('MENU.THREADS'),
             routerLink: ['/threads'],
-          }
-        ]
+          },
+        ],
       },
       {
         label: this.translate.instant('MENU.LOGS'),
@@ -159,8 +164,8 @@ export class HeaderComponent implements OnInit {
           {
             label: this.translate.instant('MENU.CONFIGURATION'),
             routerLink: ['/logs/logging-configuration'],
-          }
-        ]
+          },
+        ],
       },
       {
         label: this.translate.instant('MENU.LOGIN'),
@@ -195,16 +200,15 @@ export class HeaderComponent implements OnInit {
     ];
 
     for (let i = 0; i < 4; i++) {
-      this.items[2].items.push({ label: '--dev--', routerLink: [''] });
+      this.items[2].items!.push({ label: '--dev--', routerLink: [''] });
     }
     if (this.developerMode) {
       // Add another menu item if in developer mode
-      this.items[2].items.push({ label: '--dev--', routerLink: [''] });
+      this.items[2].items!.push({ label: '--dev--', routerLink: [''] });
     }
 
     this.menuInitialized = true;
   }
-
 
   getMenuItems() {
     // console.log('HeaderComponent.getMenuItems');
@@ -212,7 +216,7 @@ export class HeaderComponent implements OnInit {
       this.buildMenu();
     }
 
-    this.translate.use(sessionStorage.getItem('default_language'));
+    this.translate.use(this.appConfig.defaultLanguage);
 
     const isLoggedIn = this.authService.isLoggedIn();
     if (this.items) {
@@ -232,45 +236,46 @@ export class HeaderComponent implements OnInit {
       this.items[8].visible = !isLoggedIn;
 
       this.items[0].label = this.translate.instant('MENU.SYSTEM');
-      this.items[0].items[0].label = this.translate.instant('MENU.SYSTEM_PROPERTIES');
-      this.items[0].items[1].label = this.translate.instant('MENU.CONFIGURATION');
+      this.items[0].items![0].label = this.translate.instant('MENU.SYSTEM_PROPERTIES');
+      this.items[0].items![1].label = this.translate.instant('MENU.CONFIGURATION');
       this.items[1].label = this.translate.instant('MENU.SERVICES');
 
       this.items[2].label = this.translate.instant('MENU.ITEMS');
-      this.items[2].items[0].label = this.translate.instant('MENU.ITEM_TREE');
-      this.items[2].items[0].routerLink = ['/item_tree'];
-      this.items[2].items[1].label = this.translate.instant('MENU.ITEM_CONFIGURATION');
-      this.items[2].items[1].routerLink = ['/items/config'];
-      if (this.items[2].items.length < 5) {
-        this.items[2].items[2].label = this.translate.instant('MENU.ITEM_STRUCTS');
-        this.items[2].items[2].routerLink = ['/items/structs'];
-        this.items[2].items[3].label = this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION');
-        this.items[2].items[3].routerLink = ['/items/struct_config'];
+      this.items[2].items![0].label = this.translate.instant('MENU.ITEM_TREE');
+      this.items[2].items![0].routerLink = ['/item_tree'];
+      this.items[2].items![1].label = this.translate.instant('MENU.ITEM_CONFIGURATION');
+      this.items[2].items![1].routerLink = ['/items/config'];
+      if (this.items[2].items!.length < 5) {
+        this.items[2].items![2].label = this.translate.instant('MENU.ITEM_STRUCTS');
+        this.items[2].items![2].routerLink = ['/items/structs'];
+        this.items[2].items![3].label = this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION');
+        this.items[2].items![3].routerLink = ['/items/struct_config'];
       } else {
-        this.items[2].items[2].label = this.translate.instant('MENU.ITEM_CONFIGURATION') + ' (dev)';
-        this.items[2].items[2].routerLink = ['/items/config2'];
-        this.items[2].items[3].label = this.translate.instant('MENU.ITEM_STRUCTS');
-        this.items[2].items[3].routerLink = ['/items/structs'];
-        this.items[2].items[4].label = this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION');
-        this.items[2].items[4].routerLink = ['/items/struct_config'];
+        this.items[2].items![2].label =
+          this.translate.instant('MENU.ITEM_CONFIGURATION') + ' (dev)';
+        this.items[2].items![2].routerLink = ['/items/config2'];
+        this.items[2].items![3].label = this.translate.instant('MENU.ITEM_STRUCTS');
+        this.items[2].items![3].routerLink = ['/items/structs'];
+        this.items[2].items![4].label = this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION');
+        this.items[2].items![4].routerLink = ['/items/struct_config'];
       }
 
       this.items[3].label = this.translate.instant('MENU.LOGICS');
-//      this.items[4].label = this.translate.instant('MENU.SCHEDULERS');
+      //      this.items[4].label = this.translate.instant('MENU.SCHEDULERS');
       this.items[4].label = this.translate.instant('MENU.PLUGINS');
-      this.items[4].items[0].label = this.translate.instant('MENU.PLUGINS_LIST');
-      this.items[4].items[1].label = this.translate.instant('MENU.CONFIGURATION');
+      this.items[4].items![0].label = this.translate.instant('MENU.PLUGINS_LIST');
+      this.items[4].items![1].label = this.translate.instant('MENU.CONFIGURATION');
 
       this.items[5].label = this.translate.instant('MENU.SCENES');
-      this.items[5].items[0].label = this.translate.instant('MENU.SCENE_LIST');
-      this.items[5].items[1].label = this.translate.instant('MENU.SCENE_CONFIGURATION');
+      this.items[5].items![0].label = this.translate.instant('MENU.SCENE_LIST');
+      this.items[5].items![1].label = this.translate.instant('MENU.SCENE_CONFIGURATION');
       this.items[6].label = this.translate.instant('MENU.SCHEDULERS');
-      this.items[6].items[0].label = this.translate.instant('MENU.SCHEDULERS');
-      this.items[6].items[1].label = this.translate.instant('MENU.THREADS');
+      this.items[6].items![0].label = this.translate.instant('MENU.SCHEDULERS');
+      this.items[6].items![1].label = this.translate.instant('MENU.THREADS');
       this.items[7].label = this.translate.instant('MENU.LOGS');
-      this.items[7].items[0].label = this.translate.instant('MENU.LOGS_DISPLAY');
-      this.items[7].items[1].label = this.translate.instant('MENU.LOGGER_LIST');
-      this.items[7].items[2].label = this.translate.instant('MENU.CONFIGURATION');
+      this.items[7].items![0].label = this.translate.instant('MENU.LOGS_DISPLAY');
+      this.items[7].items![1].label = this.translate.instant('MENU.LOGGER_LIST');
+      this.items[7].items![2].label = this.translate.instant('MENU.CONFIGURATION');
 
       this.items[8].label = this.translate.instant('MENU.LOGIN');
     }
