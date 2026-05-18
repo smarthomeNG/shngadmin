@@ -58,14 +58,14 @@ export class LogicsGroupsComponent implements OnInit {
   // -----------------------------------------------------
   //  Vars for the YAML syntax checker
   //
-  @ViewChild('codeeditor') private codeEditor;
-  @ViewChild('groupDesc') private groupDescEl: ElementRef<HTMLElement>;
+  @ViewChild('codeeditor') private codeEditor: unknown;
+  @ViewChild('groupDesc') private groupDescEl!: ElementRef<HTMLElement>;
 
-  logicGroups: LogicsGroupType[]; // filelist: string[];
-  groupList: string[];
-  group: LogicsGroupType;
-  menuGroupList: SelectItem[]; // itemFiles: SelectItem[];
-  selectedGroup: SelectItem;
+  logicGroups!: Record<string, LogicsGroupType>; // filelist: string[];
+  groupList!: string[];
+  group!: LogicsGroupType;
+  menuGroupList!: SelectItem[]; // itemFiles: SelectItem[];
+  selectedGroup!: SelectItem;
 
   myEditGroup = ''; // myEditFilename = '';
 
@@ -79,10 +79,10 @@ export class LogicsGroupsComponent implements OnInit {
 
   groupTitleOrig = '';
   groupDescriptionOrig = '';
-  groupChanged: boolean;
+  groupChanged!: boolean;
 
   confirmdelete_display: boolean = false;
-  delete_param: {};
+  delete_param!: {};
 
   ngOnInit() {
     this.group = { title: '', description: '' };
@@ -95,7 +95,7 @@ export class LogicsGroupsComponent implements OnInit {
       .getGroupsInfo()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        this.logicGroups = (response as { groups: LogicsGroupType[] })['groups'];
+        this.logicGroups = (response as { groups: Record<string, LogicsGroupType> })['groups'];
         this.groupList = Object.keys(this.logicGroups).sort(function (a, b) {
           return a.toLowerCase().localeCompare(b.toLowerCase());
         });
@@ -174,8 +174,6 @@ export class LogicsGroupsComponent implements OnInit {
         }
       });
 
-    // alert('code for removal of plugin "' + this.dialog_configname + '" configurations is not yet implemented');
-
     return true;
   }
 
@@ -232,7 +230,7 @@ export class LogicsGroupsComponent implements OnInit {
           this.group = this.logicGroups[this.myEditGroup];
           const groupDesc = this.groupDescEl?.nativeElement;
           if (groupDesc) {
-            groupDesc.innerHTML = this.group.description + '<br><br><br>';
+            groupDesc.textContent = this.group.description;
           }
         }
         this.groupChanged = false;
@@ -274,7 +272,7 @@ export class LogicsGroupsComponent implements OnInit {
       }
       const groupDesc = this.groupDescEl?.nativeElement;
       if (groupDesc) {
-        groupDesc.innerHTML = this.group.description + '<br><br><br>';
+        groupDesc.textContent = this.group.description;
       }
       this.groupTitleOrig = this.logicGroups[group]['title'];
       this.groupDescriptionOrig = this.logicGroups[group]['description'];

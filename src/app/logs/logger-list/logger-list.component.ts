@@ -21,10 +21,10 @@ import { Message } from 'primeng/message';
 import { Ripple } from 'primeng/ripple';
 import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-import { LoggersType } from '../../common/models/loggers-info';
+import { LoggersApiResponse, LoggersType } from '../../common/models/loggers-info';
+// LoggersType is used for the loggers field type below
 import { LogService } from '../../common/services/log.service';
 import { LoggersApiService } from '../../common/services/loggers-api.service';
-import { ServerApiService } from '../../common/services/server-api.service';
 import { LoggerLineComponent } from '../logger-line/logger-line.component';
 
 @Component({
@@ -55,15 +55,14 @@ export class LoggerListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private dataService = inject(LoggersApiService);
-  private dataServiceServer = inject(ServerApiService);
   protected router = inject(Router);
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private readonly log = inject(LogService);
 
-  loggers: LoggersType;
-  active_plugins: string[];
-  active_logics: string[];
+  loggers!: LoggersType;
+  active_plugins!: string[];
+  active_logics!: string[];
   loggersList: string[] = [];
   definedHandlers: string[] = [];
 
@@ -85,30 +84,29 @@ export class LoggerListComponent implements OnInit {
 
   ngOnInit() {
     this.log.log('LoggerListComponent.ngOnInit');
+    this.setTitle(this.translate.instant('MENU.LOGGER_CONFIGURATION'));
+    this.refreshLoggers();
+  }
 
-    this.dataServiceServer
-      .getServerinfo()
+  private applyLoggersResponse(r: LoggersApiResponse) {
+    this.loggers = r.loggers;
+    this.active_plugins = r.active_plugins;
+    this.active_logics = r.active_logics;
+    this.loggersList = Object.keys(r.loggers).sort();
+    this.definedHandlers = r.defined_handlers;
+    this.cdr.markForCheck();
+  }
+
+  private refreshLoggers() {
+    this.dataService
+      .getLoggers()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.LOGGER_CONFIGURATION'));
-
-        this.dataService
-          .getLoggers()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((response2: LoggersType) => {
-            this.loggers = response2['loggers'];
-            this.active_plugins = response2['active_plugins'];
-            this.active_logics = response2['active_logics'];
-            this.loggersList = Object.keys(response2['loggers']);
-            this.loggersList = this.loggersList.sort();
-            this.definedHandlers = response2['defined_handlers'];
-            this.log.log('ngOnInit: response2', response2);
-            this.cdr.markForCheck();
-          });
+      .subscribe((r) => {
+        if (r && 'loggers' in r) this.applyLoggersResponse(r as LoggersApiResponse);
       });
   }
 
-  baseName(str, withExtension = true) {
+  baseName(str: string, withExtension = true) {
     let base = str;
     base = base.substring(base.lastIndexOf('/') + 1);
     if (!withExtension && base.lastIndexOf('.') !== -1) {
@@ -117,7 +115,7 @@ export class LoggerListComponent implements OnInit {
     return base;
   }
 
-  levelChanged(logger, level) {
+  levelChanged(logger: string, level: string | null) {
     if (level === null) {
       this.loggers[logger].active.level = this.levelDefault;
     }
@@ -128,11 +126,12 @@ export class LoggerListComponent implements OnInit {
     this.loggers[logger].level = this.loggers[logger].active.level;
 
     this.dataService
-      .setLoggerLevel(logger, level)
+      .setLoggerLevel(logger, level ?? '')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        const result = response['result'];
-        const description = response['description'];
+        const resp = response as Record<string, unknown>;
+        const result = resp['result'];
+        const description = resp['description'];
         if (result === 'error') {
           this.log.warn('dataService.setLoggerLevel ERROR', { description });
         }
@@ -145,7 +144,7 @@ export class LoggerListComponent implements OnInit {
   //   Logic-logger specific functions
   // ------------------------------------------------------------------------------
 
-  logic_loaded(logger) {
+  logic_loaded(logger: string) {
     if (logger === 'logics') {
       return true;
     }
@@ -176,7 +175,7 @@ export class LoggerListComponent implements OnInit {
   //   Plugin-logger specific functions
   // ------------------------------------------------------------------------------
 
-  plugin_loaded(logger) {
+  plugin_loaded(logger: string) {
     if (logger === 'plugins') {
       return true;
     }
@@ -203,7 +202,7 @@ export class LoggerListComponent implements OnInit {
     this.noLoggerToAdd = this.loggerOptions.length === 1;
   }
 
-  pluginLoggerIsDeletable(logger) {
+  pluginLoggerIsDeletable(logger: string) {
     if (logger === 'plugins') {
       return false;
     }
@@ -267,13 +266,13 @@ export class LoggerListComponent implements OnInit {
   //   Functions for all loggers
   // ------------------------------------------------------------------------------
 
-  getParent(logger) {
+  getParent(logger: string) {
     const parts = logger.split('.');
     parts.pop();
     return parts.join('.');
   }
 
-  newLoggerSelected(loggerOption) {
+  newLoggerSelected(loggerOption: string) {
     this.newlogger_add_enabled = loggerOption !== '';
   }
 
@@ -284,87 +283,50 @@ export class LoggerListComponent implements OnInit {
       .addLogger(this.newlogger_name)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        const result = response['result'];
-        const description = response['description'];
+        const resp = response as Record<string, unknown>;
+        const result = resp['result'];
+        const description = resp['description'];
         if (result === 'error') {
           this.log.warn('dataService.addLogger ERROR', { description });
         }
 
-        if (result === 'ok') {
-          this.dataService
-            .getLoggers()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((response2: LoggersType) => {
-              this.loggers = response2['loggers'];
-              this.active_plugins = response2['active_plugins'];
-              this.active_logics = response2['active_logics'];
-              this.loggersList = Object.keys(response2['loggers']);
-              this.loggersList = this.loggersList.sort();
-              this.cdr.markForCheck();
-            });
-        }
+        if (result === 'ok') this.refreshLoggers();
       });
   }
 
-  loggerDelete(loggerName) {
+  loggerDelete(loggerName: string) {
     // this.log.log('list: loggerDelete', loggerName);
 
     this.dataService
       .deleteLogger(loggerName)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        const result = response['result'];
-        const description = response['description'];
+        const resp2 = response as Record<string, unknown>;
+        const result = resp2['result'];
+        const description = resp2['description'];
         if (result === 'error') {
           this.log.warn('dataService.deleteLogger ERROR', { description });
         }
 
-        if (result === 'ok') {
-          this.dataService
-            .getLoggers()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((response2: LoggersType) => {
-              this.loggers = response2['loggers'];
-              this.active_plugins = response2['active_plugins'];
-              this.active_logics = response2['active_logics'];
-              this.loggersList = Object.keys(response2['loggers']);
-              this.loggersList = this.loggersList.sort();
-              this.definedHandlers = response2['defined_handlers'];
-              this.log.log('loggerDelete: response2', response2);
-              this.cdr.markForCheck();
-            });
-        }
+        if (result === 'ok') this.refreshLoggers();
       });
   }
 
-  modifyHandlers(logger, handlers) {
+  modifyHandlers(logger: string, handlers: string[] | string) {
     this.log.log("modifyHandlers: Logger '" + logger + "' " + " to '" + handlers + "'");
 
     this.dataService
-      .setHandlers(logger, handlers)
+      .setHandlers(logger, Array.isArray(handlers) ? handlers.join(',') : handlers)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        const result = response['result'];
-        const description = response['description'];
+        const resp3 = response as Record<string, unknown>;
+        const result = resp3['result'];
+        const description = resp3['description'];
         if (result === 'error') {
           this.log.warn('dataService.setHandlers ERROR', { description });
         }
 
-        if (result === 'ok') {
-          this.dataService
-            .getLoggers()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe((response2: LoggersType) => {
-              this.loggers = response2['loggers'];
-              this.active_plugins = response2['active_plugins'];
-              this.active_logics = response2['active_logics'];
-              this.loggersList = Object.keys(response2['loggers']);
-              this.loggersList = this.loggersList.sort();
-              this.definedHandlers = response2['defined_handlers'];
-              this.log.log('loggerDelete: response2', response2);
-              this.cdr.markForCheck();
-            });
-        }
+        if (result === 'ok') this.refreshLoggers();
       });
   }
 }

@@ -1,5 +1,4 @@
 import {
-  AfterViewChecked,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -16,12 +15,12 @@ import { PrimeTemplate, SelectItem } from 'primeng/api';
 
 import { NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CodemirrorModule } from '@ctrl/ngx-codemirror';
 import { Bind } from 'primeng/bind';
 import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
+import { CodeEditorComponent } from '../../common/components/code-editor/code-editor.component';
 import { FilesApiService } from '../../common/services/files-api.service';
 import { FunctionsApiService } from '../../common/services/functions-api.service';
 import { LogService } from '../../common/services/log.service';
@@ -37,7 +36,7 @@ import { ServicesApiService } from '../../common/services/services-api.service';
     ButtonDirective,
     Listbox,
     FormsModule,
-    CodemirrorModule,
+    CodeEditorComponent,
     Dialog,
     PrimeTemplate,
     InputText,
@@ -45,7 +44,7 @@ import { ServicesApiService } from '../../common/services/services-api.service';
     TranslatePipe,
   ],
 })
-export class FunctionConfigurationComponent implements AfterViewChecked, OnInit {
+export class FunctionConfigurationComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
@@ -55,19 +54,14 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
   private titleService = inject(Title);
   private readonly log = inject(LogService);
 
-  // -----------------------------------------------------------------
-  //  Vars for the codemirror components
-  //
-  rulers: { color: string; column: number; lineStyle: string }[] = [];
-
   // -----------------------------------------------------
   //  Vars for the YAML syntax checker
   //
-  @ViewChild('codeeditor', { static: true }) private codeEditor;
+  @ViewChild('codeeditor') codeEditor?: CodeEditorComponent;
 
-  filelist: string[];
-  functionFiles: SelectItem[];
-  selectedFunctionfile: SelectItem;
+  filelist!: string[];
+  functionFiles!: SelectItem[];
+  selectedFunctionfile!: SelectItem;
 
   reloadButtonDisabled = false;
   reloadAllButtonDisabled = false;
@@ -76,44 +70,7 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
   myTextarea = '';
   myTextareaOrig = '';
 
-  cmOptions = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      Tab: 'insertSoftTab',
-      'Shift-Tab': 'indentLess',
-      F11: function (cm) {
-        cm.setOption('fullScreen', !cm.getOption('fullScreen'));
-        // cm.getScrollerElement().style.maxHeight = 'none';
-      },
-      Esc: function (cm, fullScreen) {
-        if (cm.getOption('fullScreen')) {
-          cm.setOption('fullScreen', false);
-        }
-      },
-      'Ctrl-Q': function (cm) {
-        cm.foldCode(cm.getCursor());
-      },
-      'Shift-Ctrl-Q': function (cm) {
-        for (let l = cm.firstLine(); l <= cm.lastLine(); ++l) {
-          cm.foldCode({ line: l, ch: 0 }, null, 'unfold');
-        }
-      },
-    },
-    fullScreen: false,
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'python',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-    foldGutter: true,
-    gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-  };
+  cmReadOnly = true;
 
   editorHelp_display = false;
   error_display = false;
@@ -123,7 +80,7 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
   add_enabled = false;
 
   confirmdelete_display: boolean = false;
-  delete_param: {};
+  delete_param!: {};
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -134,9 +91,6 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
 
     this.setTitle(this.translate.instant('MENU.FUNCTION_CONFIGURATION'));
 
-    for (let i = 1; i <= 100; i++) {
-      this.rulers.push({ color: '#eee', column: i * 4, lineStyle: 'dashed' });
-    }
     this.getFunctionFile('');
 
     this.functionFiles = [];
@@ -162,19 +116,6 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
         }
         this.cdr.markForCheck();
       });
-  }
-
-  ngAfterViewChecked() {
-    const editor1 = this.codeEditor.codeMirror;
-
-    if (editor1.getOption('fullScreen')) {
-      editor1.setSize('100vw', '100vh');
-    } else {
-      editor1.setSize('calc(100% - 10px)', 'calc(100vh - 160px)');
-      // width: min(80%, 100% - 280px);       calc(80vw - 90px)
-    }
-
-    editor1.refresh();
   }
 
   newConfig() {
@@ -207,8 +148,6 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
         }
       });
 
-    // alert('code for removal of plugin "' + this.dialog_configname + '" configurations is not yet implemented');
-
     return true;
   }
 
@@ -240,13 +179,11 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
             '# Userfunctions - file: ' +
             this.newFilename +
             ".py   (template file 'uf.tpl' not found)\n";
-        } else {
-          this.cmOptions.readOnly = false;
         }
 
         this.myTextareaOrig = this.myTextarea;
         this.myEditFilename = this.newFilename;
-        this.cmOptions.readOnly = false;
+        this.cmReadOnly = false;
         this.cdr.markForCheck();
 
         // save new file before editing
@@ -284,15 +221,15 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
     } else {
       this.myEditFilename = '';
       this.myTextarea = '';
-      this.cmOptions.readOnly = true;
+      this.cmReadOnly = true;
       this.myTextarea = this.translate.instant('FUNCTION_CONFIG.FILETYPE_UNSUPPORTED');
     }
   }
 
-  getFunctionFile(filename) {
+  getFunctionFile(filename: string) {
     this.myEditFilename = '';
     this.myTextarea = '';
-    this.cmOptions.readOnly = true;
+    this.cmReadOnly = true;
     if (filename === '') {
       return;
     }
@@ -310,7 +247,7 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
           }
         } else {
           this.myEditFilename = filename;
-          this.cmOptions.readOnly = false;
+          this.cmReadOnly = false;
         }
         this.cdr.markForCheck();
       });
@@ -331,13 +268,9 @@ export class FunctionConfigurationComponent implements AfterViewChecked, OnInit 
           this.cdr.markForCheck();
         });
     }
-    if (this.codeEditor !== undefined) {
-      const editor = this.codeEditor.codeMirror;
-      editor.refresh();
-    }
   }
 
-  reloadFunction(name) {
+  reloadFunction(name: string) {
     // this.log.log('reloadPlugin', {pluginConfigName});
 
     this.log.log('reloadFunctions:', name);

@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -18,7 +17,6 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { SchedulerInfo } from '../../common/models/scheduler-info';
 import { LogService } from '../../common/services/log.service';
 import { SchedulersApiService } from '../../common/services/schedulers-api.service';
-import { ServerApiService } from '../../common/services/server-api.service';
 
 @Component({
   selector: 'app-schedulers',
@@ -30,16 +28,14 @@ import { ServerApiService } from '../../common/services/server-api.service';
 export class SchedulersComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private http = inject(HttpClient);
-  private dataServiceServer = inject(ServerApiService);
   private dataService = inject(SchedulersApiService);
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
   private readonly log = inject(LogService);
 
-  schedulerinfo: SchedulerInfo[];
-  developerMode: boolean;
+  schedulerinfo!: SchedulerInfo[];
+  developerMode!: boolean;
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -48,23 +44,18 @@ export class SchedulersComponent implements OnInit {
   ngOnInit() {
     this.log.log('SchedulersComponent.ngOnInit');
 
-    this.dataServiceServer
-      .getServerinfo()
+    this.setTitle(this.translate.instant('MENU.SCHEDULERS'));
+
+    this.dataService
+      .getSchedulers()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.SCHEDULERS'));
+      .subscribe((response2) => {
+        this.schedulerinfo = <SchedulerInfo[]>response2;
+        //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
+        this.developerMode = this.appConfig.developerMode;
 
-        this.dataService
-          .getSchedulers()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((response2) => {
-            this.schedulerinfo = <SchedulerInfo[]>response2;
-            //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
-            this.developerMode = this.appConfig.developerMode;
-
-            this.log.log('getSchedulers', { response2 });
-            this.cdr.markForCheck();
-          });
+        this.log.log('getSchedulers', { response2 });
+        this.cdr.markForCheck();
       });
   }
 }

@@ -25,7 +25,6 @@ import { ProgressSpinner } from 'primeng/progressspinner';
 import { PlugininfoType } from '../../common/models/plugin-info';
 import { LogService } from '../../common/services/log.service';
 import { PluginsApiService } from '../../common/services/plugins-api.service';
-import { ServerApiService } from '../../common/services/server-api.service';
 
 @Component({
   selector: 'app-plugins',
@@ -47,7 +46,6 @@ import { ServerApiService } from '../../common/services/server-api.service';
 export class PluginsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private dataServiceServer = inject(ServerApiService);
   private pluginsDataService = inject(PluginsApiService);
   private translate = inject(TranslateService);
   private titleService = inject(Title);
@@ -59,8 +57,8 @@ export class PluginsComponent implements OnInit {
   faExclamationTriangle = faExclamationTriangle; // signal deprecated plugin
   faCode = faLaptopCode; // signal plugin in state "develop"
 
-  plugininfo: PlugininfoType[];
-  developerMode: boolean;
+  plugininfo!: PlugininfoType[];
+  developerMode!: boolean;
   loading = true;
 
   showPluginDetails = false;
@@ -73,32 +71,9 @@ export class PluginsComponent implements OnInit {
   ngOnInit() {
     this.log.log('PluginsComponent.ngOnInit');
 
-    this.dataServiceServer
-      .getServerinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.PLUGINS_LIST'));
-
-        this.developerMode = this.appConfig.developerMode;
-        this.getPlugins();
-      });
-    /*
-    this.dataServiceServer.getServerinfo()
-      .subscribe(
-        (response) => {
-          this.developerMode = (this.appConfig.developerMode);
-
-          this.pluginsDataService.getPluginsInfo()
-            .subscribe(
-              (response2) => {
-                this.plugininfo = <any>response2;
-                this.plugininfo.sort(function (a, b) {return (a.pluginname + a.configname.toLowerCase() > b.pluginname + b.configname.
-                toLowerCase()) ? 1 : ((b.pluginname + b.configname.toLowerCase() > a.pluginname + a.configname.toLowerCase()) ? -1 : 0); });
-              }
-            );
-        }
-      );
-*/
+    this.setTitle(this.translate.instant('MENU.PLUGINS_LIST'));
+    this.developerMode = this.appConfig.developerMode;
+    this.getPlugins();
   }
 
   getPlugins() {
@@ -122,7 +97,7 @@ export class PluginsComponent implements OnInit {
       });
   }
 
-  parameterLines(parameters) {
+  parameterLines(parameters: number) {
     let result = Math.round(parameters / 2);
     if (result < 3) {
       result = 3;
@@ -130,7 +105,7 @@ export class PluginsComponent implements OnInit {
     return result;
   }
 
-  attributeLines(parameters) {
+  attributeLines(parameters: number) {
     let result = Math.round(parameters / 3);
     if (result < 2) {
       result = 2;
@@ -142,7 +117,7 @@ export class PluginsComponent implements OnInit {
     window.open(url, '_blank');
   }
 
-  stopPlugin(pluginConfigName) {
+  stopPlugin(pluginConfigName: string) {
     // this.log.log('stopPlugin', {pluginConfigName});
 
     this.pluginsDataService
@@ -153,7 +128,7 @@ export class PluginsComponent implements OnInit {
       });
   }
 
-  startPlugin(pluginConfigName) {
+  startPlugin(pluginConfigName: string) {
     // this.log.log('startPlugin', {pluginConfigName});
 
     this.pluginsDataService
@@ -164,7 +139,7 @@ export class PluginsComponent implements OnInit {
       });
   }
 
-  reloadPlugin(pluginConfigName) {
+  reloadPlugin(pluginConfigName: string) {
     // this.log.log('reloadPlugin', {pluginConfigName});
 
     this.pluginsDataService

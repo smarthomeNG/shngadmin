@@ -58,6 +58,7 @@ export class ServerApiService {
         this.appConfig.patch({
           clientIp: result.client_ip,
           wsHost: this.appConfig.hostIp,
+          loginRequired: result.login_required ?? false,
         });
 
         this.shared.setGuiLanguage();
@@ -152,6 +153,34 @@ export class ServerApiService {
           err?.error?.error || err.message || err,
         );
         return of({});
+      }),
+    );
+  }
+
+  getSystemStats() {
+    const url = this.appConfig.apiUrl + 'system/info';
+    return this.http.get(url).pipe(
+      map((response) => response),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error(
+          'ServerApiService.getSystemStats(): Could not read system stats - ',
+          err?.error?.error || err.message || err,
+        );
+        return of({});
+      }),
+    );
+  }
+
+  getPypiInfo() {
+    const url = this.appConfig.apiUrl + 'server/pypi';
+    return this.http.get(url).pipe(
+      map((response) => response),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error(
+          'ServerApiService.getPypiInfo(): Could not read PyPI data - ',
+          err?.error?.error || err.message || err,
+        );
+        return of([]);
       }),
     );
   }

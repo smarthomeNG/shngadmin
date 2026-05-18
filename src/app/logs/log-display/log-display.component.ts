@@ -1,5 +1,4 @@
 import {
-  AfterViewChecked,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -17,10 +16,16 @@ import { LogsInfoDict, LogsType } from '../../common/models/logfiles-info';
 import { LogService } from '../../common/services/log.service';
 import { LogsApiService } from '../../common/services/logs-api.service';
 
+interface LogfileChunk {
+  lines: number[];
+  loglines: string[];
+  lastchunk: boolean;
+  chunk: number;
+}
+
 import { NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
-import { CodemirrorModule } from '@ctrl/ngx-codemirror';
 import { PrimeTemplate } from 'primeng/api';
 import { Bind } from 'primeng/bind';
 import { ButtonDirective } from 'primeng/button';
@@ -28,7 +33,7 @@ import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { Select } from 'primeng/select';
-import { ServerApiService } from '../../common/services/server-api.service';
+import { CodeEditorComponent } from '../../common/components/code-editor/code-editor.component';
 
 interface DropDownEntry {
   label: string;
@@ -47,7 +52,7 @@ interface DropDownEntry {
     FormsModule,
     ButtonDirective,
     InputText,
-    CodemirrorModule,
+    CodeEditorComponent,
     Dialog,
     NgStyle,
     ProgressSpinner,
@@ -55,17 +60,16 @@ interface DropDownEntry {
     TranslatePipe,
   ],
 })
-export class LogDisplayComponent implements AfterViewChecked, OnInit {
+export class LogDisplayComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
-  private dataServiceServer = inject(ServerApiService);
   private dataService = inject(LogsApiService);
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private readonly log = inject(LogService);
 
-  @ViewChild('codeeditor', { static: true }) private codeEditor;
+  @ViewChild('codeeditor') codeEditor?: CodeEditorComponent;
 
   loglevels: DropDownEntry[] = [];
 
@@ -84,41 +88,14 @@ export class LogDisplayComponent implements AfterViewChecked, OnInit {
 
   nbsp = String.fromCharCode(160);
 
-  logfile_chunk = {};
+  logfile_chunk: LogfileChunk | null = null;
   first_chunk = true;
   last_chunk = true;
   chunk_no = 1;
   logfile_content = '';
 
-  cmOptions = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      F11: function (cm) {
-        cm.setOption('fullScreen', !cm.getOption('fullScreen'));
-      },
-      'Ctrl-L': function (cm) {
-        cm.setOption('lineWrapping', !cm.getOption('lineWrapping'));
-      },
-      Esc: function (cm, fullScreen) {
-        if (cm.getOption('fullScreen')) {
-          cm.setOption('fullScreen', false);
-        }
-      },
-    },
-    fullScreen: false,
-    lineNumbers: true,
-    readOnly: true,
-    lineSeparator: '\n',
-    mode: 'ttcn',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-    foldGutter: true,
-    gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-  };
+  cmLineNumbers = true;
+  cmFirstLineNumber = 1;
 
   editorHelp_display = false;
   spinner_display: boolean = false;
@@ -129,8 +106,8 @@ export class LogDisplayComponent implements AfterViewChecked, OnInit {
 
   ngOnInit() {
     // test if component is called with a parameter and remove '.log' from the parameter
-    let logParam = this.route.snapshot.paramMap['params']['logname'];
-    if (logParam !== undefined) {
+    let logParam = this.route.snapshot.paramMap.get('logname');
+    if (logParam !== null) {
       if (logParam.endsWith('.log')) {
         logParam = logParam.slice(0, -4);
       }
@@ -144,49 +121,34 @@ export class LogDisplayComponent implements AfterViewChecked, OnInit {
     this.loglevels.push({ label: 'ERROR', value: ' ERROR ' });
     this.loglevels.push({ label: 'CRITICAL', value: ' CRITICAL ' });
 
-    this.dataServiceServer
-      .getServerinfo()
+    this.setTitle(this.translate.instant('MENU.LOGS_DISPLAY'));
+
+    this.dataService
+      .getLogs()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.LOGS_DISPLAY'));
-
-        this.dataService
-          .getLogs()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((response2: LogsType) => {
-            this.logs_info = response2['logs'];
-            this.default_log = response2['default'];
-            this.logs = [];
-            for (let log in this.logs_info) {
-              if (this.logs_info.hasOwnProperty(log)) {
-                this.logs.push({ label: log, value: log });
-              }
-            }
-            this.selectedLog = null;
-            if (logParam !== undefined) {
-              if (logParam in this.logs_info) {
-                this.selectedLog = logParam;
-                this.fillTimeframe(true);
-              }
-            }
-            if (this.selectedLog == null && this.default_log in this.logs_info) {
-              this.selectedLog = this.default_log;
-              this.fillTimeframe(true);
-            }
-            this.cdr.markForCheck();
-          });
+      .subscribe((response2) => {
+        const logs = response2 as LogsType;
+        this.logs_info = logs['logs'];
+        this.default_log = logs['default'];
+        this.logs = [];
+        for (let log in this.logs_info) {
+          if (this.logs_info.hasOwnProperty(log)) {
+            this.logs.push({ label: log, value: log });
+          }
+        }
+        this.selectedLog = null;
+        if (logParam !== null) {
+          if (logParam in this.logs_info) {
+            this.selectedLog = logParam;
+            this.fillTimeframe(true);
+          }
+        }
+        if (this.selectedLog == null && this.default_log in this.logs_info) {
+          this.selectedLog = this.default_log;
+          this.fillTimeframe(true);
+        }
+        this.cdr.markForCheck();
       });
-  }
-
-  ngAfterViewChecked() {
-    const editor1 = this.codeEditor.codeMirror;
-    if (editor1.getOption('fullScreen')) {
-      editor1.setSize('100vw', '100vh');
-    } else {
-      // editor1.setSize('97vw', '83vh');
-      editor1.setSize('calc(100% - 5px)', 'calc(100vh - 160px)');
-    }
-    editor1.refresh();
   }
 
   fillTimeframe(useActual = false) {
@@ -259,23 +221,24 @@ export class LogDisplayComponent implements AfterViewChecked, OnInit {
 
   filterLogChunk() {
     this.logfile_content = '';
-    this.cmOptions.lineNumbers = this.level_filter === 'ALL' && this.text_filter === '';
+    this.cmLineNumbers = this.level_filter === 'ALL' && this.text_filter === '';
+    if (!this.logfile_chunk) return;
 
     const filter = this.text_filter;
-    for (let i = 0; i < this.logfile_chunk['loglines'].length; i++) {
+    for (let i = 0; i < this.logfile_chunk.loglines.length; i++) {
       if (
         this.level_filter === 'ALL' ||
-        this.logfile_chunk['loglines'][i].indexOf(this.level_filter) > -1
+        this.logfile_chunk.loglines[i].indexOf(this.level_filter) > -1
       ) {
-        if (filter === '' || this.logfile_chunk['loglines'][i].indexOf(filter) > -1) {
-          this.logfile_content += this.logfile_chunk['loglines'][i];
+        if (filter === '' || this.logfile_chunk.loglines[i].indexOf(filter) > -1) {
+          this.logfile_content += this.logfile_chunk.loglines[i];
         }
       }
     }
   }
 
   scrollDown() {
-    this.codeEditor.codeMirror.execCommand('goDocEnd');
+    this.codeEditor?.scrollToEnd();
   }
 
   readLogfile(chunk = 1) {
@@ -289,25 +252,25 @@ export class LogDisplayComponent implements AfterViewChecked, OnInit {
       this.dataService
         .readLogfile(this.displayLogfile, chunk)
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((response: string) => {
+        .subscribe((response) => {
           // this.log.log({response});
-          this.logfile_chunk = <any>response;
-          this.first_chunk = this.logfile_chunk['lines'][0] === 1;
-          this.last_chunk = this.logfile_chunk['lastchunk'];
-          this.chunk_no = this.logfile_chunk['chunk'];
-          this.cmOptions.lineNumbers = true;
-          this.cmOptions.firstLineNumber = this.logfile_chunk['lines'][0];
-          if (this.cmOptions.firstLineNumber !== undefined) {
-            for (let i = 0; i < this.logfile_chunk['loglines'].length; i++) {
+          this.logfile_chunk = response as unknown as LogfileChunk;
+          this.first_chunk = this.logfile_chunk.lines[0] === 1;
+          this.last_chunk = this.logfile_chunk.lastchunk;
+          this.chunk_no = this.logfile_chunk.chunk;
+          this.cmLineNumbers = true;
+          this.cmFirstLineNumber = this.logfile_chunk.lines[0];
+          if (this.cmFirstLineNumber !== undefined) {
+            for (let i = 0; i < this.logfile_chunk.loglines.length; i++) {
               let wrk2 = '';
-              for (let c = 0; c < this.logfile_chunk['loglines'][i].length; c++) {
-                if (this.logfile_chunk['loglines'][i][c].charCodeAt(0) === 160) {
+              for (let c = 0; c < this.logfile_chunk.loglines[i].length; c++) {
+                if (this.logfile_chunk.loglines[i][c].charCodeAt(0) === 160) {
                   wrk2 += ' ';
                 } else {
-                  wrk2 += this.logfile_chunk['loglines'][i][c];
+                  wrk2 += this.logfile_chunk.loglines[i][c];
                 }
               }
-              this.logfile_chunk['loglines'][i] = wrk2;
+              this.logfile_chunk.loglines[i] = wrk2;
             }
           }
 

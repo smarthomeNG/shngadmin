@@ -12,7 +12,6 @@ import { Title } from '@angular/platform-browser';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThreadInfo } from '../../common/models/thread-info';
 import { LogService } from '../../common/services/log.service';
-import { ServerApiService } from '../../common/services/server-api.service';
 import { ThreadsApiService } from '../../common/services/threads-api.service';
 
 @Component({
@@ -26,14 +25,13 @@ export class ThreadsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private dataService = inject(ThreadsApiService);
-  private dataServiceServer = inject(ServerApiService);
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private readonly log = inject(LogService);
 
-  threadsList: ThreadInfo[];
-  threads_count: number;
-  thread_response: [number, ThreadInfo[]];
+  threadsList!: ThreadInfo[];
+  threads_count!: number;
+  thread_response!: [number, ThreadInfo[]];
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -42,22 +40,18 @@ export class ThreadsComponent implements OnInit {
   ngOnInit() {
     // this.log.log('ThreadsComponent.ngOnInit');
 
-    this.dataServiceServer
-      .getServerinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.THREADS'));
+    this.setTitle(this.translate.instant('MENU.THREADS'));
 
-        this.dataService
-          .getThreads()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((response2) => {
-            this.threadsList = response2[1];
-            this.threads_count = response2[0];
-            //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
-            this.log.log('getThreads', { response2 });
-            this.cdr.markForCheck();
-          });
+    this.dataService
+      .getThreads()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response2) => {
+        const r2 = response2 as [number, unknown];
+        this.threadsList = r2[1] as any;
+        this.threads_count = r2[0];
+        //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
+        this.log.log('getThreads', { response2 });
+        this.cdr.markForCheck();
       });
   }
 }

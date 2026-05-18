@@ -1,4 +1,3 @@
-// import { Component, OnInit } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -12,11 +11,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { HttpClient } from '@angular/common/http';
 
-import { LogicsGroupType, LogicsinfoType } from '../../common/models/logics-info';
-import { LogicsWatchItem } from '../../common/models/logics-watch-item';
-import { LogicsApiService } from '../../common/services/logics-api.service';
-import { OlddataService } from '../../common/services/olddata.service';
-// //// import {Log} from '@angular/core/testing/src/logger';
 import { NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
@@ -31,14 +25,15 @@ import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Ripple } from 'primeng/ripple';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
+import { LogicsGroupType, LogicsinfoType } from '../../common/models/logics-info';
+import { LogicsWatchItem } from '../../common/models/logics-watch-item';
 import { LogService } from '../../common/services/log.service';
-import { ServerApiService } from '../../common/services/server-api.service';
-
+import { LogicsApiService } from '../../common/services/logics-api.service';
 @Component({
   selector: 'app-logics',
   templateUrl: './logics-list.component.html',
   styleUrls: ['./logics-list.component.css'],
-  providers: [OlddataService],
+  providers: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Bind,
@@ -67,7 +62,6 @@ export class LogicsListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
-  private dataServiceServer = inject(ServerApiService);
   private dataService = inject(LogicsApiService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -76,12 +70,12 @@ export class LogicsListComponent implements OnInit {
   private renderer = inject(Renderer2);
   private readonly log = inject(LogService);
 
-  groupdefinitions = {};
-  groupList: LogicsGroupType[];
+  groupdefinitions: Record<string, Record<string, string>> = {};
+  groupList!: LogicsGroupType[];
   groupExpandedOnStart: number[] = [];
   groupExpanded: number[] = [];
   nogroups: boolean;
-  logics: LogicsinfoType[];
+  logics!: LogicsinfoType[];
   userlogics: LogicsinfoType[] = [];
   systemlogics: LogicsinfoType[] = [];
   newlogics: LogicsinfoType[] = [];
@@ -96,7 +90,7 @@ export class LogicsListComponent implements OnInit {
   wrongNewLogicName: string = '';
   confirmdelete_display: boolean = false;
   logicToDelete: string = '';
-  delete_param: {};
+  delete_param!: {};
 
   constructor() {
     this.userlogics = [];
@@ -115,17 +109,11 @@ export class LogicsListComponent implements OnInit {
     this.groupExpandedOnStart = this.dataService.groupExpanded;
     this.groupExpanded = this.dataService.groupExpanded;
 
-    this.dataServiceServer
-      .getServerinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.LOGICS'));
-
-        this.getLogics();
-      });
+    this.setTitle(this.translate.instant('MENU.LOGICS'));
+    this.getLogics();
   }
 
-  baseName(str, withExtension = true) {
+  baseName(str: string, withExtension = true) {
     let base = str;
     base = base.substring(base.lastIndexOf('/') + 1);
     if (!withExtension && base.lastIndexOf('.') !== -1) {
@@ -134,7 +122,7 @@ export class LogicsListComponent implements OnInit {
     return base;
   }
 
-  addGroup(name) {
+  addGroup(name: string) {
     if (this.groupList.find((g) => g.name === name) === undefined) {
       let title = '';
       let description = '';
@@ -150,7 +138,7 @@ export class LogicsListComponent implements OnInit {
     }
   }
 
-  groupOpened(event) {
+  groupOpened(event: { index: number }) {
     const index = event['index'];
     this.log.warn('groupOpened', { index });
 
@@ -164,7 +152,7 @@ export class LogicsListComponent implements OnInit {
     this.log.log('this.groupExpanded', this.groupExpanded);
   }
 
-  groupClosed(event) {
+  groupClosed(event: { index: number }) {
     const index = event['index'];
     this.log.warn('groupClosed', { index });
     if (this.groupExpanded === undefined) {
@@ -200,8 +188,9 @@ export class LogicsListComponent implements OnInit {
       .getLogics()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        this.groupdefinitions = response['groups'];
-        this.logics = <LogicsinfoType[]>response['logics'];
+        const resp = response as Record<string, unknown>;
+        this.groupdefinitions = resp['groups'] as Record<string, Record<string, string>>;
+        this.logics = <LogicsinfoType[]>resp['logics'];
         this.logics.sort(function (a, b) {
           return a.name.toLowerCase() > b.name.toLowerCase()
             ? 1
@@ -214,14 +203,13 @@ export class LogicsListComponent implements OnInit {
         this.groupList = [];
         for (const logic of this.logics) {
           if (logic.userlogic === true) {
-            if (logic.group === undefined || logic.group.length === 0) {
+            if (logic.group == null || logic.group.length === 0) {
               logic.group = [''];
             }
             this.userlogics.push(logic);
-            for (const g in logic.group) {
-              if (logic.group.hasOwnProperty(g)) {
-                this.addGroup(logic.group[g]);
-              }
+            const groups = Array.isArray(logic.group) ? logic.group : [logic.group];
+            for (const g of groups) {
+              this.addGroup(g);
             }
           } else {
             this.systemlogics.push(logic);
@@ -236,7 +224,7 @@ export class LogicsListComponent implements OnInit {
               ? -1
               : 0;
         });
-        this.newlogics = <LogicsinfoType[]>response['logics_new'];
+        this.newlogics = <LogicsinfoType[]>resp['logics_new'];
         this.newlogics.sort(function (a, b) {
           return a.name.toLowerCase() > b.name.toLowerCase()
             ? 1
@@ -248,7 +236,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  triggerLogic(logicName) {
+  triggerLogic(logicName: string) {
     // this.log.log('triggerLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'trigger')
@@ -258,7 +246,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  disableLogic(logicName) {
+  disableLogic(logicName: string) {
     // this.log.log('disableLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'disable')
@@ -268,7 +256,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  enableLogic(logicName) {
+  enableLogic(logicName: string) {
     // this.log.log('enableLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'enable')
@@ -278,7 +266,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  unloadLogic(logicName) {
+  unloadLogic(logicName: string) {
     // this.log.log('unloadLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'unload')
@@ -288,7 +276,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  reloadLogic(logicName) {
+  reloadLogic(logicName: string) {
     // this.log.log('reloadLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'reload')
@@ -298,7 +286,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  loadLogic(logicName) {
+  loadLogic(logicName: string) {
     // this.log.log('loadLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'load')
@@ -383,7 +371,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  deleteLogic(logicName, fileName) {
+  deleteLogic(logicName: string, fileName: string) {
     // this.log.log('deleteLogic', {logicName});
 
     this.logicToDelete = logicName;
@@ -391,7 +379,7 @@ export class LogicsListComponent implements OnInit {
     this.confirmdelete_display = true;
   }
 
-  deleteLogicConfirm(with_code) {
+  deleteLogicConfirm(with_code: boolean) {
     // this.log.log('deleteLogicConfirm', this.logicToDelete);
     this.confirmdelete_display = false;
 
