@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AppConfigService } from '../common/services/app-config.service';
 import { AuthService } from '../common/services/auth.service';
@@ -36,7 +36,7 @@ interface MenuItem {
   templateUrl: './top-navigation.component.html',
   styleUrls: ['./top-navigation.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgOptimizedImage, RouterLink, TranslatePipe],
+  imports: [NgOptimizedImage, RouterLink, RouterLinkActive, TranslatePipe],
 })
 export class TopNavigationComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
@@ -229,8 +229,8 @@ export class TopNavigationComponent implements OnInit {
       '/services/functions',
     ]);
 
-    this.setMenuEntry(2, this.translate.instant('MENU.ITEMS'), ['/item_tree']);
-    this.setSubmenuEntry(2, 0, this.translate.instant('MENU.ITEM_TREE'), ['/item_tree']);
+    this.setMenuEntry(2, this.translate.instant('MENU.ITEMS'), ['/items']);
+    this.setSubmenuEntry(2, 0, this.translate.instant('MENU.ITEM_TREE'), ['/items']);
     this.setSubmenuEntry(2, 1, this.translate.instant('MENU.ITEM_CONFIGURATION'), [
       '/items/config',
     ]);
@@ -249,12 +249,12 @@ export class TopNavigationComponent implements OnInit {
       ]);
     }
 
-    this.setMenuEntry(3, this.translate.instant('MENU.LOGICS'), ['/logics-list']);
-    this.setSubmenuEntry(3, 0, this.translate.instant('MENU.LOGICS_LIST'), ['/logics-list']);
-    this.setSubmenuEntry(3, 1, this.translate.instant('MENU.LOGICS_GROUPS'), ['/logics-groups']);
+    this.setMenuEntry(3, this.translate.instant('MENU.LOGICS'), ['/logics/list']);
+    this.setSubmenuEntry(3, 0, this.translate.instant('MENU.LOGICS_LIST'), ['/logics/list']);
+    this.setSubmenuEntry(3, 1, this.translate.instant('MENU.LOGICS_GROUPS'), ['/logics/groups']);
 
-    this.setMenuEntry(4, this.translate.instant('MENU.PLUGINS'), ['/plugins_list']);
-    this.setSubmenuEntry(4, 0, this.translate.instant('MENU.PLUGINS_LIST'), ['/plugins_list']);
+    this.setMenuEntry(4, this.translate.instant('MENU.PLUGINS'), ['/plugins']);
+    this.setSubmenuEntry(4, 0, this.translate.instant('MENU.PLUGINS_LIST'), ['/plugins']);
     this.setSubmenuEntry(4, 1, this.translate.instant('MENU.PLUGINS_CONFIGURATION'), [
       '/plugins/config',
     ]);

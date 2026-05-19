@@ -8,8 +8,8 @@
   margin: 0;
 }
 .shngbody {
-  width: 100vw;
   height: calc(100vh - 60px);
+  overflow: hidden;
   margin: 0;
   padding: 0;
 
@@ -31,7 +31,7 @@
 
 .shngsysinfo {
   height: calc(100vh - 60px - 41px - 10px);
-  width: calc(100vw - 20px);
+  width: 100%;
 
   border: 1px solid #dee2e6;
   border-top: 0;
@@ -143,7 +143,7 @@
 /* css for SmartHomeNG Charts tab */
 .shngcharts {
   height: calc(100vh - 60px - 41px - 10px);
-  width: calc(100vw - 20px);
+  width: 100%;
 
   border: 1px solid #dee2e6;
   border-top: 0;
@@ -186,7 +186,7 @@
 /* css for SmartHomeNG PyPI check tab */
 .shngpypi {
   height: calc(100vh - 60px - 41px - 10px);
-  width: calc(100vw - 20px);
+  width: 100%;
 
   border: 1px solid #dee2e6;
   border-top: 0;
