@@ -12,6 +12,8 @@ import {
   Output,
   SimpleChanges,
   ViewChild,
+  ViewEncapsulation,
+  inject,
 } from '@angular/core';
 import {
   CompletionContext,
@@ -59,18 +61,14 @@ export type CmCompletionSource = (
   template: `<div #host class="cm-host"></div>`,
   styles: [
     `
-      :host {
-        display: block;
-        height: 300px;
-        width: 100%;
-      }
-      :host.cm-fullscreen {
+      .cm-fullscreen {
         position: fixed !important;
         top: 0;
         left: 0;
         width: 100vw !important;
         height: 100vh !important;
         z-index: 9999;
+        background: Canvas;
       }
       .cm-host {
         height: 100%;
@@ -81,9 +79,12 @@ export type CmCompletionSource = (
       }
     `,
   ],
+  encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
+  private readonly el = inject(ElementRef);
+
   @ViewChild('host', { static: true }) private hostRef!: ElementRef<HTMLDivElement>;
 
   @Input() language: CmLanguage = 'text';
@@ -103,6 +104,8 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
 
   /** If set, typed text matching this regex is blocked (watch-items editor). */
   @Input() allowedCharsPattern?: RegExp;
+
+  @HostBinding('style.display') readonly hostDisplay = 'block';
 
   @HostBinding('class.cm-fullscreen')
   private _fullscreen = false;
@@ -174,10 +177,19 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
 
   toggleFullscreen() {
     this._fullscreen = !this._fullscreen;
+    const host = this.el.nativeElement as HTMLElement;
+    if (this._fullscreen) {
+      host.classList.add('cm-fullscreen');
+    } else {
+      host.classList.remove('cm-fullscreen');
+    }
   }
 
   exitFullscreen() {
-    if (this._fullscreen) this._fullscreen = false;
+    if (this._fullscreen) {
+      this._fullscreen = false;
+      (this.el.nativeElement as HTMLElement).classList.remove('cm-fullscreen');
+    }
   }
 
   toggleLineWrapping() {
@@ -188,9 +200,14 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
   }
 
   scrollToEnd() {
-    if (!this._view) return;
-    const len = this._view.state.doc.length;
-    this._view.dispatch({ selection: { anchor: len }, scrollIntoView: true });
+    requestAnimationFrame(() => {
+      const scroller = this.hostRef.nativeElement.querySelector(
+        '.cm-scroller',
+      ) as HTMLElement | null;
+      if (scroller) {
+        scroller.scrollTop = scroller.scrollHeight;
+      }
+    });
   }
 
   foldAtCursor() {
@@ -265,6 +282,7 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
     ];
 
     const extensions: Extension[] = [
+      EditorView.theme({ '.cm-scroller': { overflow: 'auto' } }),
       this.readOnlyComp.of(EditorState.readOnly.of(this.readOnly)),
       this.lineNumComp.of(this._lineNumsExtension()),
       this.lineWrapComp.of(this._lineWrapping ? EditorView.lineWrapping : []),

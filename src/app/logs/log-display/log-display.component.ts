@@ -21,6 +21,7 @@ interface LogfileChunk {
   loglines: string[];
   lastchunk: boolean;
   chunk: number;
+  chunks?: number;
 }
 
 import { NgStyle } from '@angular/common';
@@ -98,6 +99,7 @@ export class LogDisplayComponent implements OnInit {
   cmFirstLineNumber = 1;
 
   editorHelp_display = false;
+  editorFullscreen = false;
   spinner_display: boolean = false;
 
   public setTitle(newTitle: string) {
@@ -201,22 +203,13 @@ export class LogDisplayComponent implements OnInit {
         this.files.reverse();
       }
 
-      if (this.files.length === 1 || useActual) {
-        this.selectedFile = this.files[0].value;
-        this.readLogfile();
-      } else {
-        this.selectedFile = this.files[0].value;
-        this.readLogfile();
-      }
+      this.selectedFile = this.files[0].value;
+      this.readLogfile(0); // 0 = last (newest) chunk
     }
   }
 
   changedTimeframe() {
-    if (this.selectedFile === null) {
-      this.readLogfile();
-    } else {
-      this.readLogfile();
-    }
+    this.readLogfile(0); // 0 = last (newest) chunk
   }
 
   filterLogChunk() {
@@ -239,6 +232,11 @@ export class LogDisplayComponent implements OnInit {
 
   scrollDown() {
     this.codeEditor?.scrollToEnd();
+  }
+
+  toggleEditorFullscreen() {
+    this.codeEditor?.toggleFullscreen();
+    this.editorFullscreen = !this.editorFullscreen;
   }
 
   readLogfile(chunk = 1) {
