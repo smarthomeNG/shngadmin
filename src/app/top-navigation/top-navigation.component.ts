@@ -119,20 +119,44 @@ export class TopNavigationComponent implements OnInit {
   // Label of the section whose dropdown is currently forced open (touch mode).
   openMenuLabel: string | null = null;
 
+  // Side-drawer state (mobile ≤720px)
+  drawerOpen = false;
+  drawerOpenSections = new Set<string>();
+
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
   }
 
-  toggleResponsiveMenu() {
-    this.log.log('TopNavigationComponent.toggleResponsiveMenu');
-    const x = this.topnavEl?.nativeElement;
-    if (!x) return;
-
-    if (x.classList.contains('responsive')) {
-      this.renderer.removeClass(x, 'responsive');
+  toggleDrawer() {
+    this.drawerOpen = !this.drawerOpen;
+    if (this.drawerOpen) {
+      // Pre-expand the section whose child route is currently active
+      const url = this.router.url;
+      for (const entry of this.menu) {
+        if (entry.items.some((sub) => sub.routerLink && url.startsWith(sub.routerLink[0]))) {
+          this.drawerOpenSections.add(entry.label);
+          break;
+        }
+      }
     } else {
-      this.renderer.addClass(x, 'responsive');
+      this.drawerOpenSections.clear();
     }
+    this.cdr.markForCheck();
+  }
+
+  closeDrawer() {
+    this.drawerOpen = false;
+    this.drawerOpenSections.clear();
+    this.cdr.markForCheck();
+  }
+
+  toggleDrawerSection(label: string) {
+    const wasOpen = this.drawerOpenSections.has(label);
+    this.drawerOpenSections.clear();
+    if (!wasOpen) {
+      this.drawerOpenSections.add(label);
+    }
+    this.cdr.markForCheck();
   }
 
   enableDropdownMenu() {
