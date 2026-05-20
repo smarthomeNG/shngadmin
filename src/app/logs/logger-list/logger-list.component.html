@@ -263,7 +263,7 @@
                       l === '__main__'
                     )
                   ) {
-                    @if (loggers[l].level !== undefined) {
+                    @if (loggers[l].active !== undefined) {
                       <tr>
                         <app-logger-line
                           [loggerName]="l"
