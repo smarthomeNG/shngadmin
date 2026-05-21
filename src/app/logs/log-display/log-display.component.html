@@ -1,5 +1,5 @@
 <div class="shngbody">
-  <h6>
+  <div>
     SmartHomeNG {{ 'LOGS.LOGFILE' | translate }}:
     <p-select
       [style]="{ width: '300px' }"
@@ -26,17 +26,17 @@
       label="{{ 'BUTTON.RELOAD_LOG' | translate }}"
       class="ui-button-success"
     ></button>
-  </h6>
+  </div>
 
-  <div class="form-group" style="display: inline; width: 98%">
-    <div style="margin-top: 2px; float: left; font-size: 20px">{{ 'LOGS.FILTER' | translate }}:</div>
+  <div class="form-group" style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 98%">
+    <div>{{ 'LOGS.FILTER' | translate }}:</div>
     <input
       type="text"
       class="form-control form-control-sm"
       id="text_filter"
       pInputText
       [(ngModel)]="text_filter"
-      style="margin-top: 2px; margin-left: 10px; width: 395px; float: left"
+      style="margin-left: 6px; width: 395px"
       (ngModelChange)="filterLogChunk()"
     />
     <p-select

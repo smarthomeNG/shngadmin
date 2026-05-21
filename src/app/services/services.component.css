@@ -1,17 +1,3 @@
-/*
-::ng-deep .tab-shng > a{
-  border-bottom: none !important;
-  outline: 0 !important;
-  color:rgb(160, 160, 160);
-}
-*/
-
-.tab-shng > a {
-  border-bottom: none !important;
-  outline: 0 !important;
-  color: rgb(160, 160, 160);
-}
-
 .body {
   margin: 0;
 }
@@ -82,16 +68,6 @@
   grid-gap: 0px;
   grid-auto-flow: row;
 */
-}
-
-.tab-content-services table td {
-  padding-top: 23px;
-}
-.tab-content-services .row-icon {
-  padding-top: 15px;
-}
-.tab-content-services .row-button {
-  padding-top: 22px;
 }
 
 /*

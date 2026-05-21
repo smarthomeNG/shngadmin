@@ -7,37 +7,29 @@
 -->
 <div class="shngbody">
   <div class="shng_headline" style="margin-top: 5px; margin-left: 8px">
-    <h3>
-      {{ 'PLUGIN.PLUGIN_CONFIGURATION' | translate }}
-      @if (spinner_display) {
-        <span
-          style="
-            margin-left: 1rem;
-            font-size: var(--font-size-xs);
-            font-weight: var(--font-weight-normal);
-            color: var(--text-muted);
-            vertical-align: middle;
-          "
-        >
-          <p-progressSpinner
-            [style]="{ width: '18px', height: '18px' }"
-            styleClass="plugin-loading-spinner"
-          ></p-progressSpinner>
-          &nbsp;{{ spinner_header }}
-        </span>
-      }
-      <button
-        pButton
-        type="button"
-        style="margin-left: 0; margin-top: 5px"
-        id="btn-monitor"
-        [disabled]="false"
-        (click)="addPluginDialog()"
-        icon="fa fa-plus"
-        label="{{ 'BUTTON.ADD_PLUGIN' | translate }}"
-        class="ui-button-success float-sm-right"
-      ></button>
-    </h3>
+    {{ 'PLUGIN.PLUGIN_CONFIGURATION' | translate }}
+    @if (spinner_display) {
+      <span
+        style="margin-left: 1rem; font-size: var(--font-size-base); color: var(--text-muted); vertical-align: middle"
+      >
+        <p-progressSpinner
+          [style]="{ width: '18px', height: '18px' }"
+          styleClass="plugin-loading-spinner"
+        ></p-progressSpinner>
+        &nbsp;{{ spinner_header }}
+      </span>
+    }
+    <button
+      pButton
+      type="button"
+      style="margin-left: 0; margin-top: 5px"
+      id="btn-monitor"
+      [disabled]="false"
+      (click)="addPluginDialog()"
+      icon="fa fa-plus"
+      label="{{ 'BUTTON.ADD_PLUGIN' | translate }}"
+      class="ui-button-success float-sm-right"
+    ></button>
   </div>
 
   <div class="body-content">
@@ -251,21 +243,21 @@
     </p-table>
   }
   @if (this.classic) {
-    <h4>
+    <div>
       {{ 'PLUGIN.CLASSIC_NOT_CONFIGURABLE' | translate }}
-    </h4>
+    </div>
     <br />
   }
 
   <ng-template pTemplate="footer">
     @if (dialog_readonly === false) {
       @if (save_error) {
-        <span style="color: var(--shng-danger); font-size: var(--font-size-sm); margin-right: 1rem">
+        <span style="color: var(--shng-danger); font-size: var(--font-size-base); margin-right: 1rem">
           <i class="fa fa-exclamation-triangle"></i>&nbsp;{{ save_error }}
         </span>
       }
       @if (load_error) {
-        <span style="color: var(--shng-danger); font-size: var(--font-size-sm); margin-right: 1rem">
+        <span style="color: var(--shng-danger); font-size: var(--font-size-base); margin-right: 1rem">
           <i class="fa fa-exclamation-triangle"></i>&nbsp;{{ load_error }}
         </span>
       }

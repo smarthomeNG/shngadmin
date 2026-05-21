@@ -18,7 +18,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 0; margin-top: 5px"
               id="newLoggerButtonL"
               [disabled]="false"
               (click)="newLogicLogger()"
@@ -68,7 +68,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 0; margin-top: 5px"
               id="newLoggerButtonP"
               [disabled]="false"
               (click)="newPluginLogger()"
@@ -117,7 +117,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 0; margin-top: 5px"
               id="newLoggerButtonI"
               [disabled]="false"
               (click)="newItemLogger()"
@@ -166,7 +166,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 0; margin-top: 5px"
               id="newLoggerButtonA"
               [disabled]="false"
               (click)="newAdvancedLogger()"
@@ -310,8 +310,8 @@
   {{ 'LOGGERS.CREATE_LOGGER_TEXT' | translate }}
   <br />
   <br />
-  <label style="display: block">
-    <span style="display: inline-block; width: 120px">{{ 'LOGGERS.LOGGER_NAME' | translate }}:</span>
+  <label style="display: flex; align-items: center; gap: 8px">
+    <span style="min-width: 120px">{{ 'LOGGERS.LOGGER_NAME' | translate }}:</span>
 
     <p-select
       [options]="loggerOptions"

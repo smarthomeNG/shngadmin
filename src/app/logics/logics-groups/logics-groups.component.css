@@ -9,7 +9,6 @@
 .button-row {
   grid-column: 1 / -1;
   grid-row: 1;
-  font-weight: normal;
   padding-top: 10px;
   padding-left: 15px;
   padding-right: 20px;
@@ -43,10 +42,4 @@
 .description-text {
   margin-left: 4px;
   padding-bottom: 48px;
-}
-
-.tab-shng > a {
-  border-bottom: none !important;
-  outline: 0 !important;
-  color: rgb(160, 160, 160);
 }
