@@ -495,6 +495,7 @@ a.text-shng:hover {
   font-weight: 600;
   color: var(--text-secondary);
   background-color: rgba(0, 0, 0, 0.06);
+  text-align: left;
 }
 
 /* ============================================================
@@ -892,6 +893,36 @@ a.text-shng:hover {
 }
 .p-tree li.p-tree-node {
   padding: 0 !important;
+}
+
+/* items-filelist: flex column so p-listbox fills the remaining height */
+.items-filelist {
+  display: flex;
+  flex-direction: column;
+}
+
+.items-filelist .filelist-header {
+  flex-shrink: 0;
+  overflow: hidden; /* contain floated buttons */
+}
+
+.items-filelist p-listbox {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Code editor wrapper areas: visible border */
+.items-fileeditor {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.editor-area,
+.tab-editor-area {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 /* Offline banner */

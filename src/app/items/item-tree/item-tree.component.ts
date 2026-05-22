@@ -99,7 +99,11 @@ export class ItemTreeComponent implements OnDestroy, OnInit {
   itemdetails: ItemDetails = <ItemDetails>{};
   itemdetailsloaded = false;
 
-  monitoredItems: MonitoredItem[] = [];
+  /** Delegate to SharedService (true root singleton) so the list survives
+   *  navigation — WebsocketPluginService is component-scoped and gets destroyed */
+  get monitoredItems(): MonitoredItem[] {
+    return this.shared.monitoredItemsList;
+  }
 
   filesTree0!: {}[];
   filteredTree!: {}[];
@@ -177,6 +181,12 @@ export class ItemTreeComponent implements OnDestroy, OnInit {
     this.resizeItemTree();
 
     this.websocketPluginService.connect();
+
+    // Re-register monitored items that survived navigation
+    if (this.monitoredItems.length > 0) {
+      const monitoredDataFunction = this.monitoredDataFunction.bind(this);
+      this.websocketPluginService.getMonitoredItems(this.monitoredItems, monitoredDataFunction);
+    }
   }
 
   closeAlert(item_oldvalue: unknown) {

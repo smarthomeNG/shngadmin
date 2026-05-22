@@ -122,7 +122,7 @@
     ></button>
   </div>
 
-  <div style="margin-left: 0; margin-top: 10px; padding-left: 10px; padding-right: 5px">
+  <div class="editor-area" style="margin-left: 0; margin-top: 10px; padding-left: 10px; padding-right: 5px">
     <app-code-editor
       #codeeditor
       [language]="'text'"
@@ -130,6 +130,7 @@
       [lineNums]="cmLineNumbers"
       [firstLineNumber]="cmFirstLineNumber"
       [value]="logfile_content"
+      (fullscreenChange)="onFullscreenChange($event)"
       style="height: calc(100vh - 160px)"
     ></app-code-editor>
   </div>

@@ -187,6 +187,7 @@
     "EXPAND ALL": "Expand All",
     "REDUCE ALL": "Reduce All",
     "MONITOR": "Monitor",
+    "MONITORED": "Monitored",
     "RELOAD": "Reload",
     "ITEM DETAILS": "Item Details",
     "CHOOSE ITEM IN TREE": "Choose item in tree to see details!",
@@ -572,5 +573,9 @@
     "RETRYING": "Retrying…",
     "RETRY_NOW": "Retry now",
     "BACK_ONLINE": "Reconnected"
+  },
+  "COMMON": {
+    "FILE_EXISTS_TITLE": "File Already Exists",
+    "FILE_EXISTS_HINT": "A file named '{{filename}}' already exists."
   }
 }
