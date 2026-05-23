@@ -895,6 +895,26 @@ a.text-shng:hover {
   padding: 0 !important;
 }
 
+/* PrimeNG DataTable column headers: left-align text */
+.p-datatable th {
+  text-align: left;
+}
+
+/* Sortable table column headers */
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.sortable-th:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.sort-indicator {
+  margin-left: 4px;
+  font-size: 0.75em;
+  color: var(--shng-blue);
+}
+
 /* items-filelist: flex column so p-listbox fills the remaining height */
 .items-filelist {
   display: flex;

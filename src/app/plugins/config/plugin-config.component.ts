@@ -126,6 +126,45 @@ export class PluginConfigComponent implements OnInit {
 
   configuredplugins!: ConfiguredPlugin[];
   cols!: TableColumn[];
+
+  sortField = '';
+  sortOrder: 1 | -1 = 1;
+
+  sortBy(field: string): void {
+    this.sortOrder = this.sortField === field ? (this.sortOrder === 1 ? -1 : 1) : 1;
+    this.sortField = field;
+    const ord = this.sortOrder;
+    this.configuredplugins.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
+
+  filterText = '';
+
+  onFilterChange(value: string): void {
+    this.filterText = value;
+    this.cdr.markForCheck();
+  }
+
+  clearFilter(): void {
+    this.filterText = '';
+    this.cdr.markForCheck();
+  }
+
+  get filteredPlugins(): ConfiguredPlugin[] {
+    if (!this.filterText) return this.configuredplugins;
+    const f = this.filterText.toLowerCase();
+    return this.configuredplugins.filter(
+      (p) =>
+        p.confname.toLowerCase().includes(f) ||
+        p.plugin.toLowerCase().includes(f) ||
+        p.instance.toLowerCase().includes(f) ||
+        p.desc.toLowerCase().includes(f),
+    );
+  }
   pluginconflist!: PluginsConfig;
   server_info!: ServerInfo;
   lang!: string;
@@ -154,6 +193,50 @@ export class PluginConfigComponent implements OnInit {
   add_firstrun = true;
   plugins_installed!: PluginsInstalled;
   plugins_installed_list!: string[];
+
+  addDialogFilter = '';
+  addDialogCategorized = true;
+
+  onAddFilterChange(value: string): void {
+    this.addDialogFilter = value;
+    this.cdr.markForCheck();
+  }
+
+  clearAddFilter(): void {
+    this.addDialogFilter = '';
+    this.cdr.markForCheck();
+  }
+
+  get addDialogFilteredList(): string[] {
+    const f = this.addDialogFilter.toLowerCase();
+    const list = f
+      ? this.plugins_installed_list.filter(
+          (name) =>
+            name.toLowerCase().includes(f) ||
+            (this.plugins_installed[name]?.disp_description ?? '').toLowerCase().includes(f),
+        )
+      : [...this.plugins_installed_list];
+    return list.sort((a, b) => a.localeCompare(b));
+  }
+
+  matchesAddFilter(name: string): boolean {
+    if (!this.addDialogFilter) return true;
+    const f = this.addDialogFilter.toLowerCase();
+    return (
+      name.toLowerCase().includes(f) ||
+      (this.plugins_installed[name]?.disp_description ?? '').toLowerCase().includes(f)
+    );
+  }
+
+  hasMatchingPlugins(plugintype: string): boolean {
+    return this.plugins_installed_list.some((name) => {
+      const inType =
+        this.plugins_installed[name]?.type === plugintype ||
+        (plugintype === 'unclassified' &&
+          this.plugintypes.indexOf(this.plugins_installed[name]?.type) === -1);
+      return inType && this.matchesAddFilter(name);
+    });
+  }
 
   // set configuration name dialog
   setconfig_display = false;

@@ -72,6 +72,63 @@ export class LogicsListComponent implements OnInit {
 
   groupdefinitions: Record<string, Record<string, string>> = {};
   groupList!: LogicsGroupType[];
+
+  uSortField = '';
+  uSortOrder: 1 | -1 = 1;
+  sSortField = '';
+  sSortOrder: 1 | -1 = 1;
+
+  filterText = '';
+
+  onFilterChange(value: string): void {
+    this.filterText = value;
+    this.cdr.markForCheck();
+  }
+
+  clearFilter(): void {
+    this.filterText = '';
+    this.cdr.markForCheck();
+  }
+
+  get filteredUserLogics(): LogicsinfoType[] {
+    if (!this.filterText) return this.userlogics;
+    const f = this.filterText.toLowerCase();
+    return this.userlogics.filter(
+      (l) => l.name.toLowerCase().includes(f) || (l.filename ?? '').toLowerCase().includes(f),
+    );
+  }
+
+  get filteredSysLogics(): LogicsinfoType[] {
+    if (!this.filterText) return this.systemlogics;
+    const f = this.filterText.toLowerCase();
+    return this.systemlogics.filter(
+      (l) => l.name.toLowerCase().includes(f) || (l.filename ?? '').toLowerCase().includes(f),
+    );
+  }
+
+  sortUserLogics(field: string): void {
+    this.uSortOrder = this.uSortField === field ? (this.uSortOrder === 1 ? -1 : 1) : 1;
+    this.uSortField = field;
+    const ord = this.uSortOrder;
+    this.userlogics.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
+
+  sortSysLogics(field: string): void {
+    this.sSortOrder = this.sSortField === field ? (this.sSortOrder === 1 ? -1 : 1) : 1;
+    this.sSortField = field;
+    const ord = this.sSortOrder;
+    this.systemlogics.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
   groupExpandedOnStart: number[] = [];
   groupExpanded: number[] = [];
   nogroups: boolean;
