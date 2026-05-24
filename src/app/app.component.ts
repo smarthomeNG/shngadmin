@@ -10,8 +10,15 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 
-import { RouterOutlet } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationStart,
+  Router,
+  RouterOutlet,
+} from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { Toast } from 'primeng/toast';
 import { OfflineBannerComponent } from './common/components/offline-banner/offline-banner.component';
@@ -38,7 +45,7 @@ export const APP_VERSION = '1.12.0';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TopNavigationComponent, RouterOutlet, OfflineBannerComponent, Toast],
+  imports: [TopNavigationComponent, RouterOutlet, OfflineBannerComponent, Toast, TranslatePipe],
 })
 export class AppComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
@@ -56,9 +63,25 @@ export class AppComponent implements OnInit {
   public APP_VERSION = APP_VERSION;
 
   title = 'shngadmin';
+  navigating = false;
 
   constructor() {
     this.log.log('AppComponent.constructor:');
+
+    inject(Router)
+      .events.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event) => {
+        if (event instanceof NavigationStart) {
+          this.navigating = true;
+        } else if (
+          event instanceof NavigationEnd ||
+          event instanceof NavigationCancel ||
+          event instanceof NavigationError
+        ) {
+          this.navigating = false;
+        }
+        this.cdr.markForCheck();
+      });
 
     this.translate.addLangs(['en', 'de', 'fr']);
 
