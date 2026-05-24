@@ -799,6 +799,7 @@ a.text-shng:hover {
   border: none !important;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-normal);
+  padding: 0.25rem !important; /* Aura default is 1rem — reduce the outer whitebox */
 }
 
 .p-tree-root {
@@ -860,6 +861,7 @@ a.text-shng:hover {
 .p-accordionheader {
   justify-content: flex-start !important;
   gap: 0.4rem;
+  padding: 0.35rem 0.75rem !important; /* Aura default is 1.125rem (18 px) — compress to ~6 px */
   background-color: rgba(0, 0, 0, 0.09) !important;
   border-radius: 4px;
   transition: background-color 0.15s ease;
@@ -887,12 +889,44 @@ a.text-shng:hover {
   content: '▼';
 }
 
+/* Accordion content — Aura default is "0 1.125rem 1.125rem 1.125rem" (18 px).
+   Reduce to a modest inset so tables/trees inside don't feel over-padded. */
+.p-accordioncontent-content {
+  padding: 0.35rem 0.75rem !important;
+}
+
+/* ================================================================
+   Compact list table
+   Apply class="shng-list-table" to any <table> that should show
+   dense rows (same target density as btn-sm, ~28 px rows).
+   The !important beats Bootstrap's and Primeng's per-cell defaults.
+   ================================================================ */
+.shng-list-table td,
+.shng-list-table th {
+  padding: 2px 4px !important;
+  vertical-align: middle !important;
+}
+
+/* Suppress Bootstrap paragraph margin inside compact table cells */
+.shng-list-table td p {
+  margin-bottom: 0;
+}
+
 /* Tighten p-tree node row spacing */
 .p-tree .p-tree-node-content {
   padding: 1px 4px !important;
 }
 .p-tree li.p-tree-node {
   padding: 0 !important;
+}
+
+/* Item-tree view (/items): plain-text labels only — halve the leading */
+.item-tree .p-tree-node-content {
+  padding: 0 4px !important;
+  line-height: 1.1 !important;
+}
+.item-tree .p-tree-node-toggle-button {
+  height: 1.1em !important;
 }
 
 /* PrimeNG DataTable column headers: left-align text */
