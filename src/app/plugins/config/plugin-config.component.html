@@ -31,7 +31,7 @@
       <input
         pInputText
         type="text"
-        placeholder="Filter..."
+        [placeholder]="'FILTER' | translate"
         [value]="filterText"
         (input)="onFilterChange($any($event.target).value)"
         style="width: 220px; padding-right: 2rem; margin-top: 5px"
@@ -142,7 +142,7 @@
                   (click)="loadPlugin(row.confname)"
                   label="{{ 'BUTTON.LOAD' | translate }}"
                   class="ui-button-success btn-sm shng-text-sm"
-                  style="min-width: 100px"
+                  style="width: 8em"
                 ></button>
               }
               @if (row.loaded) {
@@ -153,7 +153,7 @@
                   (click)="reloadPlugin(row.confname)"
                   label="{{ 'BUTTON.RELOAD' | translate }}"
                   class="ui-button-warning btn-sm shng-text-sm"
-                  style="min-width: 100px"
+                  style="width: 8em"
                 ></button>
               }
             </td>
@@ -192,18 +192,20 @@
   [style]="{ minWidth: '600px', minHeight: '300px', maxHeight: '98%' }"
 >
   <ng-template pTemplate="header">
-    @if (is_new_plugin) {
-      {{ 'PLUGIN.CONFIGURE_AND_LOAD' | translate }} <strong>{{ this.dialog_configname }}</strong> &nbsp; (Plugin
-      <strong>{{ this.dialog_pluginname }}</strong
-      >)
-    } @else {
-      {{ 'CONFIGURATION' | translate }} <strong>{{ this.dialog_configname }}</strong> &nbsp; (Plugin
-      <strong>{{ this.dialog_pluginname }}</strong
-      >)
-      @if (plugin_enabled === false) {
-        &nbsp; - &nbsp;<strong>{{ 'PLUGIN.PLUGIN_DISABLED' | translate }}</strong>
+    <span>
+      @if (is_new_plugin) {
+        {{ 'PLUGIN.CONFIGURE_AND_LOAD' | translate }} <strong>{{ this.dialog_configname }}</strong> &nbsp; (Plugin
+        <strong>{{ this.dialog_pluginname }}</strong
+        >)
+      } @else {
+        {{ 'CONFIGURATION' | translate }} <strong>{{ this.dialog_configname }}</strong> &nbsp; (Plugin
+        <strong>{{ this.dialog_pluginname }}</strong
+        >)
+        @if (plugin_enabled === false) {
+          &nbsp; - &nbsp;<strong>{{ 'PLUGIN.PLUGIN_DISABLED' | translate }}</strong>
+        }
       }
-    }
+    </span>
   </ng-template>
 
   <table>
@@ -414,14 +416,14 @@
   #pluginadd
   header=""
   [(visible)]="add_display"
-  (onShow)="pluginadd.maximize()"
   [modal]="true"
   blockScroll="true"
-  [closable]="false"
+  [closable]="true"
   [resizable]="true"
   [maximizable]="false"
   [minY]="100"
-  [style]="{ minWidth: '600px', minHeight: '300px' }"
+  [style]="{ width: '95vw', height: '95vh' }"
+  [contentStyle]="{ overflow: 'auto', flex: '1', 'min-height': '0' }"
 >
   <ng-template pTemplate="header">
     {{ 'PLUGIN.ADD' | translate }}
@@ -433,7 +435,7 @@
       <input
         pInputText
         type="text"
-        placeholder="Filter..."
+        [placeholder]="'FILTER' | translate"
         [value]="addDialogFilter"
         (input)="onAddFilterChange($any($event.target).value)"
         style="width: 260px; padding-right: 2rem"
@@ -465,7 +467,7 @@
       @for (plugintype of plugintypes; track plugintype; let i = $index) {
         @if (!addDialogFilter || hasMatchingPlugins(plugintype)) {
           <p-accordion-panel [value]="i">
-            <p-accordion-header (click)="pluginadd.maximize()">
+            <p-accordion-header>
               <span class="shng-text-lg"
                 ><img
                   [src]="'assets/img/plugin_' + plugintype + '.svg'"
@@ -606,17 +608,6 @@
       </tbody>
     </table>
   }
-
-  <ng-template pTemplate="footer">
-    <button
-      pButton
-      type="button"
-      icon="pi pi-times"
-      (click)="add_display = false"
-      label="{{ 'BUTTON.CLOSE' | translate }}"
-      class="ui-button-secondary"
-    ></button>
-  </ng-template>
 </p-dialog>
 
 <!--

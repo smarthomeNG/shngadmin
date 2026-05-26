@@ -810,5 +810,9 @@
       "title": "Logiken der Gruppe 2",
       "description": ""
     }
+  },
+  "unknown_groups": {
+    "Group 1": ["AutomaticTemperatureControlLogicDay"],
+    "Group 4": ["AutomaticGateControlLogicDay", "GateOpenLogic"]
   }
 }

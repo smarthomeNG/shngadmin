@@ -26,4 +26,5 @@ export interface LogicsGroupType {
   name?: string;
   title: string;
   description: string;
+  unknown?: boolean; // true when group name is not defined in logic_groups.yaml
 }

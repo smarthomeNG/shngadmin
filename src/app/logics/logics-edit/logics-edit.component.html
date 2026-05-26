@@ -309,17 +309,32 @@
               <tr>
                 <td>{{ 'LOGIC_EDIT.GROUP' | translate }}</td>
                 <td colspan="3">
-                  <input
-                    [(ngModel)]="logic.group"
-                    (keyup)="this.logicChanged = hasLogicChanged()"
-                    type="text"
-                    pInputText
-                    placeholder=""
-                    pInputText
+                  <p-autoComplete
+                    #groupAC
+                    [(ngModel)]="logicGroupChips"
+                    [suggestions]="filteredGroupNames"
+                    (completeMethod)="searchGroups($event)"
+                    (onSelect)="onGroupChipsChange()"
+                    (onUnselect)="onGroupChipsChange()"
+                    (onAdd)="onGroupChipsChange()"
+                    (onFocus)="onGroupFocus()"
+                    [multiple]="true"
+                    [typeahead]="false"
+                    [addOnBlur]="true"
+                    [dropdown]="true"
                     name="group"
-                    style="width: 400px"
-                    [ngStyle]="{ width: 50 }"
-                  />
+                    [placeholder]="logicGroupChips.length === 0 ? ('LOGIC_EDIT.GROUP_PLACEHOLDER' | translate) : ''"
+                    styleClass="group-autocomplete"
+                  >
+                    <ng-template #selecteditem let-g>
+                      <span [style.color]="allGroupNames.includes(g) ? '' : 'var(--shng-orange)'">
+                        @if (!allGroupNames.includes(g)) {
+                          <i class="fa fa-exclamation-triangle" style="margin-right: 3px"></i>
+                        }
+                        {{ g }}</span
+                      >
+                    </ng-template>
+                  </p-autoComplete>
                 </td>
               </tr>
               <tr>

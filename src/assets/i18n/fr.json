@@ -264,6 +264,9 @@
     "GROUPED": "groupé",
     "GROUPS": "groupes logiques",
     "NOGROUP_TITLE": "Logique sans appartenance à un groupe",
+    "UNKNOWN_GROUP": "(groupe non défini)",
+    "UNKNOWN_GROUPS_BANNER": "Les noms de groupe suivants sont utilisés dans les fichiers de logique mais ne sont pas définis :",
+    "USED_BY": "utilisé par",
     "LOGIC": "Logique",
     "NEXT_EXEC": "Prochaine exécution",
     "CYCLE": "Cycle",
@@ -306,12 +309,15 @@
     "TYPE": "Type",
     "DESCRIPTION": "Description",
     "ADD_ITEM": "Ajouter un objet",
-    "ITEM_INVALID": "Objet non valide ou déjà ajouté, vérifiez votre entrée s.v.p.!"
+    "ITEM_INVALID": "Objet non valide ou déjà ajouté, vérifiez votre entrée s.v.p.!",
+    "GROUP_PLACEHOLDER": "Saisir ou filtrer les groupes…"
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Nom de groupe",
     "GROUP_TITLE": "Titre",
     "GROUP_DESCRIPTION": "Description",
+    "GROUP_MEMBERS": "Membres",
+    "AVAILABLE_LOGICS": "Logiques disponibles",
     "NAME_NEW_GROUP": "Choisissez un nom pour le nouveau groupe logique",
     "UNIQUE_NAME": "Nom unique pour un nouveau groupe logique"
   },
@@ -446,6 +452,7 @@
     "SYSTEM-PID": "Id de processus",
     "ACTIVE": "Actif"
   },
+  "FILTER": "Filtre",
   "LOGS": {
     "LOGFILE": "Fichier journal",
     "FILTER": "Filtre",

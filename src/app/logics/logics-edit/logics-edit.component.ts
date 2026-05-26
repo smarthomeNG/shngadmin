@@ -16,6 +16,7 @@ import { CompletionContext } from '@codemirror/autocomplete';
 import { KeyBinding } from '@codemirror/view';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PrimeTemplate } from 'primeng/api';
+import { AutoComplete } from 'primeng/autocomplete';
 import { Bind } from 'primeng/bind';
 import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
@@ -30,7 +31,7 @@ import {
 } from '../../common/components/code-editor/code-editor.component';
 import { DynamicFieldComponent } from '../../common/components/dynamic-field/dynamic-field.component';
 import { ConfigParameter, TableColumn } from '../../common/models/interfaces';
-import { LogicsinfoType } from '../../common/models/logics-info';
+import { LogicsGroupType, LogicsinfoType } from '../../common/models/logics-info';
 import { LogicsWatchItem } from '../../common/models/logics-watch-item';
 import { FilesApiService } from '../../common/services/files-api.service';
 import { ItemsApiService } from '../../common/services/items-api.service';
@@ -45,6 +46,7 @@ import { SharedService } from '../../common/services/shared.service';
   styleUrls: ['./logics-edit.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    AutoComplete,
     Bind,
     Tabs,
     TabList,
@@ -81,6 +83,11 @@ export class LogicsEditComponent implements OnInit {
   logics!: LogicsinfoType[];
   newlogics!: LogicsinfoType[];
   logic: LogicsinfoType = {} as LogicsinfoType;
+
+  // Group autocomplete
+  logicGroupChips: string[] = []; // array binding for p-autoComplete
+  allGroupNames: string[] = []; // all defined group names (for suggestions)
+  filteredGroupNames: string[] = []; // current suggestion dropdown list
   wrongWatchItem!: boolean;
   logicChanged!: boolean;
   logicDescriptionOrig: string | undefined;
@@ -95,6 +102,7 @@ export class LogicsEditComponent implements OnInit {
 
   @ViewChild('codeeditor') codeEditor?: CodeEditorComponent;
   @ViewChild('watchitems') codeEditorWatchItems?: CodeEditorComponent;
+  @ViewChild('groupAC') groupAutoComplete?: AutoComplete;
 
   myEditFilename!: string;
   myLogicName!: string;
@@ -155,6 +163,18 @@ export class LogicsEditComponent implements OnInit {
     this.watchItemCompletionSource = this._makeCompletionSource(this.full_autocomplete_list);
 
     this.getLogicInfo(this.myLogicName);
+
+    // Fetch group names for the autocomplete suggestion list
+    this.dataService
+      .getGroupsInfo()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const groups = (response as { groups: Record<string, LogicsGroupType> })['groups'] ?? {};
+        this.allGroupNames = Object.keys(groups).sort((a, b) =>
+          a.toLowerCase().localeCompare(b.toLowerCase()),
+        );
+        this.cdr.markForCheck();
+      });
 
     this.setTitle(this.translate.instant('LOGICS.LOGIC') + ' ' + this.myLogicName);
 
@@ -344,6 +364,30 @@ export class LogicsEditComponent implements OnInit {
     return list;
   }
 
+  /** Called by p-autoComplete (completeMethod) to filter suggestions. */
+  searchGroups(event: { query: string }) {
+    const q = event.query.toLowerCase();
+    // Suggest existing groups that match the query and aren't already selected
+    this.filteredGroupNames = this.allGroupNames.filter(
+      (g) => g.toLowerCase().includes(q) && !this.logicGroupChips.includes(g),
+    );
+  }
+
+  /** Open the suggestions dropdown automatically when the field receives focus. */
+  onGroupFocus() {
+    this.filteredGroupNames = this.allGroupNames.filter((g) => !this.logicGroupChips.includes(g));
+    if (this.filteredGroupNames.length > 0) {
+      this.groupAutoComplete?.show();
+    }
+  }
+
+  /** Called whenever the chip list changes (add/remove/select). Syncs logic.group string. */
+  onGroupChipsChange() {
+    this.logic.group = this.listToString(this.logicGroupChips) ?? '';
+    this.logicChanged = this.hasLogicChanged();
+    this.cdr.markForCheck();
+  }
+
   getLogicInfo(logicname: string) {
     // this.log.warn({logicname});
     this.dataService
@@ -366,6 +410,8 @@ export class LogicsEditComponent implements OnInit {
         this.log.log('typeof this.logic.group', typeof this.logic.group, this.logic.group);
         this.logic.group = this.listToString(this.logic.group);
         this.log.log('typeof this.logic.group', typeof this.logic.group, this.logic.group);
+        // Populate chip array from the pipe-separated string
+        this.logicGroupChips = this.stringToList(this.logic.group as string | null);
 
         if (this.logic.cycle === undefined) {
           this.logic.cycle = null;
@@ -585,6 +631,11 @@ export class LogicsEditComponent implements OnInit {
     this.myTextarea = this.myTextareaOrig;
     this.logic.logic_description = this.logicDescriptionOrig;
     this.logic.group = this.logicGroupOrig;
+    this.logicGroupChips = this.stringToList(
+      Array.isArray(this.logicGroupOrig)
+        ? this.logicGroupOrig.join(' | ')
+        : (this.logicGroupOrig as string | null),
+    );
     this.logic.cycle = this.logicCycleOrig;
     this.logic.crontab = this.logicCrontabOrig;
     this.logic.watch_item = Array.from(this.logicWatchitemOrig);

@@ -260,6 +260,9 @@
     "GROUPED": "Grouped",
     "GROUPS": "Logic Groups",
     "NOGROUP_TITLE": "Logics without group membership",
+    "UNKNOWN_GROUP": "(undefined group)",
+    "UNKNOWN_GROUPS_BANNER": "The following group names are used in logic files but not defined:",
+    "USED_BY": "used by",
     "LOGIC": "Logic",
     "NEXT_EXEC": "Next Execution",
     "CYCLE": "Cycle",
@@ -302,12 +305,15 @@
     "TYPE": "Type",
     "DESCRIPTION": "Description",
     "ADD_ITEM": "Add item",
-    "ITEM_INVALID": "Item invalid or already added, please check your input!"
+    "ITEM_INVALID": "Item invalid or already added, please check your input!",
+    "GROUP_PLACEHOLDER": "Type to filter groups…"
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Groupname",
     "GROUP_TITLE": "Title",
     "GROUP_DESCRIPTION": "Description",
+    "GROUP_MEMBERS": "Members",
+    "AVAILABLE_LOGICS": "Available logics",
     "NAME_NEW_GROUP": "Choose a name for the new logic-group",
     "UNIQUE_NAME": "Unique name for the new logic-group"
   },
@@ -442,6 +448,7 @@
     "SYSTEM-PID": "Process-Id",
     "ACTIVE": "Active"
   },
+  "FILTER": "Filter",
   "LOGS": {
     "LOGFILE": "Log",
     "FILTER": "Filter",

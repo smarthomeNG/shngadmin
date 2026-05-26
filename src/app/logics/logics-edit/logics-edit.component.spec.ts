@@ -13,12 +13,29 @@ import {
 } from '../../../testing/test-helpers';
 import { AppConfigService } from '../../common/services/app-config.service';
 import { AuthService } from '../../common/services/auth.service';
+import { LogicsApiService } from '../../common/services/logics-api.service';
 import { ServerApiService } from '../../common/services/server-api.service';
 import { LogicsEditComponent } from './logics-edit.component';
 
 describe('LogicsEditComponent', () => {
   let component: LogicsEditComponent;
   let fixture: ComponentFixture<LogicsEditComponent>;
+
+  const mockGroupsResponse = {
+    groups: {
+      alpha: { title: 'Alpha group', description: '' },
+      beta: { title: 'Beta group', description: '' },
+      gamma: { title: 'Gamma group', description: '' },
+    },
+  };
+
+  const mockLogicsApi = {
+    getGroupsInfo: () => of(mockGroupsResponse),
+    getLogic: () => of({ name: 'testlogic', group: '', enabled: true, logic_description: '' }),
+    getLogicState: () => of({}),
+    setLogicState: () => of({}),
+    saveLogicParameters: () => of({}),
+  };
 
   beforeEach(async () => {
     const mockServerApi = {
@@ -34,6 +51,7 @@ describe('LogicsEditComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ServerApiService, useValue: mockServerApi },
+        { provide: LogicsApiService, useValue: mockLogicsApi },
         { provide: AuthService, useValue: createMockAuthService() },
         { provide: AppConfigService, useValue: createMockAppConfigService() },
         MessageService,
@@ -69,9 +87,101 @@ describe('LogicsEditComponent', () => {
     (component as any).codeEditor = { codeMirror: cmStub };
     (component as any).codeEditorWatchItems = { codeMirror: cmStub };
     fixture.detectChanges();
+    // Override ViewChild after detectChanges so Angular's resolution doesn't overwrite it
+    (component as any).groupAutoComplete = { show: jest.fn() };
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  // -------------------------------------------------------------------------
+  // allGroupNames populated from getGroupsInfo()
+  // -------------------------------------------------------------------------
+
+  it('allGroupNames is populated from the groups API response', () => {
+    expect(component.allGroupNames).toEqual(['alpha', 'beta', 'gamma']);
+  });
+
+  it('allGroupNames is sorted alphabetically (case-insensitive)', () => {
+    const sorted = [...component.allGroupNames].sort((a, b) =>
+      a.toLowerCase().localeCompare(b.toLowerCase()),
+    );
+    expect(component.allGroupNames).toEqual(sorted);
+  });
+
+  // -------------------------------------------------------------------------
+  // searchGroups(): filter suggestions by query, exclude already-selected chips
+  // -------------------------------------------------------------------------
+
+  it('searchGroups() with empty query returns all group names', () => {
+    component.logicGroupChips = [];
+    component.searchGroups({ query: '' });
+    expect(component.filteredGroupNames).toEqual(['alpha', 'beta', 'gamma']);
+  });
+
+  it('searchGroups() filters by substring (case-insensitive)', () => {
+    component.logicGroupChips = [];
+    component.searchGroups({ query: 'a' });
+    // 'alpha', 'beta', 'gamma' all contain 'a'
+    expect(component.filteredGroupNames).toEqual(['alpha', 'beta', 'gamma']);
+  });
+
+  it('searchGroups() narrows results as query becomes more specific', () => {
+    component.logicGroupChips = [];
+    component.searchGroups({ query: 'alp' });
+    expect(component.filteredGroupNames).toEqual(['alpha']);
+  });
+
+  it('searchGroups() returns empty array when nothing matches', () => {
+    component.logicGroupChips = [];
+    component.searchGroups({ query: 'zzz' });
+    expect(component.filteredGroupNames).toEqual([]);
+  });
+
+  it('searchGroups() excludes already-selected chips from suggestions', () => {
+    component.logicGroupChips = ['alpha', 'gamma'];
+    component.searchGroups({ query: '' });
+    expect(component.filteredGroupNames).toEqual(['beta']);
+  });
+
+  // -------------------------------------------------------------------------
+  // onGroupFocus(): pre-fills filteredGroupNames excluding current chips
+  // -------------------------------------------------------------------------
+
+  it('onGroupFocus() sets filteredGroupNames to unused groups', () => {
+    component.logicGroupChips = ['beta'];
+    component.onGroupFocus();
+    expect(component.filteredGroupNames).toEqual(['alpha', 'gamma']);
+  });
+
+  it('onGroupFocus() with no chips selected returns all groups', () => {
+    component.logicGroupChips = [];
+    component.onGroupFocus();
+    expect(component.filteredGroupNames).toEqual(['alpha', 'beta', 'gamma']);
+  });
+
+  // -------------------------------------------------------------------------
+  // onGroupChipsChange(): syncs logicGroupChips -> logic.group string
+  // -------------------------------------------------------------------------
+
+  it('onGroupChipsChange() writes a pipe-separated string to logic.group', () => {
+    component.logicGroupChips = ['alpha', 'beta'];
+    component.onGroupChipsChange();
+    expect(component.logic.group).toBe('alpha | beta');
+  });
+
+  it('onGroupChipsChange() writes empty string when chips are empty', () => {
+    component.logicGroupChips = [];
+    component.onGroupChipsChange();
+    expect(component.logic.group).toBe('');
+  });
+
+  it('onGroupChipsChange() marks logicChanged when chips differ from original', () => {
+    // After fixture loads, logicGroupChips is [] and logicGroupOrig is the original value.
+    // Adding a chip that wasn't there before should set logicChanged = true.
+    component.logicGroupChips = ['alpha'];
+    component.onGroupChipsChange();
+    expect(component.logicChanged).toBe(true);
   });
 });

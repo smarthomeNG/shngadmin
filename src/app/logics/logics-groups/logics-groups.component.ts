@@ -1,4 +1,3 @@
-import { NgStyle } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -19,7 +18,8 @@ import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
-import { LogicsGroupType } from '../../common/models/logics-info';
+import { PickList } from 'primeng/picklist';
+import { LogicsGroupType, LogicsinfoType } from '../../common/models/logics-info';
 import { LogService } from '../../common/services/log.service';
 import { LogicsApiService } from '../../common/services/logics-api.service';
 import { ServerApiService } from '../../common/services/server-api.service';
@@ -33,9 +33,9 @@ import { ServerApiService } from '../../common/services/server-api.service';
     Bind,
     ButtonDirective,
     Listbox,
+    PickList,
     FormsModule,
     InputText,
-    NgStyle,
     Dialog,
     PrimeTemplate,
     TranslatePipe,
@@ -50,81 +50,246 @@ export class LogicsGroupsComponent implements OnInit {
   private titleService = inject(Title);
   private readonly log = inject(LogService);
 
-  // -----------------------------------------------------------------
-  //  Vars for the codemirror components
-  //
-  rulers = [];
-
-  // -----------------------------------------------------
-  //  Vars for the YAML syntax checker
-  //
-  @ViewChild('codeeditor') private codeEditor: unknown;
   @ViewChild('groupDesc') private groupDescEl!: ElementRef<HTMLElement>;
 
-  logicGroups!: Record<string, LogicsGroupType>; // filelist: string[];
+  // Group list / selection
+  logicGroups!: Record<string, LogicsGroupType>;
   groupList!: string[];
   group!: LogicsGroupType;
-  menuGroupList!: SelectItem[]; // itemFiles: SelectItem[];
+  menuGroupList!: SelectItem[];
   selectedGroup!: SelectItem;
+  myEditGroup = '';
 
-  myEditGroup = ''; // myEditFilename = '';
+  // Unknown groups: referenced in logic.yaml but not defined in logic_groups.yaml
+  unknownGroups: Record<string, string[]> = {}; // {groupname: [logicname, ...]}
 
+  // Member pick-list
+  allLogics: LogicsinfoType[] = [];
+  membersAvailable: LogicsinfoType[] = [];
+  membersInGroup: LogicsinfoType[] = [];
+  private membersOrig: string[] = [];
+
+  // Change tracking
+  groupTitleOrig = '';
+  groupDescriptionOrig = '';
+  groupChanged = false;
+
+  // Dialog state
   error_display = false;
   myTextOutput = '';
-
   newgroup_display = false;
   newGroupname = '';
   add_enabled = false;
-  myTextarea = '';
-
-  groupTitleOrig = '';
-  groupDescriptionOrig = '';
-  groupChanged!: boolean;
-
-  confirmdelete_display: boolean = false;
+  confirmdelete_display = false;
   delete_param!: {};
 
   ngOnInit() {
     this.group = { title: '', description: '' };
-    const groupDesc = this.groupDescEl?.nativeElement;
-    if (groupDesc) {
-      groupDesc.textContent = this.group.description;
-    }
 
+    // Load groups and all logics in parallel; we need both before the
+    // pick-list can be populated.
     this.dataService
-      .getGroupsInfo()
+      .getLogics()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        this.logicGroups = (response as { groups: Record<string, LogicsGroupType> })['groups'];
-        this.groupList = Object.keys(this.logicGroups).sort(function (a, b) {
-          return a.toLowerCase().localeCompare(b.toLowerCase());
-        });
+        const data = response as {
+          logics: LogicsinfoType[];
+          logics_new: LogicsinfoType[];
+          groups: Record<string, LogicsGroupType>;
+        };
 
-        this.menuGroupList = [];
-        for (let i = 0; i < this.groupList.length; i++) {
-          this.menuGroupList = [
-            ...this.menuGroupList,
-            <SelectItem>{ label: this.groupList[i], value: this.groupList[i] },
-          ];
-        }
+        // Merge loaded + unloaded logics, sorted by name
+        this.allLogics = [...(data.logics ?? []), ...(data.logics_new ?? [])].sort((a, b) =>
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+        );
 
+        this.logicGroups = data.groups ?? {};
+        this.unknownGroups =
+          ((data as Record<string, unknown>)['unknown_groups'] as Record<string, string[]>) ?? {};
+        this._rebuildGroupMenu();
         this.myEditGroup = '';
         this.cdr.markForCheck();
       });
   }
 
-  hasGroupChanged() {
-    const desc = this.groupDescEl?.nativeElement?.textContent || '';
-    const descHtml = this.groupDescEl?.nativeElement?.innerHTML || '';
-    this.log.log('hasGroupChanged: descHtml', descHtml);
+  // ------------------------------------------------------------------
+  //  Helpers
+  // ------------------------------------------------------------------
 
-    if (this.groupTitleOrig !== this.group['title']) {
-      return true;
+  private _rebuildGroupMenu() {
+    this.groupList = Object.keys(this.logicGroups).sort((a, b) =>
+      a.toLowerCase().localeCompare(b.toLowerCase()),
+    );
+    this.menuGroupList = this.groupList.map((g) => ({ label: g, value: g }) as SelectItem);
+  }
+
+  /** Split allLogics into "in group" / "available" for the pick-list. */
+  private _splitByGroup(groupname: string) {
+    this.membersInGroup = [];
+    this.membersAvailable = [];
+    for (const logic of this.allLogics) {
+      const groups = Array.isArray(logic.group) ? logic.group : logic.group ? [logic.group] : [];
+      if (groups.includes(groupname)) {
+        this.membersInGroup.push(logic);
+      } else {
+        this.membersAvailable.push(logic);
+      }
     }
-    if (this.groupDescriptionOrig !== desc.trim()) {
-      return true;
+    this.membersOrig = this.membersInGroup.map((l) => l.name);
+  }
+
+  private _hasMembersChanged(): boolean {
+    const current = this.membersInGroup.map((l) => l.name).sort();
+    const orig = [...this.membersOrig].sort();
+    return current.length !== orig.length || current.some((name, i) => name !== orig[i]);
+  }
+
+  hasGroupChanged(): boolean {
+    const desc = this.groupDescEl?.nativeElement?.textContent?.trim() ?? '';
+    return (
+      this.groupTitleOrig !== this.group['title'] ||
+      this.groupDescriptionOrig !== desc ||
+      this._hasMembersChanged()
+    );
+  }
+
+  onPickListChange() {
+    this.groupChanged = this.hasGroupChanged();
+    this.cdr.markForCheck();
+  }
+
+  // ------------------------------------------------------------------
+  //  Group selection
+  // ------------------------------------------------------------------
+
+  groupSelected() {
+    const group = this.selectedGroup.value as string;
+    if (!group) {
+      this.myEditGroup = '';
+      this.group = { title: '', description: '' };
+      this._setDescEl('');
+      this.membersAvailable = [...this.allLogics];
+      this.membersInGroup = [];
+      this.membersOrig = [];
+    } else {
+      this.myEditGroup = group;
+      this.group = this.logicGroups[group];
+      if (this.group.description === undefined) this.group.description = '';
+      this._setDescEl(this.group.description);
+      this.groupTitleOrig = this.group.title;
+      this.groupDescriptionOrig = this.group.description;
+      this._splitByGroup(group);
     }
-    return false;
+    this.groupChanged = false;
+    this.cdr.markForCheck();
+  }
+
+  private _setDescEl(text: string) {
+    const el = this.groupDescEl?.nativeElement;
+    if (el) el.textContent = text;
+  }
+
+  // ------------------------------------------------------------------
+  //  Save / discard
+  // ------------------------------------------------------------------
+
+  saveGroup() {
+    const desc = this.groupDescEl?.nativeElement?.textContent?.trim() ?? '';
+    this.group['description'] = desc;
+
+    const members = this.membersInGroup.map((l) => l.name);
+    const payload = { ...this.group, members };
+
+    this.dataService
+      .saveLogicGroup(this.myEditGroup, payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.groupTitleOrig = this.group['title'];
+        this.groupDescriptionOrig = this.group['description'];
+        this.membersOrig = [...members];
+        this.logicGroups[this.myEditGroup] = this.group;
+        this._setDescEl(this.group.description);
+        this.groupChanged = false;
+        this.cdr.markForCheck();
+      });
+  }
+
+  discardChanges() {
+    this.group.title = this.groupTitleOrig;
+    this.group.description = this.groupDescriptionOrig;
+    this._setDescEl(this.group.description);
+    this._splitByGroup(this.myEditGroup); // restore pick-list
+    this.groupChanged = false;
+    this.cdr.markForCheck();
+  }
+
+  // ------------------------------------------------------------------
+  //  Unknown group resolution
+  // ------------------------------------------------------------------
+
+  unknownGroupNames(): string[] {
+    return Object.keys(this.unknownGroups);
+  }
+
+  createUnknownGroup(groupname: string) {
+    const newGroup: LogicsGroupType = { title: '', description: '' };
+    this.dataService
+      .saveLogicGroup(groupname, { ...newGroup, members: [] })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.logicGroups[groupname] = newGroup;
+        delete this.unknownGroups[groupname];
+        this._rebuildGroupMenu();
+        this.cdr.markForCheck();
+      });
+  }
+
+  // ------------------------------------------------------------------
+  //  Create / delete group
+  // ------------------------------------------------------------------
+
+  newGroup() {
+    this.newGroupname = '';
+    this.add_enabled = false;
+    this.newgroup_display = true;
+  }
+
+  checkInput() {
+    this.add_enabled =
+      this.newGroupname.length > 0 &&
+      !this.groupList.some((g) => g.toLowerCase() === this.newGroupname.toLowerCase());
+  }
+
+  addGroup() {
+    this.newgroup_display = false;
+    this.myEditGroup = this.newGroupname;
+    const newGroup: LogicsGroupType = { title: '', description: '' };
+
+    this.dataService
+      .saveLogicGroup(this.myEditGroup, { ...newGroup, members: [] })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.logicGroups[this.myEditGroup] = newGroup;
+        this.group = newGroup;
+        this._setDescEl('');
+        this.groupTitleOrig = '';
+        this.groupDescriptionOrig = '';
+        this.membersInGroup = [];
+        this.membersAvailable = [...this.allLogics];
+        this.membersOrig = [];
+        this.groupChanged = false;
+        this._rebuildGroupMenu();
+        this.selectedGroup = { label: this.myEditGroup, value: this.myEditGroup };
+        this.cdr.markForCheck();
+      });
+  }
+
+  newGroupAbort() {
+    this.newGroupname = '';
+    this.add_enabled = false;
+    this.newgroup_display = false;
+    this._setDescEl(this.group.description);
+    this.selectedGroup = { label: this.myEditGroup, value: this.myEditGroup };
   }
 
   deleteGroup() {
@@ -133,187 +298,20 @@ export class LogicsGroupsComponent implements OnInit {
   }
 
   DeleteGroupConfirm() {
-    this.log.log('LogicsGroupsComponent.DeleteGroupConfirm');
-    this.log.log('this.myEditGroup', this.myEditGroup);
-
-    // close confirm dialog
     this.confirmdelete_display = false;
-
-    // delete on backend server
 
     this.dataService
       .deleteLogicGroup(this.myEditGroup)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        if (response) {
-          // close configuration dialog
-          this.confirmdelete_display = false;
-          this.log.log('LogicsGroupsComponent.DeleteConfigConfirm(): Returned from api', response);
-
-          delete this.logicGroups[this.myEditGroup];
-
-          this.groupList = Object.keys(this.logicGroups).sort(function (a, b) {
-            return a.toLowerCase().localeCompare(b.toLowerCase());
-          });
-
-          this.menuGroupList = [];
-          for (let i = 0; i < this.groupList.length; i++) {
-            this.menuGroupList = [
-              ...this.menuGroupList,
-              <SelectItem>{ label: this.groupList[i], value: this.groupList[i] },
-            ];
-          }
-
-          this.myEditGroup = '';
-          this.group = { title: '', description: '' };
-          const groupDesc = this.groupDescEl?.nativeElement;
-          if (groupDesc) {
-            groupDesc.textContent = this.group.description;
-          }
-          this.cdr.markForCheck();
-        }
-      });
-
-    return true;
-  }
-
-  checkInput() {
-    this.add_enabled = false;
-    if (this.newGroupname.length > 0) {
-      this.add_enabled = true;
-      for (const groupno in this.groupList) {
-        const gn = this.groupList[groupno];
-        if (this.newGroupname.toLowerCase() === gn.toLowerCase()) {
-          this.add_enabled = false;
-        }
-      }
-    }
-  }
-
-  newGroup() {
-    this.newGroupname = '';
-    this.add_enabled = false;
-    this.newgroup_display = true;
-  }
-
-  newGroupAbort() {
-    this.newGroupname = '';
-    this.add_enabled = false;
-    this.newgroup_display = false;
-
-    const groupDesc = this.groupDescEl?.nativeElement;
-    if (groupDesc) {
-      groupDesc.textContent = this.group.description;
-    }
-
-    this.selectedGroup = { label: this.myEditGroup, value: this.myEditGroup };
-  }
-
-  addGroup() {
-    this.log.log('LogicsGroupsComponent.addGroup');
-    this.log.log('this.newGroupname', this.newGroupname);
-
-    this.newgroup_display = false;
-
-    this.myEditGroup = this.newGroupname;
-    const newGroup = { title: '', description: '' };
-
-    this.dataService
-      .saveLogicGroup(this.myEditGroup, newGroup)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.groupTitleOrig = this.group['title'];
-        this.groupDescriptionOrig = this.group['description'];
-
-        if (this.myEditGroup !== '') {
-          this.logicGroups[this.myEditGroup] = newGroup;
-          this.group = this.logicGroups[this.myEditGroup];
-          const groupDesc = this.groupDescEl?.nativeElement;
-          if (groupDesc) {
-            groupDesc.textContent = this.group.description;
-          }
-        }
-        this.groupChanged = false;
-
-        this.groupList = Object.keys(this.logicGroups).sort(function (a, b) {
-          return a.toLowerCase().localeCompare(b.toLowerCase());
-        });
-
-        this.menuGroupList = [];
-        for (let i = 0; i < this.groupList.length; i++) {
-          this.menuGroupList = [
-            ...this.menuGroupList,
-            <SelectItem>{ label: this.groupList[i], value: this.groupList[i] },
-          ];
-        }
-        this.selectedGroup = { label: this.myEditGroup, value: this.myEditGroup };
-        this.log.warn('LogicsGroupsComponent.addGroup: selectedGroup:', this.selectedGroup);
-        this.cdr.markForCheck();
-      });
-  }
-
-  groupSelected() {
-    const group = this.selectedGroup.value;
-    if (group === '') {
-      this.myEditGroup = '';
-      this.group = { title: '', description: '' };
-      const groupDesc = this.groupDescEl?.nativeElement;
-      if (groupDesc) {
-        groupDesc.textContent = this.group.description;
-      }
-      this.log.log('groupSelected() *2', { group });
-      // this.myTextarea = '';
-      // this.cmOptions.readOnly = true;
-    } else {
-      this.myEditGroup = group;
-      this.group = this.logicGroups[group];
-      if (this.group.description === undefined) {
-        this.group.description = '';
-      }
-      const groupDesc = this.groupDescEl?.nativeElement;
-      if (groupDesc) {
-        groupDesc.textContent = this.group.description;
-      }
-      this.groupTitleOrig = this.logicGroups[group]['title'];
-      this.groupDescriptionOrig = this.logicGroups[group]['description'];
-      this.log.log('groupSelected()', { group }, this.group);
-      // this.getItemFile(group);
-    }
-  }
-
-  discardChanges() {
-    const desc = this.groupDescEl?.nativeElement?.textContent || '';
-    this.log.log('discardChanges', { desc });
-
-    this.group.title = this.groupTitleOrig;
-    this.group.description = this.groupDescriptionOrig;
-    const groupDesc = this.groupDescEl?.nativeElement;
-    if (groupDesc) {
-      groupDesc.textContent = this.group.description;
-    }
-    this.groupChanged = false;
-    this.log.log('this.group.description', this.group.description);
-  }
-
-  saveGroup() {
-    this.log.log('LoggingConfigurationComponent.saveGroup');
-
-    const desc = this.groupDescEl?.nativeElement?.textContent || '';
-    this.log.log('saveGroup', { desc });
-    this.group['description'] = desc.trim();
-
-    this.dataService
-      .saveLogicGroup(this.myEditGroup, this.group)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.groupTitleOrig = this.group['title'];
-        this.groupDescriptionOrig = this.group['description'];
-
-        this.logicGroups[this.myEditGroup] = this.group;
-        const groupDesc = this.groupDescEl?.nativeElement;
-        if (groupDesc) {
-          groupDesc.textContent = this.group.description;
-        }
+      .subscribe(() => {
+        delete this.logicGroups[this.myEditGroup];
+        this._rebuildGroupMenu();
+        this.myEditGroup = '';
+        this.group = { title: '', description: '' };
+        this._setDescEl('');
+        this.membersAvailable = [...this.allLogics];
+        this.membersInGroup = [];
+        this.membersOrig = [];
         this.groupChanged = false;
         this.cdr.markForCheck();
       });

@@ -44,6 +44,32 @@
     ></button>
   </div>
 
+  @if (unknownGroupNames().length > 0) {
+    <div class="unknown-groups-banner">
+      <i class="fa fa-exclamation-triangle" style="margin-right: 8px"></i>
+      <strong>{{ 'LOGICS.UNKNOWN_GROUPS_BANNER' | translate }}</strong>
+      <ul class="unknown-groups-list">
+        @for (gname of unknownGroupNames(); track gname) {
+          <li>
+            <span class="unknown-group-name">{{ gname }}</span>
+            <span class="unknown-group-members"
+              >({{ 'LOGICS.USED_BY' | translate }}: {{ unknownGroups[gname].join(', ') }})</span
+            >
+            <button
+              pButton
+              type="button"
+              icon="far fa-file"
+              [label]="'BUTTON.CREATE' | translate"
+              class="ui-button-warning btn-sm"
+              style="margin-left: 12px"
+              (click)="createUnknownGroup(gname)"
+            ></button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
   <div class="logics-groupslist">
     <i class="fa fa-sitemap" style="margin-left: 5px; color: var(--text-caption)"></i>
     <a style="margin-left: 5px; color: var(--text-muted)">{{ 'LOGICS.GROUPS' | translate }}</a>
@@ -71,10 +97,8 @@
             type="text"
             pInputText
             placeholder=""
-            pInputText
             name="name"
             style="width: 100%"
-            [ngStyle]="{ width: 50 }"
           />
         </td>
       </tr>
@@ -87,15 +111,13 @@
             type="text"
             pInputText
             placeholder=""
-            pInputText
-            name="description"
+            name="title"
             style="width: 100%"
-            [ngStyle]="{ width: 50 }"
           />
         </td>
       </tr>
       <tr>
-        <td>{{ 'LOGIC_GROUPS.GROUP_DESCRIPTION' | translate }}</td>
+        <td valign="top">{{ 'LOGIC_GROUPS.GROUP_DESCRIPTION' | translate }}</td>
         <td>
           <div class="description">
             <div
@@ -110,12 +132,45 @@
           </div>
         </td>
       </tr>
+      <tr>
+        <td valign="top" style="padding-top: 12px">{{ 'LOGIC_GROUPS.GROUP_MEMBERS' | translate }}</td>
+        <td>
+          <p-pickList
+            [source]="membersAvailable"
+            [target]="membersInGroup"
+            [sourceHeader]="'LOGIC_GROUPS.AVAILABLE_LOGICS' | translate"
+            [targetHeader]="'LOGIC_GROUPS.GROUP_MEMBERS' | translate"
+            [dragdrop]="true"
+            [responsive]="true"
+            [showSourceControls]="false"
+            [showTargetControls]="false"
+            filterBy="name,logic_description"
+            [sourceFilterPlaceholder]="'FILTER' | translate"
+            [targetFilterPlaceholder]="'FILTER' | translate"
+            (onMoveToTarget)="onPickListChange()"
+            (onMoveToSource)="onPickListChange()"
+            (onMoveAllToTarget)="onPickListChange()"
+            (onMoveAllToSource)="onPickListChange()"
+            [disabled]="myEditGroup === ''"
+            styleClass="members-picklist"
+          >
+            <ng-template #item let-logic>
+              <div class="picklist-item">
+                <span class="picklist-name">{{ logic.name }}</span>
+                @if (logic.logic_description) {
+                  <span class="picklist-desc">{{ logic.logic_description }}</span>
+                }
+              </div>
+            </ng-template>
+          </p-pickList>
+        </td>
+      </tr>
     </table>
   </div>
 </div>
 
 <!--
-  -- Dialog for setting the name of the new item configuration file
+  -- Dialog for setting the name of the new group
   -->
 
 <p-dialog
@@ -135,15 +190,7 @@
   <br />
   <div style="display: flex; align-items: center; gap: 8px">
     {{ 'LOGIC_GROUPS.UNIQUE_NAME' | translate }}
-    <input
-      [(ngModel)]="newGroupname"
-      type="text"
-      (input)="checkInput()"
-      pInputText
-      placeholder=""
-      [ngStyle]="{ width: 20 }"
-      autofocus
-    />
+    <input [(ngModel)]="newGroupname" type="text" (input)="checkInput()" pInputText placeholder="" autofocus />
   </div>
   <br />
   <ng-template pTemplate="footer">
@@ -169,7 +216,7 @@
 </p-dialog>
 
 <!--
-  -- Confirm dialog vor configuration deletion
+  -- Error dialog
   -->
 <p-dialog header="" [(visible)]="error_display" [closable]="false" [modal]="true" blockScroll="true">
   <ng-template pTemplate="header">
@@ -194,7 +241,7 @@
 </p-dialog>
 
 <!--
-  -- Confirm dialog vor configuration deletion
+  -- Confirm delete dialog
   -->
 <p-dialog header="" [(visible)]="confirmdelete_display" [modal]="true" blockScroll="true">
   <ng-template pTemplate="header">

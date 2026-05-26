@@ -98,6 +98,25 @@ export class LogicsListComponent implements OnInit {
     return groups.filter((g) => g !== '').join(', ');
   }
 
+  /** Returns true if any of the logic's groups are not defined in logic_groups.yaml. */
+  hasUnknownGroup(logic: LogicsinfoType): boolean {
+    if (!logic.group) return false;
+    const groups = Array.isArray(logic.group) ? logic.group : [logic.group];
+    return groups.some((g) => g !== '' && this._unknownGroupNames.has(g));
+  }
+
+  /** Returns the non-empty group names of a logic as an array (for flat-list rendering). */
+  getGroupsArray(logic: LogicsinfoType): string[] {
+    if (!logic.group) return [];
+    const groups = Array.isArray(logic.group) ? logic.group : [logic.group];
+    return groups.filter((g) => g !== '');
+  }
+
+  /** Returns true if the given group name is not defined in logic_groups.yaml. */
+  isUnknownGroup(groupname: string): boolean {
+    return this._unknownGroupNames.has(groupname);
+  }
+
   /** When a filter is active, expand all accordion panels so no match is hidden. */
   get effectiveExpanded(): number[] {
     if (this.filterText) {
@@ -148,6 +167,7 @@ export class LogicsListComponent implements OnInit {
   groupExpandedOnStart: number[] = [];
   groupExpanded: number[] = [];
   nogroups: boolean;
+  private _unknownGroupNames = new Set<string>();
   logics!: LogicsinfoType[];
   userlogics: LogicsinfoType[] = [];
   systemlogics: LogicsinfoType[] = [];
@@ -196,11 +216,12 @@ export class LogicsListComponent implements OnInit {
     if (this.groupList.find((g) => g.name === name) === undefined) {
       let title = '';
       let description = '';
+      const unknown = name !== '' && this._unknownGroupNames.has(name);
       if (this.groupdefinitions[name] !== undefined) {
         title = this.groupdefinitions[name]['title'];
         description = this.groupdefinitions[name]['description'];
       }
-      const group: LogicsGroupType = { name: name, title: title, description: description };
+      const group: LogicsGroupType = { name, title, description, unknown };
       this.groupList.push(group);
       if (name !== '') {
         this.nogroups = false;
@@ -250,6 +271,9 @@ export class LogicsListComponent implements OnInit {
       .subscribe((response) => {
         const resp = response as Record<string, unknown>;
         this.groupdefinitions = resp['groups'] as Record<string, Record<string, string>>;
+        const unknownGroups = (resp['unknown_groups'] ?? {}) as Record<string, string[]>;
+        // Mark unknown group names so addGroup() can flag them
+        this._unknownGroupNames = new Set(Object.keys(unknownGroups));
         this.logics = <LogicsinfoType[]>resp['logics'];
         this.logics.sort(function (a, b) {
           return a.name.toLowerCase() > b.name.toLowerCase()

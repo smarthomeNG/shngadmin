@@ -160,4 +160,118 @@ describe('LogicsListComponent', () => {
     const names = component.systemlogics.map((l) => l.name.toLowerCase());
     expect(names).toEqual([...names].sort());
   });
+
+  // -------------------------------------------------------------------------
+  // Unknown group detection (unknown_groups from API response)
+  // -------------------------------------------------------------------------
+
+  it('isUnknownGroup() returns true for group names in unknown_groups', () => {
+    // fixture unknown_groups: Group 1, Group 4
+    expect(component.isUnknownGroup('Group 1')).toBe(true);
+    expect(component.isUnknownGroup('Group 4')).toBe(true);
+  });
+
+  it('isUnknownGroup() returns false for defined group names', () => {
+    expect(component.isUnknownGroup('Group 2')).toBe(false);
+    expect(component.isUnknownGroup('test')).toBe(false);
+    expect(component.isUnknownGroup('raeume')).toBe(false);
+  });
+
+  it('hasUnknownGroup() returns true when any group of the logic is unknown', () => {
+    const logic = component.userlogics.find((l) => l.name === 'AutomaticGateControlLogicDay')!;
+    expect(logic).toBeDefined();
+    expect(component.hasUnknownGroup(logic)).toBe(true);
+  });
+
+  it('hasUnknownGroup() returns false when all groups are defined', () => {
+    const logic = component.userlogics.find((l) => l.name === 'CallListCSVLogic')!;
+    expect(logic).toBeDefined();
+    expect(component.hasUnknownGroup(logic)).toBe(false);
+  });
+
+  it('hasUnknownGroup() returns false for a logic with no group', () => {
+    const logic = component.userlogics.find((l) => l.name === 'DashbuttonLogics')!;
+    expect(logic).toBeDefined();
+    expect(component.hasUnknownGroup(logic)).toBe(false);
+  });
+
+  it('hasUnknownGroup() returns true when only one of multiple groups is unknown', () => {
+    // "test" logic belongs to ["test", "Group 2"] — both defined; none unknown
+    const testLogic = component.userlogics.find((l) => l.name === 'test')!;
+    expect(component.hasUnknownGroup(testLogic)).toBe(false);
+
+    // Simulate a logic that mixes a defined and an unknown group
+    const mixed = { name: 'x', group: ['Group 2', 'Group 4'], userlogic: true };
+    expect(component.hasUnknownGroup(mixed as any)).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // groupLabel() and getGroupsArray()
+  // -------------------------------------------------------------------------
+
+  it('groupLabel() returns comma-separated non-empty group names', () => {
+    const logic = component.userlogics.find((l) => l.name === 'test')!;
+    // fixture: ["test", "Group 2"]
+    expect(component.groupLabel(logic)).toBe('test, Group 2');
+  });
+
+  it('groupLabel() returns empty string when group is absent', () => {
+    const logic = component.userlogics.find((l) => l.name === 'DashbuttonLogics')!;
+    expect(component.groupLabel(logic)).toBe('');
+  });
+
+  it('groupLabel() skips empty-string entries', () => {
+    const logic = { name: 'x', group: ['', 'Group 2', ''], userlogic: true };
+    expect(component.groupLabel(logic as any)).toBe('Group 2');
+  });
+
+  it('getGroupsArray() returns non-empty group names as an array', () => {
+    const logic = component.userlogics.find((l) => l.name === 'test')!;
+    expect(component.getGroupsArray(logic)).toEqual(['test', 'Group 2']);
+  });
+
+  it('getGroupsArray() returns empty array when logic has no group', () => {
+    const logic = component.userlogics.find((l) => l.name === 'DashbuttonLogics')!;
+    expect(component.getGroupsArray(logic)).toEqual([]);
+  });
+
+  it('getGroupsArray() filters out empty-string entries', () => {
+    const logic = { name: 'x', group: ['', 'Group 2'], userlogic: true };
+    expect(component.getGroupsArray(logic as any)).toEqual(['Group 2']);
+  });
+
+  // -------------------------------------------------------------------------
+  // effectiveExpanded: expand all groups when a filter is active
+  // -------------------------------------------------------------------------
+
+  it('effectiveExpanded returns groupExpanded when no filter is set', () => {
+    component.filterText = '';
+    component.groupExpanded = [0, 2];
+    expect(component.effectiveExpanded).toEqual([0, 2]);
+  });
+
+  it('effectiveExpanded returns all group indices when a filter is active', () => {
+    component.onFilterChange('gate');
+    const expanded = component.effectiveExpanded;
+    const expected = component.groupList.map((_, i) => i);
+    expect(expanded).toEqual(expected);
+  });
+
+  // -------------------------------------------------------------------------
+  // groupList includes an unknown flag for groups in unknown_groups
+  // -------------------------------------------------------------------------
+
+  it('groupList marks groups in unknown_groups as unknown', () => {
+    const g1 = component.groupList.find((g) => g.name === 'Group 1');
+    const g4 = component.groupList.find((g) => g.name === 'Group 4');
+    expect(g1?.unknown).toBe(true);
+    expect(g4?.unknown).toBe(true);
+  });
+
+  it('groupList does not mark defined groups as unknown', () => {
+    const g2 = component.groupList.find((g) => g.name === 'Group 2');
+    const gt = component.groupList.find((g) => g.name === 'test');
+    expect(g2?.unknown).toBeFalsy();
+    expect(gt?.unknown).toBeFalsy();
+  });
 });

@@ -94,6 +94,21 @@
   /*background: cornsilk; */
 }
 
+/* Non-grouped flat view: button row + scrollable table without page scroll.
+   The wrapper owns the height; tab-content grows to fill the remaining space
+   after the button row instead of overflowing the tab panel. */
+.tab-content-ng {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height) - var(--tab-height) - 10px);
+}
+
+.tab-content-ng .tab-content {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
 .tab-footer {
   grid-area: tab-footer;
   width: 100%;
@@ -124,4 +139,15 @@
 
 .shng-color-disabled {
   color: var(--shng-disabled);
+}
+
+.group-unknown {
+  color: var(--shng-orange);
+}
+
+.group-unknown-hint {
+  font-size: 0.8em;
+  font-weight: normal;
+  margin-left: 8px;
+  opacity: 0.85;
 }

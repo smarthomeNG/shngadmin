@@ -121,6 +121,15 @@
   padding-right: 20px;
 }
 
+/* Make the group autocomplete fill the table cell */
+:host ::ng-deep .group-autocomplete {
+  width: 100%;
+}
+
+:host ::ng-deep .group-autocomplete .p-autocomplete-input-multiple {
+  width: 100%;
+}
+
 .tab-content-parameter {
   grid-area: tab-content-parameter;
   width: 100%;
