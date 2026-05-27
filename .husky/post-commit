@@ -36,4 +36,7 @@ echo "[post-commit] deploying to $SHNG_TARGET"
 rm -rf "$SHNG_TARGET"/*
 cp -r dist/static/* "$SHNG_TARGET/"
 
+# checkout work branch
+git checkout work
+
 echo "[post-commit] done"
