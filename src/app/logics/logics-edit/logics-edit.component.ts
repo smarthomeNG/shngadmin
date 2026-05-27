@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CompletionContext } from '@codemirror/autocomplete';
 import { KeyBinding } from '@codemirror/view';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -71,6 +71,7 @@ export class LogicsEditComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private dataService = inject(LogicsApiService);
   private fileService = inject(FilesApiService);
   private pluginsapiService = inject(PluginsApiService);
@@ -140,6 +141,10 @@ export class LogicsEditComponent implements OnInit {
   editorHelp_display = false;
   parameterHelp_display = false;
   error_display = false;
+
+  rename_display = false;
+  rename_newLogicName = '';
+  rename_newFilename = '';
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -436,10 +441,15 @@ export class LogicsEditComponent implements OnInit {
         this.fileService
           .readFile('logics', this.myEditFilename)
           .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((responseFile) => {
-            this.myTextarea = responseFile;
-            this.myTextareaOrig = this.myTextarea;
-            this.cdr.markForCheck();
+          .subscribe({
+            next: (responseFile) => {
+              this.myTextarea = responseFile;
+              this.myTextareaOrig = this.myTextarea;
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.cdr.markForCheck();
+            },
           });
 
         this.getPluginParameterDefinitions();
@@ -784,6 +794,54 @@ export class LogicsEditComponent implements OnInit {
       .subscribe((response) => {
         // this.getLogics();
         this.logic.enabled = true;
+        this.cdr.markForCheck();
+      });
+  }
+
+  openRenameDialog() {
+    // Pre-fill with current values
+    this.rename_newLogicName = this.myLogicName;
+    // strip .py suffix for the filename field
+    this.rename_newFilename = this.myEditFilename.endsWith('.py')
+      ? this.myEditFilename.slice(0, -3)
+      : this.myEditFilename;
+    this.rename_display = true;
+  }
+
+  get renameEnabled(): boolean {
+    const nameChanged = this.rename_newLogicName.trim() !== this.myLogicName;
+    const fileChanged =
+      this.rename_newFilename.trim() !==
+      (this.myEditFilename.endsWith('.py')
+        ? this.myEditFilename.slice(0, -3)
+        : this.myEditFilename);
+    return (
+      this.rename_newLogicName.trim() !== '' &&
+      this.rename_newFilename.trim() !== '' &&
+      (nameChanged || fileChanged)
+    );
+  }
+
+  doRename() {
+    const newName = this.rename_newLogicName.trim();
+    const newFile = this.rename_newFilename.trim();
+    const oldName = this.myLogicName;
+
+    // Only pass newFile to backend if it actually changed
+    const currentFileStem = this.myEditFilename.endsWith('.py')
+      ? this.myEditFilename.slice(0, -3)
+      : this.myEditFilename;
+    const newFilenameArg = newFile !== currentFileStem ? newFile : '';
+
+    this.dataService
+      .renameLogic(oldName, newName, newFilenameArg)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result === true) {
+          this.rename_display = false;
+          const newFilename = newFilenameArg !== '' ? newFile + '.py' : this.myEditFilename;
+          this.router.navigate(['/logics/edit', `${newName}|${newFilename}`]);
+        }
         this.cdr.markForCheck();
       });
   }

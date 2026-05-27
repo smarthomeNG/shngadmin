@@ -65,6 +65,16 @@
                 (click)="editorHelp_display = true"
                 class="float-sm-right ui-button-success"
               ></button>
+              <button
+                pButton
+                label="{{ 'LOGIC_EDIT.RENAME' | translate }}"
+                type="button"
+                [disabled]="myEditFilename === ''"
+                icon="fa fa-pen"
+                style="margin-left: 5px; margin-right: 5px"
+                (click)="openRenameDialog()"
+                class="float-sm-right ui-button-secondary"
+              ></button>
 
               @if (this.myLogicIsLoaded) {
                 @if (logic.enabled) {
@@ -672,6 +682,54 @@
       (click)="parameterHelp_display = false"
       label="{{ 'BUTTON.CLOSE' | translate }}"
       class="ui-button-success"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!--
+    -- Dialog for renaming a logic (logic name and/or filename)
+  -->
+<p-dialog
+  header=""
+  [(visible)]="rename_display"
+  [modal]="true"
+  blockScroll="true"
+  [closable]="false"
+  [maximizable]="false"
+  [style]="{ width: '480px', minWidth: '480px' }"
+>
+  <ng-template pTemplate="header">
+    {{ 'LOGIC_EDIT.RENAME' | translate }}
+  </ng-template>
+
+  <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 8px">
+    <label style="display: flex; align-items: center; gap: 8px">
+      <span style="min-width: 200px">{{ 'LOGIC_EDIT.RENAME_LOGIC_NAME' | translate }}:</span>
+      <input pInputText type="text" [(ngModel)]="rename_newLogicName" style="flex: 1" autofocus />
+    </label>
+    <label style="display: flex; align-items: center; gap: 8px">
+      <span style="min-width: 200px">{{ 'LOGIC_EDIT.RENAME_FILE_NAME' | translate }}:</span>
+      <input pInputText type="text" [(ngModel)]="rename_newFilename" style="flex: 1" />
+    </label>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-check"
+      [disabled]="!renameEnabled"
+      (click)="doRename()"
+      label="{{ 'BUTTON.RENAME' | translate }}"
+      class="ui-button-success"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-times"
+      (click)="rename_display = false"
+      label="{{ 'BUTTON.ABORT' | translate }}"
+      class="ui-button-secondary"
     ></button>
   </ng-template>
 </p-dialog>

@@ -1,29 +1,46 @@
 .shngbody {
-  margin-left: 10px;
-  margin-right: 10px;
+  height: calc(100vh - var(--navbar-height));
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
+  overflow: hidden;
   display: grid;
   grid-template-columns: max(20%, 200px) 1fr;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
 }
 
-.button-row-left {
-  grid-column: 1;
+/* .shng-page-header is global — the local .page-header-bar places it in the grid */
+.page-header-bar {
+  grid-column: 1 / -1;
   grid-row: 1;
+  margin-bottom: 0;
+}
+
+.button-toolbar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding-top: 10px;
   padding-right: 20px;
 }
 
-.button-row {
-  grid-column: 2;
-  grid-row: 1;
-  padding-top: 10px;
-  padding-left: 15px;
-  padding-right: 20px;
+.button-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.button-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .unknown-groups-banner {
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 3;
   margin-top: 10px;
   padding: 10px 14px;
   background-color: color-mix(in srgb, var(--shng-orange) 12%, transparent);
@@ -56,19 +73,46 @@
 
 .logics-groupslist {
   grid-column: 1;
-  grid-row: 3;
+  grid-row: 4;
   min-width: 16px;
   margin-top: 20px;
+  /* fill 1fr row; give p-listbox a definite parent height */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Let the p-listbox host fill the available column height */
+.logics-groupslist p-listbox {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pass height down to the PrimeNG listbox wrapper div */
+::ng-deep .logics-groupslist .p-listbox {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+::ng-deep .logics-groupslist .p-listbox-list-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .logics-groupeditor {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 4;
   margin-top: 44px;
   padding-top: 10px;
   padding-left: 10px;
   padding-right: 10px;
   border: 1px solid var(--shng-border);
+  overflow-y: auto;
 }
 
 .description {

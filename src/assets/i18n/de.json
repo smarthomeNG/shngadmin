@@ -115,7 +115,8 @@
     "INACTIVE": "Nicht aktiv",
     "EVAL CHECKER": "eval Syntax Prüfer",
     "YAML CHECKER": "YAML Syntax Prüfer",
-    "CONF TO YAML": "CONF-YAML Konverter",
+    "CONF TO YAML": "CONF-YAML Konverter (veraltet)",
+    "CONF_YAML_DEPRECATED": "Das .conf-Format wird von SmartHomeNG nicht mehr unterstützt. Dieser Konverter ist nur noch für Migrationszwecke verfügbar.",
     "CACHE_CHECKER": "Cache Prüfung",
     "SERVICE": "Dienst",
     "STATUS": "Status",
@@ -307,7 +308,12 @@
     "DESCRIPTION": "Beschreibung",
     "ADD_ITEM": "Item hinzufügen",
     "ITEM_INVALID": "Item ungültig oder bereits in der Liste vorhanden, bitte Eingabe prüfen!",
-    "GROUP_PLACEHOLDER": "Gruppen eingeben oder filtern…"
+    "GROUP_PLACEHOLDER": "Gruppen eingeben oder filtern…",
+    "RENAME": "Logik umbenennen",
+    "RENAME_LOGIC_NAME": "Neuer Logikname",
+    "RENAME_FILE_NAME": "Neuer Dateiname (ohne .py)",
+    "RENAME_NAME_IN_USE": "Dieser Logikname ist bereits vergeben.",
+    "RENAME_FILE_IN_USE": "Dieser Dateiname wird bereits von einer anderen Logik verwendet."
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Gruppenname",
@@ -316,7 +322,15 @@
     "GROUP_MEMBERS": "Mitglieder",
     "AVAILABLE_LOGICS": "Verfügbare Logiken",
     "NAME_NEW_GROUP": "Namen für die neue Logik-Gruppe wählen",
-    "UNIQUE_NAME": "Eindeutiger Name für eine neue Logik Gruppe"
+    "UNIQUE_NAME": "Eindeutiger Name für eine neue Logik Gruppe",
+    "DELETE_GROUP": "Logik-Gruppe löschen",
+    "DELETE_GROUP_CONFIRM": "Logik-Gruppe '{{group}}' löschen? Alle Mitgliedszuordnungen werden entfernt.",
+    "MERGE_INTO": "Eingliedern in…",
+    "MERGE_DIALOG_TITLE": "Logik-Gruppe eingliedern",
+    "MERGE_SELECT_TARGET": "'{{source}}' eingliedern in:",
+    "MERGE_PREVIEW": "{{added}} Mitglied(er) werden zu '{{target}}' hinzugefügt ({{before}} → {{after}} gesamt)",
+    "MERGE_CONFIRM": "Zusammenführen",
+    "MERGE_SELECT_PLACEHOLDER": "Gruppe auswählen…"
   },
   "SCHEDULERS": {
     "ITEM SCHEDULERS": "Item Scheduler",
@@ -508,6 +522,7 @@
     "SAVE_LOAD": "Sichern & Laden",
     "DISCARD": "Verwerfen",
     "ABORT": "Abbrechen",
+    "RENAME": "Umbenennen",
     "HELP": "Hilfe",
     "CREATE": "Erstellen",
     "ADD": "Hinzufügen",
@@ -603,6 +618,7 @@
   },
   "COMMON": {
     "FILE_EXISTS_TITLE": "Datei bereits vorhanden",
-    "FILE_EXISTS_HINT": "Eine Datei namens '{{filename}}' ist bereits vorhanden."
+    "FILE_EXISTS_HINT": "Eine Datei namens '{{filename}}' ist bereits vorhanden.",
+    "NO_DATA": "Keine Daten verfügbar"
   }
 }

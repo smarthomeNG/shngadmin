@@ -19,6 +19,8 @@ import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
 import { PickList } from 'primeng/picklist';
+import { Select } from 'primeng/select';
+import { switchMap } from 'rxjs/operators';
 import { LogicsGroupType, LogicsinfoType } from '../../common/models/logics-info';
 import { LogService } from '../../common/services/log.service';
 import { LogicsApiService } from '../../common/services/logics-api.service';
@@ -39,6 +41,7 @@ import { ServerApiService } from '../../common/services/server-api.service';
     Dialog,
     PrimeTemplate,
     TranslatePipe,
+    Select,
   ],
 })
 export class LogicsGroupsComponent implements OnInit {
@@ -82,6 +85,9 @@ export class LogicsGroupsComponent implements OnInit {
   add_enabled = false;
   confirmdelete_display = false;
   delete_param!: {};
+  mergeDialog = false;
+  mergeTargetName = '';
+  mergeGroupOptions: SelectItem[] = [];
 
   ngOnInit() {
     this.group = { title: '', description: '' };
@@ -293,7 +299,7 @@ export class LogicsGroupsComponent implements OnInit {
   }
 
   deleteGroup() {
-    this.delete_param = { config: this.myEditGroup };
+    this.delete_param = { group: this.myEditGroup };
     this.confirmdelete_display = true;
   }
 
@@ -313,6 +319,88 @@ export class LogicsGroupsComponent implements OnInit {
         this.membersInGroup = [];
         this.membersOrig = [];
         this.groupChanged = false;
+        this.cdr.markForCheck();
+      });
+  }
+
+  // ------------------------------------------------------------------
+  //  Merge groups
+  // ------------------------------------------------------------------
+
+  private _getMembersOfGroup(groupname: string): string[] {
+    return this.allLogics
+      .filter((l) => {
+        const groups = Array.isArray(l.group) ? l.group : l.group ? [l.group] : [];
+        return groups.includes(groupname);
+      })
+      .map((l) => l.name);
+  }
+
+  get mergePreviewParams(): Record<string, unknown> {
+    if (!this.mergeTargetName) return {};
+    const targetMembers = this._getMembersOfGroup(this.mergeTargetName);
+    const sourceMembers = this.membersInGroup.map((l) => l.name);
+    const union = [...new Set([...targetMembers, ...sourceMembers])];
+    return {
+      added: union.length - targetMembers.length,
+      target: this.mergeTargetName,
+      before: targetMembers.length,
+      after: union.length,
+    };
+  }
+
+  openMergeDialog() {
+    this.mergeGroupOptions = this.groupList
+      .filter((g) => g !== this.myEditGroup)
+      .map((g) => ({ label: g, value: g }) as SelectItem);
+    this.mergeTargetName = '';
+    this.mergeDialog = true;
+  }
+
+  executeMerge() {
+    const sourceName = this.myEditGroup;
+    const targetName = this.mergeTargetName;
+    const sourceMembers = this.membersInGroup.map((l) => l.name);
+    const targetGroup = this.logicGroups[targetName];
+    const targetMembers = this._getMembersOfGroup(targetName);
+    const mergedMembers = [...new Set([...targetMembers, ...sourceMembers])];
+
+    this.dataService
+      .saveLogicGroup(targetName, { ...targetGroup, members: mergedMembers })
+      .pipe(
+        switchMap(() => this.dataService.deleteLogicGroup(sourceName)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        // Update group field on affected logics locally
+        for (const logic of this.allLogics) {
+          const groups = Array.isArray(logic.group)
+            ? [...logic.group]
+            : logic.group
+              ? [logic.group]
+              : [];
+          if (groups.includes(sourceName)) {
+            const updated = groups.filter((g) => g !== sourceName);
+            if (!updated.includes(targetName)) updated.push(targetName);
+            logic.group = updated.length === 1 ? updated[0] : updated;
+          }
+        }
+
+        delete this.logicGroups[sourceName];
+        this._rebuildGroupMenu();
+
+        // Select the merge target
+        this.myEditGroup = targetName;
+        this.group = this.logicGroups[targetName];
+        if (this.group.description === undefined) this.group.description = '';
+        this._setDescEl(this.group.description);
+        this.groupTitleOrig = this.group.title;
+        this.groupDescriptionOrig = this.group.description;
+        this._splitByGroup(targetName);
+        this.groupChanged = false;
+        this.selectedGroup = { label: targetName, value: targetName };
+        this.mergeDialog = false;
+        this.mergeTargetName = '';
         this.cdr.markForCheck();
       });
   }

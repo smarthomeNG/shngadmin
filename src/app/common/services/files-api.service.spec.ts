@@ -70,13 +70,15 @@ describe('FilesApiService', () => {
     expect(result).toBe('# hello world');
   });
 
-  it('readFile() returns empty string on HTTP error', () => {
-    let result: unknown;
-    service.readFile('logics', 'missing.py').subscribe((r) => (result = r));
+  it('readFile() propagates error on HTTP error', () => {
+    let errorCaught = false;
+    service
+      .readFile('logics', 'missing.py')
+      .subscribe({ next: () => {}, error: () => (errorCaught = true) });
     http
       .expectOne((r) => r.url.includes('missing'))
       .flush('not found', { status: 404, statusText: 'Not Found' });
-    expect(result).toBe('');
+    expect(errorCaught).toBe(true);
   });
 
   // -------------------------------------------------------------------------

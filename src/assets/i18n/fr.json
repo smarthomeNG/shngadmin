@@ -115,7 +115,8 @@
     "INACTIVE": "Inactif",
     "EVAL CHECKER": "Contrôleur de syntaxe 'eval'",
     "YAML CHECKER": "Contrôleur de syntaxe YAML",
-    "CONF TO YAML": "Convertisseur CONF-YAML",
+    "CONF TO YAML": "Convertisseur CONF-YAML (obsolète)",
+    "CONF_YAML_DEPRECATED": "Le format .conf n'est plus pris en charge par SmartHomeNG. Ce convertisseur est conservé uniquement à des fins de migration.",
     "CACHE_CHECKER": "Contrôle du cache",
     "SERVICE": "Service",
     "STATUS": "Etat",
@@ -310,7 +311,12 @@
     "DESCRIPTION": "Description",
     "ADD_ITEM": "Ajouter un objet",
     "ITEM_INVALID": "Objet non valide ou déjà ajouté, vérifiez votre entrée s.v.p.!",
-    "GROUP_PLACEHOLDER": "Saisir ou filtrer les groupes…"
+    "GROUP_PLACEHOLDER": "Saisir ou filtrer les groupes…",
+    "RENAME": "Renommer la logique",
+    "RENAME_LOGIC_NAME": "Nouveau nom de logique",
+    "RENAME_FILE_NAME": "Nouveau nom de fichier (sans .py)",
+    "RENAME_NAME_IN_USE": "Ce nom de logique est déjà utilisé.",
+    "RENAME_FILE_IN_USE": "Ce nom de fichier est déjà utilisé par une autre logique."
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Nom de groupe",
@@ -319,7 +325,15 @@
     "GROUP_MEMBERS": "Membres",
     "AVAILABLE_LOGICS": "Logiques disponibles",
     "NAME_NEW_GROUP": "Choisissez un nom pour le nouveau groupe logique",
-    "UNIQUE_NAME": "Nom unique pour un nouveau groupe logique"
+    "UNIQUE_NAME": "Nom unique pour un nouveau groupe logique",
+    "DELETE_GROUP": "Supprimer le groupe logique",
+    "DELETE_GROUP_CONFIRM": "Supprimer le groupe logique '{{group}}' ? Toutes les affectations de membres seront supprimées.",
+    "MERGE_INTO": "Fusionner dans…",
+    "MERGE_DIALOG_TITLE": "Fusionner des groupes logiques",
+    "MERGE_SELECT_TARGET": "Fusionner '{{source}}' dans :",
+    "MERGE_PREVIEW": "{{added}} membre(s) seront ajoutés à '{{target}}' ({{before}} → {{after}} au total)",
+    "MERGE_CONFIRM": "Fusionner",
+    "MERGE_SELECT_PLACEHOLDER": "Sélectionner un groupe…"
   },
   "SCHEDULERS": {
     "ITEM SCHEDULERS": "Planificateurs d'objets",
@@ -507,6 +521,7 @@
     "SAVE_LOAD": "Sauvegarder & charger",
     "DISCARD": "Jeter",
     "ABORT": "Abandonner",
+    "RENAME": "Renommer",
     "HELP": "Aide",
     "CREATE": "Créer",
     "ADD": "Ajouter",
@@ -602,6 +617,7 @@
   },
   "COMMON": {
     "FILE_EXISTS_TITLE": "Fichier déjà existant",
-    "FILE_EXISTS_HINT": "Un fichier nommé '{{filename}}' existe déjà."
+    "FILE_EXISTS_HINT": "Un fichier nommé '{{filename}}' existe déjà.",
+    "NO_DATA": "Aucune donnée disponible"
   }
 }

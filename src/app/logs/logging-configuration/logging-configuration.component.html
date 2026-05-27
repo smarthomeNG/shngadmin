@@ -1,38 +1,39 @@
 <div class="shngbody">
-  <div class="button-row">
-    {{ 'LOGGING.CONFIG_FILE' | translate }}: <strong>../etc/{{ myEditFilename }}.yaml</strong>
-    <button
-      pButton
-      label="{{ 'BUTTON.SAVE' | translate }}"
-      type="button"
-      [disabled]="myTextarea === myTextareaOrig"
-      icon="fa fa-check"
-      style="margin-right: 0"
-      (click)="saveConfig()"
-      class="float-sm-right ui-button-success"
-    ></button>
-    <button
-      pButton
-      label="{{ 'BUTTON.DISCARD' | translate }}"
-      type="button"
-      [disabled]="myEditFilename === '' || myTextarea === myTextareaOrig"
-      icon="fa fa-times"
-      style="margin-right: 10px"
-      (click)="this.myTextarea = this.myTextareaOrig"
-      class="float-sm-right ui-button-secondary"
-    ></button>
-    <button
-      pButton
-      label="{{ 'BUTTON.HELP' | translate }}"
-      type="button"
-      [disabled]="false"
-      icon="fa fa-info"
-      style="margin-right: 10px"
-      (click)="this.editorHelp_display = true"
-      class="float-sm-right ui-button-success"
-    ></button>
+  <div class="button-row shng-page-header">
+    <span
+      >{{ 'LOGGING.CONFIG_FILE' | translate }}: <strong>../etc/{{ myEditFilename }}.yaml</strong></span
+    >
+    <div class="header-buttons">
+      <button
+        pButton
+        label="{{ 'BUTTON.HELP' | translate }}"
+        type="button"
+        [disabled]="false"
+        icon="fa fa-info"
+        (click)="this.editorHelp_display = true"
+        class="ui-button-success"
+      ></button>
+      <button
+        pButton
+        label="{{ 'BUTTON.DISCARD' | translate }}"
+        type="button"
+        [disabled]="myEditFilename === '' || myTextarea === myTextareaOrig"
+        icon="fa fa-times"
+        (click)="this.myTextarea = this.myTextareaOrig"
+        class="ui-button-secondary"
+      ></button>
+      <button
+        pButton
+        label="{{ 'BUTTON.SAVE' | translate }}"
+        type="button"
+        [disabled]="myTextarea === myTextareaOrig"
+        icon="fa fa-check"
+        (click)="saveConfig()"
+        class="ui-button-success"
+      ></button>
+    </div>
   </div>
-  <div class="editor-area">
+  <div class="editor-area shng-page-body">
     <app-code-editor
       #codeeditor
       [language]="'yaml'"

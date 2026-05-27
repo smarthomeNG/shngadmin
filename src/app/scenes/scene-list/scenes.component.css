@@ -4,45 +4,19 @@
 
 .shngbody {
   height: calc(100vh - var(--navbar-height));
-  overflow: hidden;
   width: 100%;
   margin: 0;
-  padding: 0;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.body-header {
-  grid-area: body-header;
-  width: 100%;
+/* .shng-page-header and .shng-page-body are global — see styles.css */
 
-  display: grid;
+.page-body {
+  flex: 1 1 0;
+  min-height: 0;
   overflow: auto;
-
-  grid-template-columns: 110px minmax(140px, 280px) 1fr;
-  grid-auto-rows: minmax(50px, max-content);
-}
-
-.body-content {
-  grid-area: body-content;
-  width: 100%;
-  height: calc(100vh - var(--navbar-height) - 10px);
   padding: 10px;
-  padding-top: 0;
-
-  overflow: auto;
-
-  display: grid;
-  grid-template-areas:
-    'tab-header'
-    'tab-content'
-    'tab-footer';
-  grid-template-columns: 1fr;
-  /*grid-auto-rows: minmax(50px, max-content);*/
-  grid-template-rows: 00px auto 0;
-}
-
-.body-footer {
-  grid-area: body-footer;
-  width: 100%;
 }

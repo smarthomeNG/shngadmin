@@ -1,54 +1,51 @@
-.body {
-  margin: 0;
-}
 .shngbody {
   height: calc(100vh - var(--navbar-height));
   width: 100%;
   margin: 0;
-  padding: 0;
-
-  padding-left: 10px; /* padding around tab border */
-  padding-right: 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
 
   display: grid;
-  grid-template-rows: auto 65px;
+  grid-template-rows: 1fr auto;
   grid-template-columns: 1fr;
-
   grid-template-areas:
     'body-content'
     'body-footer';
-
   grid-gap: 0;
-  grid-auto-flow: row;
 }
 
 .body-content {
   grid-area: body-content;
-  width: 100%;
+  min-height: 0;
   overflow: hidden;
+  /* Activate the global p-tabs flex chain */
+  display: flex;
+  flex-direction: column;
 }
 
 .body-footer {
   grid-area: body-footer;
-  width: 100%;
-  padding-bottom: 10px;
+  padding-top: 10px;
+  padding-bottom: 0;
+  /* Continue the tab-content border through the footer row */
+  border-left: 1px solid var(--shng-border);
+  border-right: 1px solid var(--shng-border);
+  border-bottom: 1px solid var(--shng-border);
 }
 
-.tab-header {
-  grid-area: tab-header;
-  width: 100%;
+@media (min-width: 768px) {
+  .body-footer {
+    padding-bottom: calc(var(--page-padding) / 2);
+  }
 }
 
+/* Scrollable content area inside each tab panel.
+   height: 100% works because the global styles.css flex chain gives
+   p-tabs → p-tabpanels → p-tabpanel their actual pixel heights.
+   border-bottom is omitted here; .body-footer provides it. */
 .tab-content {
-  grid-area: tab-content;
-  width: 100%;
-  height: calc(100vh - var(--navbar-height) - 65px - var(--tab-height));
-  border: 1px solid #dee2e6;
+  height: 100%;
+  border: 1px solid var(--shng-border);
   border-top: 0;
+  border-bottom: 0;
   overflow: auto;
-}
-
-.tab-footer {
-  grid-area: tab-footer;
-  width: 100%;
 }

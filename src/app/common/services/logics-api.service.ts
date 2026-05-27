@@ -111,7 +111,7 @@ export class LogicsApiService {
   }
 
   setLogicState(logicName: string, action: string, filename = '') {
-    // valid actions are: 'trigger', 'enable', 'disable', 'load', 'unload', 'reload', 'delete', 'create'
+    // valid actions are: 'trigger', 'enable', 'disable', 'load', 'unload', 'reload', 'delete', 'create', 'rename'
     action = action.toLowerCase();
     // this.log.warn('LogicsApiService.setLogicState', {logicName}, {action});
 
@@ -147,6 +147,43 @@ export class LogicsApiService {
       catchError((err: HttpErrorResponse) => {
         this.log.error(
           'LogicsApiService.setLogicState: Could not set logic state' + ' - ' + err.error.error,
+        );
+        return of({});
+      }),
+    );
+  }
+
+  renameLogic(oldName: string, newName: string, newFilename: string) {
+    const apiUrl = this.appConfig.apiUrl;
+    let url =
+      apiUrl + 'logics/' + oldName + '?action=rename&filename=' + encodeURIComponent(newName);
+    if (newFilename !== '') {
+      url += '&newfilename=' + encodeURIComponent(newFilename);
+    }
+    return this.http.put(url, JSON.stringify('')).pipe(
+      map((response) => {
+        const result = response as ApiResult;
+        if (result) {
+          if (result.result === 'ok') {
+            return true;
+          } else {
+            this.log.warn('LogicsApiService.renameLogic', result.result, result.description);
+            this.messageService.add({
+              severity: 'error',
+              summary: result.result,
+              detail: result.description,
+              sticky: true,
+            });
+            return false;
+          }
+        } else {
+          this.log.log('LogicsApiService.renameLogic', 'failed: Undefined result');
+          return undefined;
+        }
+      }),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error(
+          'LogicsApiService.renameLogic: Could not rename logic' + ' - ' + err.error?.error,
         );
         return of({});
       }),

@@ -1,1 +1,43 @@
 /* p-tree base styles are in global styles.css */
+
+.shngbody {
+  height: calc(100vh - var(--navbar-height));
+  /* No left/right padding — the inner container-fluid already provides side spacing */
+  padding-bottom: var(--page-padding);
+  overflow: hidden;
+}
+
+/*
+ * Constrain the item tree and detail panel to the visible viewport so
+ * they scroll internally rather than letting the page scroll.
+ *
+ * Offset breakdown (navbar=60px, tab-bar=41px):
+ *   #tree      — fixed overhead above tree: navbar-height + tab-height accounted separately;
+ *               remaining fixed overhead = 85px (search row + card border/padding + gaps).
+ *   #tree_detail — fixed overhead = 128px (same + card-header ~43px).
+ *   Both subtract page-padding for the outer bottom gap.
+ */
+#tree {
+  height: calc(100vh - var(--navbar-height) - var(--tab-height) - 90px - var(--page-padding));
+  overflow-y: auto;
+}
+
+#tree_detail {
+  height: calc(100vh - var(--navbar-height) - var(--tab-height) - 133px - var(--page-padding));
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+/* Monitored items tab: scrollable area matching the page bottom boundary.
+   Left/right margin matches the container-fluid gutter used by tab 0.
+   Top padding provides a small visual gap below the tab bar. */
+.monitored-container {
+  height: calc(100vh - var(--navbar-height) - var(--tab-height) - var(--page-padding) - 10px);
+  overflow-y: auto;
+  overflow-x: auto;
+  padding-top: 10px;
+  box-sizing: border-box;
+  margin: 0 var(--grid-gutter);
+  border: 1px solid var(--shng-border);
+  border-top: 0;
+}

@@ -258,20 +258,10 @@ export class TopNavigationComponent implements OnInit {
     this.setSubmenuEntry(2, 1, this.translate.instant('MENU.ITEM_CONFIGURATION'), [
       '/items/config',
     ]);
-    if (this.developerMode === true && false) {
-      this.setSubmenuEntry(2, 2, this.translate.instant('MENU.ITEM_CONFIGURATION') + ' (dev)', [
-        '/items/config2',
-      ]);
-      this.setSubmenuEntry(2, 3, this.translate.instant('MENU.ITEM_STRUCTS'), ['/items/structs']);
-      this.setSubmenuEntry(2, 4, this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'), [
-        '/items/struct_config',
-      ]);
-    } else {
-      this.setSubmenuEntry(2, 2, this.translate.instant('MENU.ITEM_STRUCTS'), ['/items/structs']);
-      this.setSubmenuEntry(2, 3, this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'), [
-        '/items/struct_config',
-      ]);
-    }
+    this.setSubmenuEntry(2, 2, this.translate.instant('MENU.ITEM_STRUCTS'), ['/items/structs']);
+    this.setSubmenuEntry(2, 3, this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'), [
+      '/items/struct_config',
+    ]);
 
     this.setMenuEntry(3, this.translate.instant('MENU.LOGICS'), ['/logics/list']);
     this.setSubmenuEntry(3, 0, this.translate.instant('MENU.LOGICS_LIST'), ['/logics/list']);

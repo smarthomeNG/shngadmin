@@ -2,13 +2,10 @@
   height: calc(100vh - var(--navbar-height));
   width: 100%;
   margin: 0;
-  padding: 0;
-
-  padding-left: 10px; /* padding around tab border */
-  padding-right: 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
 
   display: grid;
-  grid-template-rows: 0 auto 10px;
+  grid-template-rows: 0 auto 0;
   grid-template-columns: 1fr;
 
   grid-template-areas:
@@ -48,7 +45,7 @@
   width: 100%;
   height: 0;
   overflow: auto;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   border-bottom: 0;
   background: lightcyan;
@@ -58,7 +55,7 @@
   grid-area: tab-content;
   width: 100%;
   height: calc(100vh - var(--navbar-height) - var(--tab-height) - 10px);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   overflow: hidden;
   display: flex;
@@ -113,7 +110,7 @@
   width: 100%;
   height: 60px;
   overflow: auto;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   border-bottom: 0;
   padding-left: 10px;
@@ -135,7 +132,7 @@
   width: 100%;
   /*height: 100%; */
   height: calc(100vh - var(--navbar-height) - var(--tab-height) - 70px);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   overflow: auto;
   /*background: cornsilk; */

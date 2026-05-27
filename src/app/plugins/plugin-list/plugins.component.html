@@ -1,13 +1,14 @@
 <div class="shngbody">
-  <div class="shng_headline" style="margin-top: 5px; margin-left: 8px; min-height: 40px">
-    <span style="position: relative; display: inline-block; vertical-align: middle" class="float-sm-right">
+  <div class="shng-page-header">
+    <span>{{ 'MENU.PLUGINS_LIST' | translate }}</span>
+    <span style="position: relative; display: inline-block; margin-left: auto">
       <input
         pInputText
         type="text"
         [placeholder]="'FILTER' | translate"
         [value]="filterText"
         (input)="onFilterChange($any($event.target).value)"
-        style="width: 220px; padding-right: 2rem; margin-top: 5px"
+        style="width: 220px; padding-right: 2rem"
       />
       @if (filterText) {
         <span
@@ -25,7 +26,7 @@
       }
     </span>
   </div>
-  <div class="body-content" style="margin-top: 0; margin-left: 8px">
+  <div class="body-content shng-page-body">
     @if (loading) {
       <div style="display: flex; align-items: center; padding: 1rem 0; gap: 0.5rem; color: var(--text-muted)">
         <p-progressSpinner

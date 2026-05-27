@@ -312,4 +312,59 @@ describe('LogicsApiService', () => {
       .flush({ error: 'err' }, { status: 500, statusText: 'Server Error' });
     expect(result).toEqual({});
   });
+
+  // -------------------------------------------------------------------------
+  // renameLogic — PUT ?action=rename&filename=<newName>[&newfilename=<newFile>]
+  // -------------------------------------------------------------------------
+
+  it('renameLogic() sends PUT with action=rename and filename=newName', () => {
+    service.renameLogic('oldlogic', 'newlogic', '').subscribe();
+    const req = http.expectOne(
+      (r) =>
+        r.url.includes('oldlogic') &&
+        r.url.includes('action=rename') &&
+        r.url.includes('filename=newlogic'),
+    );
+    expect(req.request.method).toBe('PUT');
+    req.flush({ result: 'ok' });
+  });
+
+  it('renameLogic() appends newfilename param when provided', () => {
+    service.renameLogic('oldlogic', 'newlogic', 'newfile').subscribe();
+    const req = http.expectOne((r) => r.url.includes('newfilename=newfile'));
+    req.flush({ result: 'ok' });
+    expect(req.request.url).toContain('newfilename=newfile');
+  });
+
+  it('renameLogic() does not append newfilename when empty', () => {
+    service.renameLogic('oldlogic', 'newlogic', '').subscribe();
+    const req = http.expectOne((r) => r.url.includes('oldlogic'));
+    req.flush({ result: 'ok' });
+    expect(req.request.url).not.toContain('newfilename=');
+  });
+
+  it('renameLogic() returns true when backend result is ok', () => {
+    let result: unknown;
+    service.renameLogic('oldlogic', 'newlogic', '').subscribe((r) => (result = r));
+    http.expectOne((r) => r.url.includes('action=rename')).flush({ result: 'ok' });
+    expect(result).toBe(true);
+  });
+
+  it('renameLogic() returns false when backend result is not ok', () => {
+    let result: unknown;
+    service.renameLogic('oldlogic', 'newlogic', '').subscribe((r) => (result = r));
+    http
+      .expectOne((r) => r.url.includes('action=rename'))
+      .flush({ result: 'error', description: 'name in use' });
+    expect(result).toBe(false);
+  });
+
+  it('renameLogic() returns {} on HTTP error', () => {
+    let result: unknown;
+    service.renameLogic('oldlogic', 'newlogic', '').subscribe((r) => (result = r));
+    http
+      .expectOne((r) => r.url.includes('action=rename'))
+      .flush({ error: 'err' }, { status: 500, statusText: 'Server Error' });
+    expect(result).toEqual({});
+  });
 });

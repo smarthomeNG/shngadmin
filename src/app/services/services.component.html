@@ -31,7 +31,6 @@
                   </td>
                   <td>
                     <p-select
-                      [style]="{ width: '150px' }"
                       [options]="valid_languagelist"
                       [showClear]="false"
                       placeholder="{{ valid_default_language }}"
@@ -182,8 +181,6 @@
 
         <p-tabpanel value="1">
           <div class="tab-content-services">
-            <div class="container-fluid" style="margin-top: 10px; margin-left: 10px; margin-right: 10px"></div>
-
             <div style="padding-top: 10px; padding-left: 10px; padding-right: 5px">
               {{ 'SERVICES.EVAL_CHECK_SOURCE' | translate }}
               <app-code-editor
@@ -301,11 +298,16 @@
         </p-tabpanel>
 
         <!-- ------------------------------------------------------------------------------------
-           CONF to YAML converter
+           CONF to YAML converter  (deprecated)
     ------------------------------------------------------------------------------------- -->
 
         <p-tabpanel value="3">
           <div class="tab-content-services">
+            <p-message
+              severity="warn"
+              [text]="'SERVICES.CONF_YAML_DEPRECATED' | translate"
+              styleClass="mt-2 mx-2 w-full"
+            />
             <div style="display: flex; padding: 10px 5px 0 10px">
               <div style="width: 50%">
                 {{ 'SERVICES.YAML_CONVERTER_SOURCE' | translate }}

@@ -1,14 +1,26 @@
-.body {
-  margin: 0;
-}
 .shngbody2 {
   height: calc(100vh - var(--navbar-height));
   overflow: hidden;
   width: 100%;
   margin: 0;
-  padding: 0;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.body-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+p-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /*
@@ -48,26 +60,14 @@
 */
 
 .tab-content-services {
-  grid-area: tab-content;
   width: 100%;
-  height: calc(100vh - var(--navbar-height) - var(--tab-height) - 10px);
-  border: 1px solid #dee2e6;
+  height: 100%;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   padding-left: 10px; /* padding around striped table inside tab border */
   padding-right: 10px;
   overflow: auto;
-  /*
-    display: grid;
-    grid-template-rows: 0px auto 0px;
-    grid-template-columns: 1fr;
-
-    grid-template-areas: "tab-content-services-header"
-                         "tab-content-services-content"
-                         "tab-content-services-footer";
-
-    grid-gap: 0px;
-    grid-auto-flow: row;
-  */
+  box-sizing: border-box;
 }
 
 /*
@@ -80,15 +80,15 @@
 .tab-content-services-header {
   grid-area: tab-content-services-header;
   width: 100%;
-  border-left: 1px solid #dee2e6;
-  border-right: 1px solid #dee2e6;
+  border-left: 1px solid var(--shng-border);
+  border-right: 1px solid var(--shng-border);
 }
 
 .tab-content-services-content {
   grid-area: tab-content-services-content;
   width: 100%;
   height: calc(100vh - var(--navbar-height) - var(--tab-height) - 50px - 50px - 10px);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-left: 0;
   overflow: auto;
 }
@@ -103,7 +103,7 @@
   grid-area: tab-content;
   width: 100%;
   height: calc(100vh - var(--navbar-height) - var(--tab-height) - 50px - 10px);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   /*overflow: auto; */
 
@@ -123,15 +123,15 @@
 .tab-content-services-cache-header {
   grid-area: tab-content-services-cache-header;
   width: 100%;
-  border-left: 1px solid #dee2e6;
-  border-right: 1px solid #dee2e6;
+  border-left: 1px solid var(--shng-border);
+  border-right: 1px solid var(--shng-border);
 }
 
 .tab-content-services-cache-content {
   grid-area: tab-content-services-cache-content;
   width: 100%;
   height: calc(100vh - var(--navbar-height) - var(--tab-height) - 50px - 50px - 10px);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-left: 0;
   overflow: auto;
 }

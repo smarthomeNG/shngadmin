@@ -38,6 +38,13 @@ const ShngPreset = definePreset(Aura, {
       950: '#162836',
     },
   },
+  components: {
+    tabs: {
+      activeBar: {
+        height: '2px',
+      },
+    },
+  },
 });
 
 if (environment.production) {

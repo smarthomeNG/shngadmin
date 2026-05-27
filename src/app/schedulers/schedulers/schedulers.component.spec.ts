@@ -86,12 +86,12 @@ describe('SchedulersComponent', () => {
     expect(rows.length).toBe(logicSchedulers.length);
   });
 
-  it('should render zero trigger rows in fifth tabpanel (no triggers in fixture)', () => {
+  it('should render one empty-hint row in fifth tabpanel (no triggers in fixture)', () => {
     const nativeEl: HTMLElement = fixture.nativeElement;
     const tabPanels = nativeEl.querySelectorAll('p-tabpanel');
     const triggerPanel = tabPanels[4];
     const rows = triggerPanel.querySelectorAll('tbody tr');
-    // fixture has no schedulers with group==='trigger'
-    expect(rows.length).toBe(0);
+    // fixture has no trigger schedulers — @empty renders exactly one hint row
+    expect(rows.length).toBe(1);
   });
 });

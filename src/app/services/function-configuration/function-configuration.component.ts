@@ -21,6 +21,7 @@ import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
 import { CodeEditorComponent } from '../../common/components/code-editor/code-editor.component';
+import { FileEditorLayoutComponent } from '../../common/components/file-editor-layout/file-editor-layout.component';
 import { FilesApiService } from '../../common/services/files-api.service';
 import { FunctionsApiService } from '../../common/services/functions-api.service';
 import { LogService } from '../../common/services/log.service';
@@ -42,6 +43,7 @@ import { ServicesApiService } from '../../common/services/services-api.service';
     InputText,
     NgStyle,
     TranslatePipe,
+    FileEditorLayoutComponent,
   ],
 })
 export class FunctionConfigurationComponent implements OnInit {

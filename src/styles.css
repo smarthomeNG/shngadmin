@@ -35,6 +35,8 @@ input::-webkit-inner-spin-button {
   /* Layout */
   --navbar-height: 60px;
   --tab-height: 41px;
+  --page-padding: 18px; /* outer spacing: left / bottom / right of every page body */
+  --grid-gutter: 15px; /* Bootstrap grid gutter — set to var(--page-padding) to link with outer spacing */
 
   /* Brand / status colours */
   --shng-blue: #709cc2;
@@ -118,11 +120,73 @@ dl {
   margin-bottom: 1rem;
 }
 
-/* PrimeNG Aura adds ~14-18 px padding inside every tab panel by default.
-   Content divs (tab-content-services, shngbody, etc.) manage their own
-   spacing, so the extra layer is pure whitespace. */
-.p-tabpanel {
+/* PrimeNG Aura tab layout — flex-fill chain + padding reset.
+   PrimeNG injects its theme CSS dynamically (after this file in the cascade),
+   so equal-specificity rules here would lose. !important is required on the
+   padding reset to guarantee it wins.
+   The flex chain lets content divs use height: 100% instead of fragile
+   calc() strings that must know the exact tablist pixel height.
+   .p-tabs        — rendered root div of the p-tabs component
+   .p-tablist     — the tab button bar (natural/fixed height)
+   .p-tabpanels   — wrapper for all panel slots (has Aura padding by default)
+   .p-tabpanel    — each individual panel                                    */
+.p-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.p-tablist {
+  flex-shrink: 0;
+}
+.p-tabpanels {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 !important;
+}
+/* PrimeNG places content directly inside the <p-tabpanel> host element (no inner div).
+   The host also carries class="p-tabpanel" and uses the HTML [hidden] attribute to hide
+   inactive panels — the browser's UA [hidden]{display:none} handles that.
+   We must NOT use a bare .p-tabpanel{display:block} because it would override [hidden]
+   and show all panels simultaneously. :not([hidden]) ensures only the active panel gets
+   display:block, so [hidden] panels continue to be suppressed correctly. */
+.p-tabpanel:not([hidden]) {
+  display: block;
+  height: 100%;
+  overflow: hidden;
   padding: 0;
+}
+
+/* ================================================================
+   Page-frame for non-tab pages (B / C layout types)
+   Mirrors PrimeNG p-tabs visually so all pages look consistent.
+   Uses only app-owned CSS variables (defined in :root) so styles
+   resolve on every element, independent of PrimeNG components.
+   ================================================================ */
+
+/* Mimics the p-tablist bar: sits above .shng-page-body and provides
+   the same visual breathing room as a real tab row. */
+.shng-page-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--shng-border);
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.125rem; /* matches Aura tab padding */
+  font-weight: 600;
+  color: var(--shng-blue); /* same accent as active tab indicator */
+  min-height: var(--tab-height);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Mimics the p-tabpanel area: l / r / b border, no top border
+   (the page-header's bottom border acts as the visual divider). */
+.shng-page-body {
+  background: #ffffff;
+  border: 1px solid var(--shng-border);
+  border-top: 0;
+  overflow: auto;
 }
 
 textarea {
@@ -593,8 +657,8 @@ a.text-shng:hover {
 /* --- Grid (minimal subset actually used) --- */
 .container {
   width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
+  padding-right: var(--grid-gutter);
+  padding-left: var(--grid-gutter);
   margin-right: auto;
   margin-left: auto;
   max-width: 1140px;
@@ -602,8 +666,8 @@ a.text-shng:hover {
 }
 .container-fluid {
   width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
+  padding-right: var(--grid-gutter);
+  padding-left: var(--grid-gutter);
   margin-right: auto;
   margin-left: auto;
   box-sizing: border-box;
@@ -611,13 +675,13 @@ a.text-shng:hover {
 .row {
   display: flex;
   flex-wrap: wrap;
-  margin-right: -15px;
-  margin-left: -15px;
+  margin-right: calc(-1 * var(--grid-gutter));
+  margin-left: calc(-1 * var(--grid-gutter));
 }
 .col,
 [class*='col-'] {
-  padding-right: 15px;
-  padding-left: 15px;
+  padding-right: var(--grid-gutter);
+  padding-left: var(--grid-gutter);
   box-sizing: border-box;
 }
 .col {
@@ -1044,6 +1108,11 @@ a.text-shng:hover {
 }
 .shng-text-sm {
   font-size: var(--font-size-sm); /* 14px — xs labels only */
+}
+.shng-empty-hint {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
 }
 .shng-text-lg {
   font-size: var(--font-size-base); /* old: --font-size-lg + bold */

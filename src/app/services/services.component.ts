@@ -34,6 +34,7 @@ import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { FileUpload } from 'primeng/fileupload';
 import { InputText } from 'primeng/inputtext';
+import { Message } from 'primeng/message';
 import { Ripple } from 'primeng/ripple';
 import { Select } from 'primeng/select';
 import { Tab as Tab_1, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
@@ -71,6 +72,7 @@ export interface CacheEntryType {
     PrimeTemplate,
     FileUpload,
     TranslatePipe,
+    Message,
   ],
 })
 export class ServicesComponent implements OnInit {

@@ -1,5 +1,5 @@
-<div class="shngbody">
-  <div class="button-row-left">
+<app-file-editor-layout [title]="'MENU.ITEM_STRUCT_CONFIGURATION' | translate">
+  <div slot="buttons-left">
     <button
       pButton
       label="{{ 'BUTTON.NEW_DEFINITION_FILE' | translate }}"
@@ -21,7 +21,7 @@
     ></button>
   </div>
 
-  <div class="button-row">
+  <div slot="buttons-right">
     <button
       pButton
       label="{{ 'BUTTON.SAVE' | translate }}"
@@ -57,7 +57,7 @@
     }
   </div>
 
-  <div class="items-filelist">
+  <div slot="filelist">
     <div class="filelist-header">
       <i class="fa fa-cubes" style="margin-left: 5px; color: #a2a2a2"></i>
       <a style="margin-left: 5px; color: #727272">{{ 'STRUCT_CONFIG.DEFINITION_FILES' | translate }}</a>
@@ -74,18 +74,17 @@
     </p-listbox>
   </div>
 
-  <div class="items-fileeditor">
+  <div slot="editor">
     <app-code-editor
       #codeeditor
       [language]="'yaml'"
       [readOnly]="cmReadOnly"
       [(value)]="myTextarea"
       [foldable]="true"
-      style="height: calc(100vh - 160px)"
     ></app-code-editor>
     <a>{{ 'RESTART FOR CHANGES' | translate }}</a>
   </div>
-</div>
+</app-file-editor-layout>
 
 <!--
   -- Dialog for setting the name of the new struct configuration file

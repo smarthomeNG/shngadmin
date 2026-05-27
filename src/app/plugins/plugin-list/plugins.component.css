@@ -9,10 +9,12 @@
 
 .shngbody {
   height: 100%;
-  padding: 0 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
   display: flex;
   flex-direction: column;
 }
+
+/* .shng-page-header and .shng-page-body are global — see styles.css */
 
 /* flex:1 1 0 fills remaining space; min-height:0 is required for
    overflow:auto to activate inside a flex item. */

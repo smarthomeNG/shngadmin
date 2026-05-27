@@ -21,6 +21,7 @@ import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { Listbox } from 'primeng/listbox';
 import { CodeEditorComponent } from '../../common/components/code-editor/code-editor.component';
+import { FileEditorLayoutComponent } from '../../common/components/file-editor-layout/file-editor-layout.component';
 import { FilesApiService } from '../../common/services/files-api.service';
 import { LogService } from '../../common/services/log.service';
 import { ServicesApiService } from '../../common/services/services-api.service';
@@ -41,6 +42,7 @@ import { ServicesApiService } from '../../common/services/services-api.service';
     InputText,
     NgStyle,
     TranslatePipe,
+    FileEditorLayoutComponent,
   ],
 })
 export class StructConfigurationComponent implements OnInit {
@@ -211,16 +213,18 @@ export class StructConfigurationComponent implements OnInit {
     this.fileService
       .readFile('structs', filename)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.myTextarea = response;
-        this.myTextareaOrig = response;
-        if (this.myTextarea === '') {
-          this.myTextarea = this.translate.instant('STRUCT_CONFIG.FILE_NOT_FOUND');
-        } else {
+      .subscribe({
+        next: (response) => {
+          this.myTextarea = response;
+          this.myTextareaOrig = response;
           this.myEditFilename = filename;
           this.cmReadOnly = false;
-        }
-        this.cdr.markForCheck();
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.myTextarea = this.translate.instant('STRUCT_CONFIG.FILE_NOT_FOUND');
+          this.cdr.markForCheck();
+        },
       });
   }
 

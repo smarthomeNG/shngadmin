@@ -73,10 +73,15 @@ export class LoggingConfigurationComponent implements OnInit {
     this.fileService
       .readFile('logging')
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response2) => {
-        this.myTextarea = response2;
-        this.myTextareaOrig = response2;
-        this.cdr.markForCheck();
+      .subscribe({
+        next: (response2) => {
+          this.myTextarea = response2;
+          this.myTextareaOrig = response2;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.cdr.markForCheck();
+        },
       });
   }
 

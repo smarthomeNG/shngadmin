@@ -34,8 +34,24 @@ export class SchedulersComponent implements OnInit {
   private appConfig = inject(AppConfigService);
   private readonly log = inject(LogService);
 
-  schedulerinfo!: SchedulerInfo[];
+  schedulerinfo: SchedulerInfo[] = [];
   developerMode!: boolean;
+
+  get itemSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'item');
+  }
+  get logicSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'logic');
+  }
+  get pluginSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'plugin');
+  }
+  get otherSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'other');
+  }
+  get triggerSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'trigger');
+  }
 
   sortField = '';
   sortOrder: 1 | -1 = 1;

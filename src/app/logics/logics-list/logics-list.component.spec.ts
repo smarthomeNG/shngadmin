@@ -26,6 +26,7 @@ describe('LogicsListComponent', () => {
   const mockLogicsApi = {
     getLogics: () => of(fixtureData),
     setLogicState: () => of({}),
+    renameLogic: () => of(true),
     groupExpanded: [] as number[],
   };
 
@@ -273,5 +274,64 @@ describe('LogicsListComponent', () => {
     const gt = component.groupList.find((g) => g.name === 'test');
     expect(g2?.unknown).toBeFalsy();
     expect(gt?.unknown).toBeFalsy();
+  });
+
+  // -------------------------------------------------------------------------
+  // Rename dialog: openRenameDialog, renameEnabled, doRename
+  // -------------------------------------------------------------------------
+
+  it('openRenameDialog() pre-fills fields and sets rename_display to true', () => {
+    component.openRenameDialog('mylogic', 'mylogic.py');
+    expect(component.rename_display).toBe(true);
+    expect(component.rename_oldLogicName).toBe('mylogic');
+    expect(component.rename_newLogicName).toBe('mylogic');
+    expect(component.rename_currentFilename).toBe('mylogic');
+    expect(component.rename_newFilename).toBe('mylogic');
+  });
+
+  it('openRenameDialog() strips .py extension from currentFilename', () => {
+    component.openRenameDialog('mylogic', 'my_file.py');
+    expect(component.rename_currentFilename).toBe('my_file');
+    expect(component.rename_newFilename).toBe('my_file');
+  });
+
+  it('renameEnabled is false when nothing has changed', () => {
+    component.openRenameDialog('mylogic', 'mylogic.py');
+    expect(component.renameEnabled).toBe(false);
+  });
+
+  it('renameEnabled is true when logic name is changed', () => {
+    component.openRenameDialog('mylogic', 'mylogic.py');
+    component.rename_newLogicName = 'mylogic2';
+    expect(component.renameEnabled).toBe(true);
+  });
+
+  it('renameEnabled is true when filename is changed', () => {
+    component.openRenameDialog('mylogic', 'mylogic.py');
+    component.rename_newFilename = 'mylogic2';
+    expect(component.renameEnabled).toBe(true);
+  });
+
+  it('renameEnabled is false when new name is blank', () => {
+    component.openRenameDialog('mylogic', 'mylogic.py');
+    component.rename_newLogicName = '  ';
+    expect(component.renameEnabled).toBe(false);
+  });
+
+  it('doRename() closes dialog and refreshes list on success', () => {
+    const getLogicsSpy = jest.spyOn(mockLogicsApi, 'getLogics').mockReturnValue(of(fixtureData));
+    component.openRenameDialog('mylogic', 'mylogic.py');
+    component.rename_newLogicName = 'mylogic2';
+    component.doRename();
+    expect(component.rename_display).toBe(false);
+    expect(getLogicsSpy).toHaveBeenCalled();
+  });
+
+  it('doRename() keeps dialog open on failure', () => {
+    jest.spyOn(mockLogicsApi, 'renameLogic').mockReturnValue(of(false));
+    component.openRenameDialog('mylogic', 'mylogic.py');
+    component.rename_newLogicName = 'mylogic2';
+    component.doRename();
+    expect(component.rename_display).toBe(true);
   });
 });

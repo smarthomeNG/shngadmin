@@ -4,18 +4,28 @@
   height: calc(100vh - var(--navbar-height));
   width: 100%;
   box-sizing: border-box;
-  padding: 0 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
   overflow: hidden;
 }
 
+/* .shng-page-header applied to .button-row — override component padding
+   since shng-page-header already provides 0.75rem top/bottom padding */
 .button-row {
   flex-shrink: 0;
-  padding-top: 10px;
-  padding-bottom: 8px;
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: space-between;
+}
+
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .editor-area {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;

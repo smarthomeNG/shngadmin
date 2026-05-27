@@ -1,0 +1,81 @@
+:host {
+  display: contents;
+}
+
+.file-editor-outer {
+  margin-left: var(--page-padding);
+  margin-right: var(--page-padding);
+  margin-bottom: var(--page-padding);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height) - var(--page-padding));
+  overflow: hidden;
+}
+
+.file-editor-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: max(20% - 10px, 200px) 1fr;
+  grid-template-rows: auto 1fr;
+  column-gap: var(--grid-gutter);
+}
+
+.file-editor-buttons-left {
+  grid-column: 1;
+  grid-row: 1;
+  padding-top: 10px;
+  padding-left: 0;
+  padding-right: 20px;
+}
+
+.file-editor-buttons-right {
+  grid-column: 2;
+  grid-row: 1;
+  padding-top: 10px;
+  padding-left: 15px;
+  padding-right: 20px;
+}
+
+.file-editor-list {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 16px;
+  margin-top: 20px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.file-editor-content {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 10px;
+  padding-left: 10px;
+  padding-right: 5px;
+  border: 1px solid var(--shng-border);
+}
+
+/* Slot wrappers projected into the list and content cells must fill their grid cell. */
+/* ::ng-deep is required because projected content belongs to the host component's view. */
+:host ::ng-deep .file-editor-list > * {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Last child inside the filelist wrapper (the listbox) fills the remaining height */
+:host ::ng-deep .file-editor-list > * > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Editor slot wrapper fills the content cell */
+:host ::ng-deep .file-editor-content > * {
+  height: 100%;
+}
+
+/* First child inside the editor wrapper (the code editor) fills the wrapper */
+:host ::ng-deep .file-editor-content > * > :first-child {
+  height: 100%;
+}

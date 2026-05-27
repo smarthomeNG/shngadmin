@@ -55,9 +55,13 @@ export class ServerApiService {
           this.shared.setGuiLanguage();
         }
 
+        // websocket_port is available here too — patch it now so appReadyGuard
+        // (which waits for wsPort) can resolve from this call without waiting
+        // for the separate getServerinfo() call from TopNavigationComponent.
         this.appConfig.patch({
           clientIp: result.client_ip,
           wsHost: this._resolveWsHost(result.websocket_host),
+          wsPort: result.websocket_port ?? '',
           loginRequired: result.login_required ?? false,
         });
 

@@ -1,4 +1,4 @@
-<div style="margin-left: 10px; margin-right: 10px">
+<div class="shngbody">
   <p-tabs value="0">
     <p-tablist>
       <p-tab value="0">{{ 'ITEMS.ITEMS' | translate }} ({{ 'ITEMS.TOTAL' | translate }}: {{ itemcount }})</p-tab>
@@ -515,8 +515,10 @@
       <!-------------------------------------------------->
 
       <p-tabpanel value="1">
-        <!-- the following container is/needs to be rerenderable -->
-        <ng-container #vc [ngTemplateOutlet]="tpl"> </ng-container>
+        <div class="monitored-container">
+          <!-- the following container is/needs to be rerenderable -->
+          <ng-container #vc [ngTemplateOutlet]="tpl"> </ng-container>
+        </div>
       </p-tabpanel>
     </p-tabpanels>
   </p-tabs>

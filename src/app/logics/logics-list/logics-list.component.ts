@@ -80,6 +80,7 @@ export class LogicsListComponent implements OnInit {
 
   filterText = '';
   grouped = true;
+  activeTabIndex = '0';
 
   onFilterChange(value: string): void {
     this.filterText = value;
@@ -184,6 +185,12 @@ export class LogicsListComponent implements OnInit {
   confirmdelete_display: boolean = false;
   logicToDelete: string = '';
   delete_param!: {};
+
+  rename_display = false;
+  rename_oldLogicName = '';
+  rename_newLogicName = '';
+  rename_newFilename = '';
+  rename_currentFilename = '';
 
   constructor() {
     this.userlogics = [];
@@ -476,5 +483,39 @@ export class LogicsListComponent implements OnInit {
   deleteLogicAbort() {
     this.confirmdelete_display = false;
     this.logicToDelete = '';
+  }
+
+  openRenameDialog(logicName: string, filename: string) {
+    this.rename_oldLogicName = logicName;
+    this.rename_newLogicName = logicName;
+    this.rename_currentFilename = filename.endsWith('.py') ? filename.slice(0, -3) : filename;
+    this.rename_newFilename = this.rename_currentFilename;
+    this.rename_display = true;
+  }
+
+  get renameEnabled(): boolean {
+    const nameChanged = this.rename_newLogicName.trim() !== this.rename_oldLogicName;
+    const fileChanged = this.rename_newFilename.trim() !== this.rename_currentFilename;
+    return (
+      this.rename_newLogicName.trim() !== '' &&
+      this.rename_newFilename.trim() !== '' &&
+      (nameChanged || fileChanged)
+    );
+  }
+
+  doRename() {
+    const newName = this.rename_newLogicName.trim();
+    const newFile = this.rename_newFilename.trim();
+    const newFilenameArg = newFile !== this.rename_currentFilename ? newFile : '';
+    this.dataService
+      .renameLogic(this.rename_oldLogicName, newName, newFilenameArg)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result === true) {
+          this.rename_display = false;
+          this.getLogics();
+        }
+        this.cdr.markForCheck();
+      });
   }
 }

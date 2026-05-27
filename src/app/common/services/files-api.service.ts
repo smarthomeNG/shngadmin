@@ -41,7 +41,7 @@ export class FilesApiService {
             "FilesApiService (readFile): Could not read filetype '" +
               filetype +
               "' - error: " +
-              err.error.error,
+              err.error?.error,
           );
         } else {
           this.log.error(
@@ -50,11 +50,11 @@ export class FilesApiService {
               "', filename '" +
               filename +
               "' - error: " +
-              err.error.error,
+              err.error?.error,
           );
         }
 
-        return of('');
+        return throwError(() => err);
       }),
     );
   }

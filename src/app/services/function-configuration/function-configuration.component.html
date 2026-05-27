@@ -1,5 +1,5 @@
-<div class="shngbody">
-  <div class="button-row-left">
+<app-file-editor-layout>
+  <div slot="buttons-left">
     <button
       pButton
       label="{{ 'BUTTON.RELOAD_FUNCTIONS' | translate }}"
@@ -12,7 +12,7 @@
     ></button>
   </div>
 
-  <div class="button-row">
+  <div slot="buttons-right">
     <button
       pButton
       label="{{ 'BUTTON.SAVE' | translate }}"
@@ -59,7 +59,7 @@
     }
   </div>
 
-  <div class="items-filelist">
+  <div slot="filelist">
     <div class="filelist-header">
       <button
         pButton
@@ -98,17 +98,16 @@
     </p-listbox>
   </div>
 
-  <div class="items-fileeditor">
+  <div slot="editor">
     <app-code-editor
       #codeeditor
       [language]="'python'"
       [readOnly]="cmReadOnly"
       [(value)]="myTextarea"
       [foldable]="true"
-      style="height: calc(100vh - 160px)"
     ></app-code-editor>
   </div>
-</div>
+</app-file-editor-layout>
 
 <!--
   -- Dialog for setting the name of the new function configuration file

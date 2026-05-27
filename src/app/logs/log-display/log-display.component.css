@@ -2,6 +2,14 @@
   height: calc(100vh - var(--navbar-height));
   overflow: hidden;
   margin: 0;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
+  display: flex;
+  flex-direction: column;
+}
+
+/* .shng-page-header is global — see styles.css */
+
+.log-toolbar {
+  flex-shrink: 0;
+  padding-top: 8px;
 }

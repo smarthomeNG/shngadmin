@@ -115,7 +115,8 @@
     "INACTIVE": "Not active",
     "EVAL CHECKER": "eval Syntax Checker",
     "YAML CHECKER": "YAML Syntax Checker",
-    "CONF TO YAML": "CONF-YAML Converter",
+    "CONF TO YAML": "CONF-YAML Converter (deprecated)",
+    "CONF_YAML_DEPRECATED": "The .conf format is no longer supported by SmartHomeNG. This converter is kept for migration purposes only.",
     "CACHE_CHECKER": "Cache Checker",
     "SERVICE": "Service",
     "STATUS": "State",
@@ -306,7 +307,12 @@
     "DESCRIPTION": "Description",
     "ADD_ITEM": "Add item",
     "ITEM_INVALID": "Item invalid or already added, please check your input!",
-    "GROUP_PLACEHOLDER": "Type to filter groups…"
+    "GROUP_PLACEHOLDER": "Type to filter groups…",
+    "RENAME": "Rename logic",
+    "RENAME_LOGIC_NAME": "New logic name",
+    "RENAME_FILE_NAME": "New filename (without .py)",
+    "RENAME_NAME_IN_USE": "This logic name is already in use.",
+    "RENAME_FILE_IN_USE": "This filename is already used by another logic."
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Groupname",
@@ -315,7 +321,15 @@
     "GROUP_MEMBERS": "Members",
     "AVAILABLE_LOGICS": "Available logics",
     "NAME_NEW_GROUP": "Choose a name for the new logic-group",
-    "UNIQUE_NAME": "Unique name for the new logic-group"
+    "UNIQUE_NAME": "Unique name for the new logic-group",
+    "DELETE_GROUP": "Delete logic group",
+    "DELETE_GROUP_CONFIRM": "Delete logic group '{{group}}'? All member assignments will be removed.",
+    "MERGE_INTO": "Merge into…",
+    "MERGE_DIALOG_TITLE": "Merge logic group",
+    "MERGE_SELECT_TARGET": "Merge '{{source}}' into:",
+    "MERGE_PREVIEW": "{{added}} member(s) will be added to '{{target}}' ({{before}} → {{after}} total)",
+    "MERGE_CONFIRM": "Merge",
+    "MERGE_SELECT_PLACEHOLDER": "Select group…"
   },
   "SCHEDULERS": {
     "ITEM SCHEDULERS": "Item Schedulers",
@@ -506,6 +520,7 @@
     "SAVE_LOAD": "Save & Load",
     "DISCARD": "Discard",
     "ABORT": "Abort",
+    "RENAME": "Rename",
     "HELP": "Help",
     "CREATE": "Create",
     "ADD": "Add",
@@ -601,6 +616,7 @@
   },
   "COMMON": {
     "FILE_EXISTS_TITLE": "File Already Exists",
-    "FILE_EXISTS_HINT": "A file named '{{filename}}' already exists."
+    "FILE_EXISTS_HINT": "A file named '{{filename}}' already exists.",
+    "NO_DATA": "No data available"
   }
 }
