@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { appReadyGuard } from '../common/guards/app-ready.guard';
 import { AuthGuardService } from '../common/services/auth-guard.service';
 import { ItemConfigurationComponent } from './item-configuration/item-configuration.component';
 import { ItemTreeComponent } from './item-tree/item-tree.component';
@@ -7,16 +6,16 @@ import { StructConfigurationComponent } from './struct-configuration/struct-conf
 import { StructsComponent } from './structs/structs.component';
 
 export const ITEMS_ROUTES: Routes = [
-  { path: '', component: ItemTreeComponent, canActivate: [appReadyGuard, AuthGuardService] },
+  { path: '', component: ItemTreeComponent, canActivate: [AuthGuardService] },
   {
     path: 'config',
     component: ItemConfigurationComponent,
-    canActivate: [appReadyGuard, AuthGuardService],
+    canActivate: [AuthGuardService],
   },
-  { path: 'structs', component: StructsComponent, canActivate: [appReadyGuard, AuthGuardService] },
+  { path: 'structs', component: StructsComponent, canActivate: [AuthGuardService] },
   {
     path: 'struct_config',
     component: StructConfigurationComponent,
-    canActivate: [appReadyGuard, AuthGuardService],
+    canActivate: [AuthGuardService],
   },
 ];

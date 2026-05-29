@@ -89,60 +89,54 @@
       (onChange)="groupSelected()"
       optionLabel="label"
       [style]="{ width: '100%' }"
-      [listStyle]="{ height: '100%', 'min-height': '200px' }"
+      [listStyle]="{ 'min-height': '200px' }"
     >
     </p-listbox>
   </div>
 
   <div class="logics-groupeditor">
-    <table id="1" class="table table-striped shng-list-table">
-      <tr>
-        <td width="120px">{{ 'LOGIC_GROUPS.GROUP_NAME' | translate }}</td>
-        <td>
-          <input
-            [(ngModel)]="myEditGroup"
-            [disabled]="true"
-            type="text"
-            pInputText
-            placeholder=""
-            name="name"
-            style="width: 100%"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td width="120px">{{ 'LOGIC_GROUPS.GROUP_TITLE' | translate }}</td>
-        <td>
-          <input
-            [(ngModel)]="group.title"
+    <div class="group-form">
+      <div class="group-form-row">
+        <span class="group-form-label">{{ 'LOGIC_GROUPS.GROUP_NAME' | translate }}</span>
+        <input
+          [(ngModel)]="myEditGroup"
+          [disabled]="true"
+          type="text"
+          pInputText
+          placeholder=""
+          name="name"
+          style="flex: 1"
+        />
+      </div>
+      <div class="group-form-row">
+        <span class="group-form-label">{{ 'LOGIC_GROUPS.GROUP_TITLE' | translate }}</span>
+        <input
+          [(ngModel)]="group.title"
+          (keyup)="this.groupChanged = hasGroupChanged()"
+          type="text"
+          pInputText
+          placeholder=""
+          name="title"
+          style="flex: 1"
+        />
+      </div>
+      <div class="group-form-row">
+        <span class="group-form-label">{{ 'LOGIC_GROUPS.GROUP_DESCRIPTION' | translate }}</span>
+        <div class="description" style="flex: 1">
+          <div
+            #groupDesc
+            class="description-text"
+            id="group-desc"
+            contenteditable="true"
             (keyup)="this.groupChanged = hasGroupChanged()"
-            type="text"
-            pInputText
-            placeholder=""
-            name="title"
-            style="width: 100%"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td valign="top">{{ 'LOGIC_GROUPS.GROUP_DESCRIPTION' | translate }}</td>
-        <td>
-          <div class="description">
-            <div
-              #groupDesc
-              class="description-text"
-              id="group-desc"
-              contenteditable="true"
-              (keyup)="this.groupChanged = hasGroupChanged()"
-            >
-              {{ group.description }}
-            </div>
+          >
+            {{ group.description }}
           </div>
-        </td>
-      </tr>
-      <tr>
-        <td valign="top" style="padding-top: 12px">{{ 'LOGIC_GROUPS.GROUP_MEMBERS' | translate }}</td>
-        <td>
+        </div>
+      </div>
+      <div class="group-form-row group-form-row-fill">
+        <span class="group-form-label" style="padding-top: 12px">{{ 'LOGIC_GROUPS.GROUP_MEMBERS' | translate }}</span>
+        <div class="group-members-wrapper">
           <p-pickList
             [source]="membersAvailable"
             [target]="membersInGroup"
@@ -161,6 +155,7 @@
             (onMoveAllToSource)="onPickListChange()"
             [disabled]="myEditGroup === ''"
             styleClass="members-picklist"
+            [style]="{ height: '100%' }"
           >
             <ng-template #item let-logic>
               <div class="picklist-item">
@@ -171,9 +166,9 @@
               </div>
             </ng-template>
           </p-pickList>
-        </td>
-      </tr>
-    </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

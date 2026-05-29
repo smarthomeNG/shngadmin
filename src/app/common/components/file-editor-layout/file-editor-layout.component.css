@@ -9,6 +9,7 @@
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--navbar-height) - var(--page-padding));
+  min-height: 400px; /* prevent collapse on short viewports; viewport scrollbar handles the rest */
   overflow: hidden;
 }
 
@@ -68,6 +69,13 @@
 :host ::ng-deep .file-editor-list > * > :last-child {
   flex: 1;
   min-height: 0;
+}
+
+/* Override PrimeNG's inline max-height: 14rem on the listbox list container
+   so it can grow to fill the available space instead of capping at ~224px */
+:host ::ng-deep .file-editor-list .p-listbox-list-container {
+  max-height: none !important;
+  height: auto;
 }
 
 /* Editor slot wrapper fills the content cell */

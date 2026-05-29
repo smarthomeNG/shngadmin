@@ -98,6 +98,7 @@ body {
   font-weight: var(--font-weight-normal);
   line-height: var(--line-height-base);
   color: var(--text-primary);
+  min-width: 600px; /* prevent layout collapse on narrow viewports; viewport scrollbar handles the rest */
 }
 
 h1,

@@ -1,4 +1,4 @@
-import { enableProdMode, importProvidersFrom, Injector } from '@angular/core';
+import { APP_INITIALIZER, enableProdMode, importProvidersFrom, Injector } from '@angular/core';
 
 import {
   HttpClient,
@@ -8,17 +8,24 @@ import {
 } from '@angular/common/http';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter, withRouterConfig } from '@angular/router';
+import {
+  PreloadAllModules,
+  provideRouter,
+  withPreloading,
+  withRouterConfig,
+} from '@angular/router';
 import { JWT_OPTIONS, JwtModule } from '@auth0/angular-jwt';
 import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
+import { firstValueFrom } from 'rxjs';
 import { AppComponent, HttpLoaderFactory } from './app/app.component';
 import { appRoutes } from './app/app.routes';
 import { getBaseUrl, jwtOptionsFactory } from './app/bootstrap.utils';
 import { connectivityInterceptor } from './app/common/interceptors/connectivity.interceptor';
+import { ServerApiService } from './app/common/services/server-api.service';
 import { WebsocketPluginService } from './app/common/services/websocket-plugin.service';
 import { environment } from './environments/environment';
 
@@ -53,7 +60,11 @@ if (environment.production) {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideRouter(appRoutes, withRouterConfig({ onSameUrlNavigation: 'reload' })),
+    provideRouter(
+      appRoutes,
+      withPreloading(PreloadAllModules), // preload all lazy chunks after initial navigation
+      withRouterConfig({ onSameUrlNavigation: 'reload' }),
+    ),
     importProvidersFrom(
       JwtModule.forRoot({
         config: { throwNoTokenError: false },
@@ -72,6 +83,17 @@ bootstrapApplication(AppComponent, {
       }),
     ),
     { provide: 'BASE_URL', useFactory: getBaseUrl },
+    {
+      // Fetch basic server config (including wsPort) before the router starts
+      // its initial navigation.  Without this, appReadyGuard subscribes to
+      // serverReady$ before getServerBasicinfo() is even called, which causes
+      // every first-load navigation to hang until the 5-second timeout fires.
+      provide: APP_INITIALIZER,
+      useFactory: (serverApi: ServerApiService) => () =>
+        firstValueFrom(serverApi.getServerBasicinfo()),
+      deps: [ServerApiService],
+      multi: true,
+    },
     MessageService,
     WebsocketPluginService,
     TranslateService,

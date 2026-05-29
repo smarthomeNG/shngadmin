@@ -22,11 +22,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { Toast } from 'primeng/toast';
 import { OfflineBannerComponent } from './common/components/offline-banner/offline-banner.component';
-import { ServerInfo } from './common/models/server-info';
 import { AuthService } from './common/services/auth.service';
 import { LogService } from './common/services/log.service';
-import { ServerApiService } from './common/services/server-api.service';
-import { SharedService } from './common/services/shared.service';
 import { UserPreferencesService } from './common/services/user-preferences.service';
 import { TopNavigationComponent } from './top-navigation/top-navigation.component';
 
@@ -51,10 +48,7 @@ export class AppComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly log = inject(LogService);
-  private http = inject(HttpClient);
-  private dataService = inject(ServerApiService);
   private translate = inject(TranslateService);
-  private shared = inject(SharedService);
   public authService = inject(AuthService);
   private titleService = inject(Title);
   private userPrefs = inject(UserPreferencesService);
@@ -99,19 +93,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.log.log('AppComponent was loaded');
-
-    this.dataService
-      .getServerBasicinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response: ServerInfo) => {
-          this.dataService.shng_serverinfo = response;
-          this.shared.setGuiLanguage();
-          this.cdr.markForCheck();
-        },
-        error: (error) => {
-          this.log.warn('DataService: getServerBasicinfo():', { error });
-        },
-      });
+    // getServerBasicinfo() is called in main.ts APP_INITIALIZER, so wsPort and
+    // shng_serverinfo are already populated before any route guard runs.
   }
 }

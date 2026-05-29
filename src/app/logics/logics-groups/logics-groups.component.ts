@@ -239,8 +239,11 @@ export class LogicsGroupsComponent implements OnInit {
 
   createUnknownGroup(groupname: string) {
     const newGroup: LogicsGroupType = { title: '', description: '' };
+    // Pass the existing member list so _update_group_members() preserves the
+    // logic_groupname entries already in logic.yaml instead of clearing them.
+    const existingMembers = this.unknownGroups[groupname] ?? [];
     this.dataService
-      .saveLogicGroup(groupname, { ...newGroup, members: [] })
+      .saveLogicGroup(groupname, { ...newGroup, members: existingMembers })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.logicGroups[groupname] = newGroup;

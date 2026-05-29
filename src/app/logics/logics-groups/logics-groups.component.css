@@ -1,11 +1,12 @@
 .shngbody {
   height: calc(100vh - var(--navbar-height));
+  min-height: 480px; /* prevent grid rows from collapsing below usable size */
   width: 100%;
   box-sizing: border-box;
   padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
   overflow: hidden;
   display: grid;
-  grid-template-columns: max(20%, 200px) 1fr;
+  grid-template-columns: max(20%, 200px) minmax(380px, 1fr);
   grid-template-rows: auto auto auto 1fr;
 }
 
@@ -102,6 +103,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  height: auto;
+  max-height: none !important; /* override PrimeNG's inline max-height: 14rem */
 }
 
 .logics-groupeditor {
@@ -112,7 +115,89 @@
   padding-left: 10px;
   padding-right: 10px;
   border: 1px solid var(--shng-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-form {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 10px;
+}
+
+.group-form-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.group-form-label {
+  min-width: 120px;
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+
+/* The members row fills all remaining vertical space */
+.group-form-row-fill {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch; /* override flex-start so wrapper fills the row height */
+}
+
+.group-members-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* Cascade height into PrimeNG picklist internals.
+   PrimeNG 17 renders: p-picklist (host) > div.p-picklist (flex row) > [source, controls, target]
+   We need the host to fill the wrapper column, and each list panel to fill the row height. */
+
+/* 1. Host element: fill .group-members-wrapper (flex column) */
+::ng-deep .logics-groupeditor p-picklist {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 2. PrimeNG root div: fill the host, keep its own row layout intact */
+::ng-deep .logics-groupeditor .p-picklist {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+/* 3. Each list container (source + target): fill row height, scroll within */
+::ng-deep .logics-groupeditor .p-picklist-list-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 4. The p-listbox inside each container: fill it */
+::ng-deep .logics-groupeditor .p-picklist-list-container p-listbox,
+::ng-deep .logics-groupeditor .p-picklist-list-container .p-listbox {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 5. The scrollable list area inside each listbox */
+::ng-deep .logics-groupeditor .p-picklist-list-container .p-listbox-list-container {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  height: auto;
+  max-height: none !important; /* override PrimeNG's inline max-height: 14rem */
 }
 
 .description {
