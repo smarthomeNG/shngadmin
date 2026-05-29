@@ -822,6 +822,15 @@ export class LogicsEditComponent implements OnInit {
     );
   }
 
+  /** True when the filename field changed but only in case — the backend will normalise it to the same lowercase value. */
+  get filenameChangeIsNoop(): boolean {
+    const currentFileStem = this.myEditFilename.endsWith('.py')
+      ? this.myEditFilename.slice(0, -3)
+      : this.myEditFilename;
+    const newFile = this.rename_newFilename.trim();
+    return newFile !== currentFileStem && newFile.toLowerCase() === currentFileStem.toLowerCase();
+  }
+
   doRename() {
     const newName = this.rename_newLogicName.trim();
     const newFile = this.rename_newFilename.trim();

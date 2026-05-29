@@ -312,7 +312,8 @@
     "RENAME_LOGIC_NAME": "New logic name",
     "RENAME_FILE_NAME": "New filename (without .py)",
     "RENAME_NAME_IN_USE": "This logic name is already in use.",
-    "RENAME_FILE_IN_USE": "This filename is already used by another logic."
+    "RENAME_FILE_IN_USE": "This filename is already used by another logic.",
+    "RENAME_FILE_CASE_NOOP": "Filenames are stored in lowercase — this change has no effect."
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Groupname",

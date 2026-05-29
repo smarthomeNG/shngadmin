@@ -711,6 +711,9 @@
       <span style="min-width: 200px">{{ 'LOGIC_EDIT.RENAME_FILE_NAME' | translate }}:</span>
       <input pInputText type="text" [(ngModel)]="rename_newFilename" style="flex: 1" />
     </label>
+    @if (filenameChangeIsNoop) {
+      <small style="color: var(--yellow-600)">{{ 'LOGIC_EDIT.RENAME_FILE_CASE_NOOP' | translate }}</small>
+    }
   </div>
 
   <ng-template pTemplate="footer">

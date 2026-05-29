@@ -503,6 +503,15 @@ export class LogicsListComponent implements OnInit {
     );
   }
 
+  /** True when the filename field changed but only in case — the backend will normalise it to the same lowercase value. */
+  get filenameChangeIsNoop(): boolean {
+    const newFile = this.rename_newFilename.trim();
+    return (
+      newFile !== this.rename_currentFilename &&
+      newFile.toLowerCase() === this.rename_currentFilename.toLowerCase()
+    );
+  }
+
   doRename() {
     const newName = this.rename_newLogicName.trim();
     const newFile = this.rename_newFilename.trim();
