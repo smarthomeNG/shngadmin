@@ -140,6 +140,32 @@ export class SystemConfigComponent implements OnInit {
   validation_dialog_parameter!: string;
   validation_dialog_text!: string[];
 
+  // config_etc migration check
+  configEtcCheckResult: Record<string, any> | null = null;
+  configEtcCheckDialogVisible = false;
+  configEtcChecking = true; // auto-check starts in ngOnInit
+  configEtcEnabling = false;
+
+  get configEtcActive(): boolean {
+    return this.config?.common?.data?.['config_etc'] === true;
+  }
+
+  get configEtcConflictDirs(): { dir: string; files: string[] }[] {
+    if (!this.configEtcCheckResult?.['conflicts']) return [];
+    return Object.entries(this.configEtcCheckResult['conflicts']).map(([dir, files]) => ({
+      dir,
+      files: files as string[],
+    }));
+  }
+
+  get configEtcMigrateDirs(): { dir: string; files: string[] }[] {
+    if (!this.configEtcCheckResult?.['to_migrate']) return [];
+    return Object.entries(this.configEtcCheckResult['to_migrate']).map(([dir, files]) => ({
+      dir,
+      files: files as string[],
+    }));
+  }
+
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
   }
@@ -148,6 +174,9 @@ export class SystemConfigComponent implements OnInit {
     // this.log.log('SystemConfigComponent.ngOnInit');
 
     this.setTitle(this.translate.instant('MENU.SYSTEM_CONFIGURATION'));
+
+    // Run migration check in parallel with config load (cheap, independent)
+    this.checkConfigEtc();
 
     this.dataService
       .getConfig()
@@ -273,6 +302,16 @@ export class SystemConfigComponent implements OnInit {
   fillCommonDialogData() {
     this.common_parameter_cols = this.columnDefinitions();
     this.common_parameters = this.buildSectionParams(this.config.common);
+
+    // Move config_etc to just after deprecated_warnings for logical grouping
+    const cfgIdx = this.common_parameters.findIndex((p) => p.name === 'config_etc');
+    const anchorIdx = this.common_parameters.findIndex((p) => p.name === 'deprecated_warnings');
+    if (cfgIdx > -1 && anchorIdx > -1 && cfgIdx !== anchorIdx + 1) {
+      const [cfgEntry] = this.common_parameters.splice(cfgIdx, 1);
+      const newAnchor = this.common_parameters.findIndex((p) => p.name === 'deprecated_warnings');
+      this.common_parameters.splice(newAnchor + 1, 0, cfgEntry);
+    }
+
     this.common_parameters_beforeEdit = JSON.parse(JSON.stringify(this.common_parameters));
   }
 
@@ -611,6 +650,41 @@ export class SystemConfigComponent implements OnInit {
         } else {
           this.log.warn('saveSettings', 'fail');
         }
+      });
+  }
+
+  checkConfigEtc(showDialog = false) {
+    this.configEtcChecking = true;
+    this.dataService
+      .checkConfigEtc()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.configEtcCheckResult = result as Record<string, any>;
+        this.configEtcChecking = false;
+        if (showDialog) {
+          this.configEtcCheckDialogVisible = true;
+        }
+        this.cdr.markForCheck();
+      });
+  }
+
+  enableConfigEtc() {
+    this.configEtcEnabling = true;
+    this.dataService
+      .enableConfigEtc()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.configEtcEnabling = false;
+        const r = result as Record<string, any>;
+        if (r?.['result'] === 'ok') {
+          this.config.common.data['config_etc'] = true;
+          // keep the table row value in sync so saveSettings sends the correct value
+          const cfgParam = this.common_parameters?.find((p) => p.name === 'config_etc');
+          if (cfgParam) cfgParam.value = true;
+          this.configEtcCheckDialogVisible = false;
+          this.restart_core_button = true;
+        }
+        this.cdr.markForCheck();
       });
   }
 

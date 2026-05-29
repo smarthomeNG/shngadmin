@@ -204,12 +204,39 @@ export class LogicsGroupsComponent implements OnInit {
     this.group['description'] = desc;
 
     const members = this.membersInGroup.map((l) => l.name);
+    const origMembers = [...this.membersOrig]; // snapshot before async save
     const payload = { ...this.group, members };
 
     this.dataService
       .saveLogicGroup(this.myEditGroup, payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
+        const groupName = this.myEditGroup;
+
+        // Patch allLogics so _splitByGroup() reflects the new membership
+        // when the user switches to another group and back.
+        for (const logic of this.allLogics) {
+          const inOrig = origMembers.includes(logic.name);
+          const inNew = members.includes(logic.name);
+          if (inOrig === inNew) continue;
+
+          const groups = Array.isArray(logic.group)
+            ? [...logic.group]
+            : logic.group
+              ? [logic.group]
+              : [];
+
+          if (inOrig && !inNew) {
+            // Removed from group
+            const updated = groups.filter((g) => g !== groupName);
+            logic.group = updated.length === 0 ? [''] : updated;
+          } else {
+            // Added to group
+            if (!groups.includes(groupName)) groups.push(groupName);
+            logic.group = groups;
+          }
+        }
+
         this.groupTitleOrig = this.group['title'];
         this.groupDescriptionOrig = this.group['description'];
         this.membersOrig = [...members];

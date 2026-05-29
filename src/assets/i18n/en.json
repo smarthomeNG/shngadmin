@@ -88,7 +88,18 @@
     "NEW_PASSWORD": "New password",
     "NEW_PASSWORD_REPEAT": "New password (repeat)",
     "SHOW_PASSWORDS": "Show passwords",
-    "REMEMBER TO SAVE CHANGES": "Remember to save changes after setting a new password"
+    "REMEMBER TO SAVE CHANGES": "Remember to save changes after setting a new password",
+    "CONFIG_ETC_TITLE": "Read config from etc/",
+    "CONFIG_ETC_ACTIVE": "Active — config directories are served from etc/",
+    "CONFIG_ETC_CHECK": "Check details",
+    "CONFIG_ETC_CHECK_TITLE": "config_etc migration check",
+    "CONFIG_ETC_SAFE": "Migration is safe — no conflicts detected.",
+    "CONFIG_ETC_CONFLICTS": "Conflicts detected — the following files already exist at the target location and must be resolved manually:",
+    "CONFIG_ETC_TO_MIGRATE": "Files that will be moved on next restart:",
+    "CONFIG_ETC_ALREADY_DONE": "Already migrated",
+    "CONFIG_ETC_ENABLE": "Enable config_etc (requires restart)",
+    "CONFIG_ETC_INACTIVE_SAFE": "Inactive — migration ready, no conflicts",
+    "CONFIG_ETC_INACTIVE_UNSAFE": "Inactive — migration not possible (conflicts detected)"
   },
   "SPEEDCLASS": {
     "slow": "Slow",

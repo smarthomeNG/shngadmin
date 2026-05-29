@@ -88,7 +88,18 @@
     "NEW_PASSWORD": "Neues Passwort",
     "NEW_PASSWORD_REPEAT": "Neues Passwort (Wiederholung)",
     "SHOW_PASSWORDS": "Passworte anzeigen",
-    "REMEMBER TO SAVE CHANGES": "Daran denken die Änderungen zu speichern, nachdem ein neues Passwort gesetzt wurde"
+    "REMEMBER TO SAVE CHANGES": "Daran denken die Änderungen zu speichern, nachdem ein neues Passwort gesetzt wurde",
+    "CONFIG_ETC_TITLE": "Konfiguration aus etc/ lesen",
+    "CONFIG_ETC_ACTIVE": "Aktiv — Konfigurationsverzeichnisse werden aus etc/ gelesen",
+    "CONFIG_ETC_CHECK": "Details anzeigen",
+    "CONFIG_ETC_CHECK_TITLE": "config_etc Migrationsprüfung",
+    "CONFIG_ETC_SAFE": "Migration ist sicher — keine Konflikte gefunden.",
+    "CONFIG_ETC_CONFLICTS": "Konflikte gefunden — folgende Dateien existieren bereits am Zielort und müssen manuell aufgelöst werden:",
+    "CONFIG_ETC_TO_MIGRATE": "Beim nächsten Neustart zu verschiebende Dateien:",
+    "CONFIG_ETC_ALREADY_DONE": "Bereits migriert",
+    "CONFIG_ETC_ENABLE": "config_etc aktivieren (Neustart erforderlich)",
+    "CONFIG_ETC_INACTIVE_SAFE": "Inaktiv — Migration bereit, keine Konflikte",
+    "CONFIG_ETC_INACTIVE_UNSAFE": "Inaktiv — Migration nicht möglich (Konflikte gefunden)"
   },
   "SPEEDCLASS": {
     "slow": "Langsam",

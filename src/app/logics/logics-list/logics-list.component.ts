@@ -79,7 +79,14 @@ export class LogicsListComponent implements OnInit {
   sSortOrder: 1 | -1 = 1;
 
   filterText = '';
-  grouped = true;
+  private _grouped = true;
+  get grouped(): boolean {
+    return this._grouped;
+  }
+  set grouped(val: boolean) {
+    this._grouped = val;
+    localStorage.setItem('shng.logics.grouped', String(val));
+  }
   activeTabIndex = '0';
 
   onFilterChange(value: string): void {
@@ -206,6 +213,10 @@ export class LogicsListComponent implements OnInit {
     this.groupExpandedOnStart = this.dataService.groupExpanded;
     this.groupExpanded = this.dataService.groupExpanded;
 
+    // Restore persisted grouped preference; default true when groups exist
+    const stored = localStorage.getItem('shng.logics.grouped');
+    this._grouped = stored !== null ? stored === 'true' : true;
+
     this.setTitle(this.translate.instant('MENU.LOGICS'));
     this.getLogics();
   }
@@ -307,6 +318,11 @@ export class LogicsListComponent implements OnInit {
           }
         }
         this.sortGroupList();
+
+        // If no logics are in any group, default to ungrouped view
+        if (this.nogroups && localStorage.getItem('shng.logics.grouped') === null) {
+          this._grouped = false;
+        }
 
         this.userlogics.sort(function (a, b) {
           return a.name.toLowerCase() > b.name.toLowerCase()

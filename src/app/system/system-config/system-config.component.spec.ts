@@ -26,6 +26,16 @@ describe('SystemConfigComponent', () => {
   const mockConfigApi = {
     getConfig: () => of(fixtureData),
     saveConfig: () => of(true),
+    checkConfigEtc: () =>
+      of({
+        result: 'ok',
+        already_enabled: false,
+        safe: true,
+        conflicts: {},
+        to_migrate: {},
+        already_done: [],
+        not_present: [],
+      }),
   };
 
   const mockServerApi = {
