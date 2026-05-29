@@ -99,6 +99,7 @@ body {
   line-height: var(--line-height-base);
   color: var(--text-primary);
   min-width: 600px; /* prevent layout collapse on narrow viewports; viewport scrollbar handles the rest */
+  overflow-x: auto; /* show horizontal scrollbar when content exceeds viewport width */
 }
 
 h1,
@@ -1140,4 +1141,27 @@ a.text-shng:hover {
 }
 .shng-cell-alt {
   background-color: var(--shng-cell-alt-bg);
+}
+
+/* ================================================================
+   Responsive scaling for small viewports
+   Reducing the :root font-size shrinks every rem-based measurement
+   (font sizes, spacing, button padding, component sizes) proportionally.
+   Fixed-px layout variables (navbar height, page padding) are also
+   reduced so the frame takes less vertical/horizontal space.
+   ================================================================ */
+@media (max-width: 900px) {
+  :root {
+    font-size: 14px;
+    --navbar-height: 52px;
+    --page-padding: 14px;
+  }
+}
+
+@media (max-width: 800px) {
+  :root {
+    font-size: 12px;
+    --navbar-height: 46px;
+    --page-padding: 10px;
+  }
 }
