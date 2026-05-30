@@ -94,6 +94,17 @@ bootstrapApplication(AppComponent, {
       deps: [ServerApiService],
       multi: true,
     },
+    {
+      // Detect stale frontend: compare the server's index.html fingerprint
+      // (ETag / Last-Modified) with the value cached from the previous load.
+      // If they differ a new deployment has occurred and the page is reloaded
+      // automatically — no user action required.  Runs in parallel with
+      // getServerBasicinfo() during bootstrap so it adds zero extra latency.
+      provide: APP_INITIALIZER,
+      useFactory: (serverApi: ServerApiService) => () => serverApi.checkForUpdate(),
+      deps: [ServerApiService],
+      multi: true,
+    },
     MessageService,
     WebsocketPluginService,
     TranslateService,

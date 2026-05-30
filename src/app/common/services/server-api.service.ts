@@ -37,6 +37,45 @@ export class ServerApiService {
     });
   }
 
+  /**
+   * Checks whether index.html has changed on the server since the last page
+   * load and forces a full reload if so.
+   *
+   * Angular hashes all bundle filenames, so the only file at a stable URL is
+   * index.html itself.  If the browser caches that, it keeps referencing the
+   * old hashed bundles and never picks up a new deployment.
+   *
+   * Strategy: HEAD /index.html with cache:no-store (always hits the server),
+   * compare the ETag / Last-Modified fingerprint to the value stored in
+   * localStorage from the previous load.  If they differ, a new build was
+   * deployed → reload so the user gets the correct frontend automatically,
+   * without having to clear their cache.
+   *
+   * Called as a parallel APP_INITIALIZER alongside getServerBasicinfo(), so
+   * any stale frontend is replaced before the user starts interacting.
+   */
+  async checkForUpdate(): Promise<void> {
+    const STORAGE_KEY = 'shng.index_fingerprint';
+    try {
+      const resp = await fetch('/index.html', { method: 'HEAD', cache: 'no-store' });
+      const fingerprint = resp.headers.get('etag') || resp.headers.get('last-modified');
+      if (!fingerprint) return;
+      const stored = localStorage.getItem(STORAGE_KEY);
+      localStorage.setItem(STORAGE_KEY, fingerprint);
+      if (stored && stored !== fingerprint) {
+        // Backend was updated since the last load — navigate to a cache-busting
+        // URL so the browser performs an unconditional GET for index.html rather
+        // than a conditional one that might still be served from disk cache.
+        // AppComponent strips the _cb param from the URL after the new app loads.
+        const url = new URL(window.location.href);
+        url.searchParams.set('_cb', Date.now().toString());
+        window.location.replace(url.toString());
+      }
+    } catch {
+      // Network error or missing headers — skip silently; not critical.
+    }
+  }
+
   getServerBasicinfo() {
     const url = this.appConfig.apiUrl + 'server/';
     this.log.log('ServerApiService.getServerBasicinfo() using url', url);

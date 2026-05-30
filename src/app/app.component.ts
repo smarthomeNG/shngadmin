@@ -10,6 +10,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 
+import { Location } from '@angular/common';
 import {
   NavigationCancel,
   NavigationEnd,
@@ -52,6 +53,8 @@ export class AppComponent implements OnInit {
   public authService = inject(AuthService);
   private titleService = inject(Title);
   private userPrefs = inject(UserPreferencesService);
+  private router = inject(Router);
+  private location = inject(Location);
 
   public APP_NAME = APP_NAME;
   public APP_VERSION = APP_VERSION;
@@ -62,20 +65,31 @@ export class AppComponent implements OnInit {
   constructor() {
     this.log.log('AppComponent.constructor:');
 
-    inject(Router)
-      .events.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((event) => {
-        if (event instanceof NavigationStart) {
-          this.navigating = true;
-        } else if (
-          event instanceof NavigationEnd ||
-          event instanceof NavigationCancel ||
-          event instanceof NavigationError
-        ) {
-          this.navigating = false;
+    this.router.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.navigating = true;
+      } else if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      ) {
+        this.navigating = false;
+
+        // Strip the cache-busting _cb parameter injected by checkForUpdate()
+        // after a stale-frontend reload.  Use Location.replaceState (not
+        // router.navigate) so no secondary navigation is triggered — a
+        // router.navigate would re-run canActivate guards and could cause a
+        // spurious /login redirect.
+        if (event instanceof NavigationEnd && event.urlAfterRedirects.includes('_cb=')) {
+          const [path, qs] = event.urlAfterRedirects.split('?');
+          const params = new URLSearchParams(qs ?? '');
+          params.delete('_cb');
+          const clean = params.size ? `${path}?${params}` : path;
+          this.location.replaceState(clean);
         }
-        this.cdr.markForCheck();
-      });
+      }
+      this.cdr.markForCheck();
+    });
 
     this.translate.addLangs(['en', 'de', 'fr']);
 

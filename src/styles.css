@@ -870,7 +870,7 @@ a.text-shng:hover {
 
 .p-tree-root {
   background: #ffffff;
-  overflow: visible;
+  overflow: visible !important; /* PrimeNG injects overflow:auto — prevent inner scrollbar */
 }
 
 .p-tree-node-content {

@@ -65,17 +65,30 @@
   flex-direction: column;
 }
 
-/* Last child inside the filelist wrapper (the listbox) fills the remaining height */
+/* Last child inside the filelist wrapper (the p-listbox element) fills remaining height.
+   Also establish it as a flex column so the chain continues through PrimeNG's internals. */
 :host ::ng-deep .file-editor-list > * > :last-child {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Override PrimeNG's inline max-height: 14rem on the listbox list container
-   so it can grow to fill the available space instead of capping at ~224px */
+/* PrimeNG renders p-listbox → div.p-listbox → div.p-listbox-list-container → ul.
+   Cascade flex through those layers so the list container fills the available height
+   and scrolls — rather than growing unboundedly and being clipped by overflow:hidden. */
+:host ::ng-deep .file-editor-list .p-listbox {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 :host ::ng-deep .file-editor-list .p-listbox-list-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   max-height: none !important;
-  height: auto;
 }
 
 /* Editor slot wrapper fills the content cell */
