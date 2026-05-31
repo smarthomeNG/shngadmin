@@ -55,6 +55,8 @@
   padding-left: 10px;
   padding-right: 5px;
   border: 1px solid var(--shng-border);
+  min-height: 0; /* allow grid cell to shrink below content height */
+  overflow: hidden; /* bound the cell so height:100% children resolve correctly */
 }
 
 /* Slot wrappers projected into the list and content cells must fill their grid cell. */
