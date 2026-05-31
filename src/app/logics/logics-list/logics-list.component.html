@@ -917,6 +917,8 @@
       type="text"
       (blur)="onBlur()"
       (input)="checkNewLogicInput()"
+      (keydown.enter)="newlogic_add_enabled && createLogic()"
+      (keydown.escape)="wrongNewLogicName = ''; newlogic_display = false"
       pInputText
       placeholder=""
       [ngStyle]="{ width: 30 }"
@@ -931,6 +933,8 @@
       type="text"
       (focus)="onFocus()"
       (input)="checkNewLogicInput()"
+      (keydown.enter)="newlogic_add_enabled && createLogic()"
+      (keydown.escape)="wrongNewLogicName = ''; newlogic_display = false"
       pInputText
       placeholder=""
       [ngStyle]="{ width: 30 }"

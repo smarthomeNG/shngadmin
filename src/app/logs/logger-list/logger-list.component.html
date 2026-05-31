@@ -299,6 +299,7 @@
   [modal]="true"
   blockScroll="true"
   [closable]="false"
+  [closeOnEscape]="true"
   [maximizable]="false"
   [minY]="100"
   [style]="{ width: '600px', minWidth: '600px', minHeight: '450px' }"
@@ -319,6 +320,7 @@
       placeholder="{{ 'none selected' }}"
       [(ngModel)]="this.newlogger_name"
       (ngModelChange)="newLoggerSelected($event)"
+      (keydown.enter)="newlogger_add_enabled && createLogger()"
     ></p-select>
     <!--
     <input [(ngModel)]="newlogger_name" id="nlog" type="text" (input)="checkNewLogicInput();" pInputText placeholder="" style="position: absolute; margin-left: 60px; width: 250px" [ngStyle]="{'width': 30}" autofocus/>

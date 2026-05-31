@@ -195,7 +195,7 @@ export class PluginConfigComponent implements OnInit {
   plugins_installed_list!: string[];
 
   addDialogFilter = '';
-  addDialogCategorized = true;
+  addDialogCategorized = false;
 
   onAddFilterChange(value: string): void {
     this.addDialogFilter = value;
@@ -208,6 +208,7 @@ export class PluginConfigComponent implements OnInit {
   }
 
   get addDialogFilteredList(): string[] {
+    if (!this.plugins_installed_list) return [];
     const f = this.addDialogFilter.toLowerCase();
     const list = f
       ? this.plugins_installed_list.filter(

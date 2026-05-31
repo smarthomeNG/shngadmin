@@ -193,7 +193,16 @@
   <br />
   <div style="display: flex; align-items: center; gap: 8px">
     {{ 'LOGIC_GROUPS.UNIQUE_NAME' | translate }}
-    <input [(ngModel)]="newGroupname" type="text" (input)="checkInput()" pInputText placeholder="" autofocus />
+    <input
+      [(ngModel)]="newGroupname"
+      type="text"
+      (input)="checkInput()"
+      (keydown.enter)="add_enabled && addGroup()"
+      (keydown.escape)="newGroupAbort()"
+      pInputText
+      placeholder=""
+      autofocus
+    />
   </div>
   <br />
   <ng-template pTemplate="footer">

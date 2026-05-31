@@ -161,8 +161,8 @@ describe('PluginConfigComponent', () => {
   // addDialogCategorized default and sortBy
   // -------------------------------------------------------------------------
 
-  it('addDialogCategorized defaults to true (categories enabled)', () => {
-    expect(component.addDialogCategorized).toBe(true);
+  it('addDialogCategorized defaults to false (flat list shown on open)', () => {
+    expect(component.addDialogCategorized).toBe(false);
   });
 
   it('sortBy() sorts configuredplugins ascending by the given field', () => {

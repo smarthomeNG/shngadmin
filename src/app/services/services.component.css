@@ -99,26 +99,32 @@ p-tabs {
 }
 */
 
-.tab-content-services-header {
-  grid-area: tab-content-services-header;
-  width: 100%;
-  border-left: 1px solid var(--shng-border);
-  border-right: 1px solid var(--shng-border);
+/* Side-by-side editor panels (YAML checker, CONF→YAML converter).
+   Overrides tab-content-services overflow:auto so the editors fill
+   the tab panel height and scroll internally rather than the whole
+   tab scrolling with a fixed-pixel editor. */
+.tab-content-editors {
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden !important;
 }
 
-.tab-content-services-content {
-  grid-area: tab-content-services-content;
-  width: 100%;
-  height: calc(100vh - var(--navbar-height) - var(--tab-height) - 50px - 50px - 10px);
-  border: 1px solid var(--shng-border);
-  border-left: 0;
-  overflow: auto;
+.editors-toolbar {
+  flex-shrink: 0;
 }
 
-.tab-content-services-footer {
-  grid-area: tab-content-services-footer;
-  width: 100%;
-  padding-top: 15px;
+.editors-pair {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 5px;
+  padding: 5px 5px 5px 0;
+}
+
+.editors-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .tab-content-services-cache {

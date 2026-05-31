@@ -252,8 +252,8 @@
     ------------------------------------------------------------------------------------- -->
 
         <p-tabpanel value="2">
-          <div class="tab-content-services">
-            <div style="display: flex; padding: 10px 5px 0 10px">
+          <div class="tab-content-services tab-content-editors">
+            <div class="editors-toolbar" style="display: flex; padding: 10px 5px 0 10px">
               <div style="width: 50%">
                 {{ 'SERVICES.YAML_CHECK_SOURCE' | translate }}
                 <button
@@ -269,31 +269,24 @@
                 {{ 'SERVICES.YAML_CHECK_RESULT' | translate }}
               </div>
             </div>
-
-            <table style="width: 100%; table-layout: fixed">
-              <tbody>
-                <tr>
-                  <td style="width: 50%; margin-top: 10px; padding-left: 10px; padding-right: 5px">
-                    <app-code-editor
-                      #codeeditor
-                      [language]="'yaml'"
-                      [readOnly]="false"
-                      [(value)]="myTextarea"
-                      style="height: calc(100vh - 260px)"
-                    ></app-code-editor>
-                  </td>
-                  <td style="width: 50%; margin-top: 10px; padding-left: 0">
-                    <app-code-editor
-                      #codeeditor2
-                      [language]="'yaml'"
-                      [readOnly]="true"
-                      [value]="myTextOutput"
-                      style="height: calc(100vh - 260px)"
-                    ></app-code-editor>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="editors-pair">
+              <div class="editor-area editors-panel" style="padding-left: 10px; padding-right: 5px">
+                <app-code-editor
+                  #codeeditor
+                  [language]="'yaml'"
+                  [readOnly]="false"
+                  [(value)]="myTextarea"
+                ></app-code-editor>
+              </div>
+              <div class="editor-area editors-panel">
+                <app-code-editor
+                  #codeeditor2
+                  [language]="'yaml'"
+                  [readOnly]="true"
+                  [value]="myTextOutput"
+                ></app-code-editor>
+              </div>
+            </div>
           </div>
         </p-tabpanel>
 
@@ -302,13 +295,13 @@
     ------------------------------------------------------------------------------------- -->
 
         <p-tabpanel value="3">
-          <div class="tab-content-services">
+          <div class="tab-content-services tab-content-editors">
             <p-message
               severity="warn"
               [text]="'SERVICES.CONF_YAML_DEPRECATED' | translate"
-              styleClass="mt-2 mx-2 w-full"
+              styleClass="mt-2 mx-2 w-full editors-toolbar"
             />
-            <div style="display: flex; padding: 10px 5px 0 10px">
+            <div class="editors-toolbar" style="display: flex; padding: 10px 5px 0 10px">
               <div style="width: 50%">
                 {{ 'SERVICES.YAML_CONVERTER_SOURCE' | translate }}
                 <button
@@ -324,31 +317,24 @@
                 {{ 'SERVICES.YAML_CONVERTER_RESULT' | translate }}
               </div>
             </div>
-
-            <table style="width: 100%; table-layout: fixed">
-              <tbody>
-                <tr>
-                  <td style="width: 50%; margin-top: 10px; padding-left: 10px; padding-right: 5px">
-                    <app-code-editor
-                      #convertercodeeditor
-                      [language]="'text'"
-                      [readOnly]="false"
-                      [(value)]="myConverterTextarea"
-                      style="height: calc(100vh - 260px)"
-                    ></app-code-editor>
-                  </td>
-                  <td style="width: 50%; margin-top: 10px; padding-left: 0">
-                    <app-code-editor
-                      #convertercodeeditor2
-                      [language]="'yaml'"
-                      [readOnly]="true"
-                      [value]="myConverterTextOutput"
-                      style="height: calc(100vh - 260px)"
-                    ></app-code-editor>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="editors-pair">
+              <div class="editor-area editors-panel" style="padding-left: 10px; padding-right: 5px">
+                <app-code-editor
+                  #convertercodeeditor
+                  [language]="'text'"
+                  [readOnly]="false"
+                  [(value)]="myConverterTextarea"
+                ></app-code-editor>
+              </div>
+              <div class="editor-area editors-panel">
+                <app-code-editor
+                  #convertercodeeditor2
+                  [language]="'yaml'"
+                  [readOnly]="true"
+                  [value]="myConverterTextOutput"
+                ></app-code-editor>
+              </div>
+            </div>
           </div>
         </p-tabpanel>
 

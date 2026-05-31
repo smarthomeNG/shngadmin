@@ -110,6 +110,8 @@
       [(ngModel)]="newFilename"
       type="text"
       (input)="checkInput()"
+      (keydown.enter)="add_enabled && addFile()"
+      (keydown.escape)="newconfig_display = false"
       pInputText
       placeholder=""
       [ngStyle]="{ width: 20 }"

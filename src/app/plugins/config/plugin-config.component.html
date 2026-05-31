@@ -638,9 +638,10 @@
   {{ 'PLUGIN.UNIQUE_NAME' | translate }}&nbsp;
   <input
     [(ngModel)]="pluginconfig_name"
-    (keyup.enter)="this.addPlugin()"
     type="text"
     (input)="checkInput()"
+    (keydown.enter)="add_enabled && addPlugin()"
+    (keydown.escape)="setconfig_display = false"
     pInputText
     placeholder=""
     [ngStyle]="{ width: 20 }"
