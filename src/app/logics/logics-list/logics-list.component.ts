@@ -276,7 +276,6 @@ export class LogicsListComponent implements OnInit {
     });
     if (this.groupList[0].name === '') {
       // move 'no group' to end of list
-      // this.groupList[0].name = 'keine Gruppe';
       this.groupList.push(this.groupList[0]);
       this.groupList.shift();
     }
@@ -344,7 +343,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   triggerLogic(logicName: string) {
-    // this.log.log('triggerLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'trigger')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -354,7 +352,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   disableLogic(logicName: string) {
-    // this.log.log('disableLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'disable')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -364,7 +361,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   enableLogic(logicName: string) {
-    // this.log.log('enableLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'enable')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -374,7 +370,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   unloadLogic(logicName: string) {
-    // this.log.log('unloadLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'unload')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -384,7 +379,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   reloadLogic(logicName: string) {
-    // this.log.log('reloadLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'reload')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -394,7 +388,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   loadLogic(logicName: string) {
-    // this.log.log('loadLogic', {logicName});
     this.dataService
       .setLogicState(logicName, 'load')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -434,7 +427,6 @@ export class LogicsListComponent implements OnInit {
     }
 
     for (let i = 0; i < this.logics.length; i++) {
-      // this.log.log({i}, this.logics[i].name);
       if (this.newlogic_name === this.logics[i].name) {
         this.newlogic_add_enabled = false;
         this.wrongNewLogicName = 'LOGICS.NAME_ALREADY_EXISTS';
@@ -443,7 +435,6 @@ export class LogicsListComponent implements OnInit {
     }
 
     for (let i = 0; i < this.logics.length; i++) {
-      // this.log.log({i}, this.baseName(this.logics[i].pathname, false));
       if (this.newlogic_filename === this.baseName(this.logics[i].pathname, false)) {
         this.newlogic_add_enabled = false;
         this.wrongNewLogicName = 'LOGICS.FILENAME_ALREADY_EXISTS';
@@ -472,15 +463,12 @@ export class LogicsListComponent implements OnInit {
   }
 
   deleteLogic(logicName: string, fileName: string) {
-    // this.log.log('deleteLogic', {logicName});
-
     this.logicToDelete = logicName;
     this.delete_param = { config: logicName, filename: fileName };
     this.confirmdelete_display = true;
   }
 
   deleteLogicConfirm(with_code: boolean) {
-    // this.log.log('deleteLogicConfirm', this.logicToDelete);
     this.confirmdelete_display = false;
 
     let action = 'delete';

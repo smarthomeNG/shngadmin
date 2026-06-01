@@ -24,9 +24,9 @@ input[type='number'] {
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  /*
-  -webkit-appearance: none;
-*/
+  /* -webkit-appearance: none was tested but removed: hiding spinners entirely
+     breaks usability for fields that genuinely need them (e.g. port numbers).
+     The Firefox rule above is sufficient for the fields that need it suppressed. */
 }
 
 :root {
@@ -56,15 +56,16 @@ input::-webkit-inner-spin-button {
     'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --font-family-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
 
-  /* !! REFERENCE — old multi-size scale, keep for nav/banner/utilities !! */
-  /* Scale */
+  /* Named size tokens — all content uses --font-size-base (1rem); the others
+     are kept for the offline banner, captions, and any utility that needs
+     a size outside the standard content scale. lg/xl are intentionally mapped
+     to base so old templates that reference them don't produce oversized text. */
   --font-size-xs: 0.75rem; /* 12px — captions, footnotes   */
   --font-size-sm: 0.875rem; /* 14px — offline banner, xs labels */
   --font-size-base: 1rem; /* 16px — ALL content below nav  */
   --font-size-nav: 1.0625rem; /* 17px — navigation             */
-  --font-size-lg: 1.25rem; /* 20px — (old: section headings — now unused in content) */
-  --font-size-xl: 1.5rem; /* 24px — (old: page headings    — now unused in content) */
-  /* !! END REFERENCE !! */
+  --font-size-lg: 1.25rem; /* kept for compat — unused in content; maps to base via .shng-text-lg */
+  --font-size-xl: 1.5rem; /* kept for compat — unused in content; maps to base via .shng-text-xl */
 
   /* Weights (Roboto only ships 400 + 700)
      bold allowed only on: page headline, table-section headers,
@@ -198,14 +199,14 @@ textarea {
   font-family: var(--font-family-mono) !important;
 }
 
-/* for PrimeNG */
-
+/* Legacy PrimeNG v7/v8 utility class — kept because some plugin webinterfaces
+   still inject markup that references it. New code should not use this class. */
 .ui-state-highlight {
   background-color: var(--shng-blue) !important;
 }
 
-/* TurboTable */
-
+/* Legacy PrimeNG TurboTable overrides — kept for plugin webinterfaces that
+   still use PrimeNG v7/v8 table markup. New code uses p-table (PrimeNG v17+). */
 .ui-table .ui-table-thead > tr {
   background-color: #f0f0f0 !important;
   border: 0 solid var(--shng-border) !important;
@@ -310,8 +311,6 @@ ui-inputswitch {
   color: var(--text-caption);
 }
 
-/* TurboTable */
-
 .ui-table .ui-table-tbody > tr.ui-state-highlight {
   background-color: #186ba0;
   color: #ffffff;
@@ -341,13 +340,15 @@ ui-inputswitch {
   color: #212121;
 }
 
-/* for modal vertical align */
-
+/* Vertical centering via display:table — used by legacy modal dialogs from
+   plugin webinterfaces. Modern code uses PrimeNG p-dialog instead.
+   pointer-events:none on the wrapper lets clicks fall through to the backdrop
+   so the modal can still be dismissed by clicking outside it. */
 .vertical-alignment-helper {
   display: table;
   height: 100%;
   width: 100%;
-  pointer-events: none; /* This makes sure that we can still click outside of the modal to close it */
+  pointer-events: none;
 }
 .vertical-align-center {
   /* To center vertically */
@@ -365,8 +366,8 @@ ui-inputswitch {
   pointer-events: all;
 }
 
-/* from backend plugin */
-
+/* Legacy plugin webinterface styles — injected by backend plugins that
+   use the older SmartHomeNG webinterface component library. */
 plusIconlist-group-item.py-2.node-tree.node-selected {
   background-color: #c3daee;
 }

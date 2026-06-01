@@ -101,7 +101,6 @@
     'tab-content-parameter'
     'tab-footer';
   grid-template-columns: 1fr;
-  /* grid-auto-rows: minmax(50px, max-content); */
   grid-template-rows: 60px auto 0;
 }
 
@@ -130,10 +129,8 @@
 .tab-content-parameter {
   grid-area: tab-content-parameter;
   width: 100%;
-  /*height: 100%; */
   height: calc(100vh - var(--navbar-height) - var(--tab-height) - 70px);
   border: 1px solid var(--shng-border);
   border-top: 0;
   overflow: auto;
-  /*background: cornsilk; */
 }

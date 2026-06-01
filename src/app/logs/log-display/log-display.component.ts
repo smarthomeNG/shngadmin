@@ -107,7 +107,8 @@ export class LogDisplayComponent implements OnInit {
   }
 
   ngOnInit() {
-    // test if component is called with a parameter and remove '.log' from the parameter
+    // Support deep-linking: /logs/:logname pre-selects a log file on load.
+    // Strip the .log extension if present — the API identifies logs by base name.
     let logParam = this.route.snapshot.paramMap.get('logname');
     if (logParam !== null) {
       if (logParam.endsWith('.log')) {
@@ -249,6 +250,13 @@ export class LogDisplayComponent implements OnInit {
       this.displayLogfile = '';
       this.logfile_content = '';
     } else {
+      // chunk === 0 is the sentinel for "newest chunk" — used on initial load,
+      // timeframe change, and the fast-forward button.  Scroll to bottom in
+      // those cases so the user sees the latest entries immediately.
+      // Explicit chunk numbers (prev / next / first-page navigation) keep the
+      // viewport at the top so the user can read from the beginning of that chunk.
+      const scrollAfterLoad = chunk === 0;
+
       this.spinner_display = true;
       this.displayLogfile = String(this.selectedFile);
 
@@ -256,7 +264,6 @@ export class LogDisplayComponent implements OnInit {
         .readLogfile(this.displayLogfile, chunk)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((response) => {
-          // this.log.log({response});
           this.logfile_chunk = response as unknown as LogfileChunk;
           this.first_chunk = this.logfile_chunk.lines[0] === 1;
           this.last_chunk = this.logfile_chunk.lastchunk;
@@ -264,6 +271,9 @@ export class LogDisplayComponent implements OnInit {
           this.cmLineNumbers = true;
           this.cmFirstLineNumber = this.logfile_chunk.lines[0];
           if (this.cmFirstLineNumber !== undefined) {
+            // Replace non-breaking spaces (U+00A0, charCode 160) with regular spaces.
+            // The backend can emit NBSP in log lines; CodeMirror's monospace layout
+            // treats them differently from regular spaces, breaking column alignment.
             for (let i = 0; i < this.logfile_chunk.loglines.length; i++) {
               let wrk2 = '';
               for (let c = 0; c < this.logfile_chunk.loglines[i].length; c++) {
@@ -280,6 +290,9 @@ export class LogDisplayComponent implements OnInit {
           this.filterLogChunk();
           this.spinner_display = false;
           this.cdr.markForCheck();
+          // Defer scroll until after Angular's change-detection cycle updates the
+          // CodeMirror DOM so scrollToEnd() reads the correct scrollHeight.
+          if (scrollAfterLoad) setTimeout(() => this.scrollDown());
         });
     }
   }

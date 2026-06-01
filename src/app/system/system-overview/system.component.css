@@ -94,7 +94,6 @@ p-tabs {
   min-height: 50px;
   padding: 12px 0;
   align-self: stretch;
-  /*border-bottom: 1px solid #ddd;*/
   width: 100%;
 }
 
@@ -237,7 +236,6 @@ p-tabs {
 
 .shngpypitable {
   width: 100%;
-  /*margin-bottom: 1rem;*/
   color: #212529;
 
   border-color: grey;
