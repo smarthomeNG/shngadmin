@@ -14,6 +14,10 @@
 
 set -euo pipefail
 
+# ── Always run from the repo root ─────────────────────────────────────────────
+# Hooks live in .husky/; go one level up regardless of how the script was invoked.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.."
+
 # ── Mode ─────────────────────────────────────────────────────────────────────
 RELEASE_MODE=false
 [[ "${1:-}" == "--release" ]] && RELEASE_MODE=true
