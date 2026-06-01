@@ -118,6 +118,7 @@ export class LogDisplayComponent implements OnInit {
     this.log.log({ logParam });
 
     this.loglevels.push({ label: 'ALL', value: 'ALL' });
+    this.loglevels.push({ label: 'DEVELOP', value: ' DEVELOP ' });
     this.loglevels.push({ label: 'DEBUG', value: ' DEBUG ' });
     this.loglevels.push({ label: 'INFO', value: ' INFO ' });
     this.loglevels.push({ label: 'WARNING', value: ' WARNING ' });

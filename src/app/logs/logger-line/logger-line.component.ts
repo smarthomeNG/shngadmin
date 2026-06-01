@@ -48,6 +48,9 @@ export class LoggerLineComponent {
   @Output() loggerDelete = new EventEmitter();
   @Output() modifyHandlers = new EventEmitter();
 
+  // Ordered from least verbose (ERROR=40) to most verbose (DEVELOP=9).
+  // DEVELOP was added in SmartHomeNG core commit a95e1f0; it sits below DEBUG
+  // (level 9 vs 10) and is used by plugin developers via logger.develop().
   levelOptions: {}[] = [
     { label: 'ERROR', value: 'ERROR' },
     { label: 'WARNING', value: 'WARNING' },
@@ -57,6 +60,7 @@ export class LoggerLineComponent {
     { label: 'DBGMED', value: 'DBGMED' },
     { label: 'DBGLOW', value: 'DBGLOW' },
     { label: 'DEBUG', value: 'DEBUG' },
+    { label: 'DEVELOP', value: 'DEVELOP' },
   ];
 
   levelDefault: string = 'WARNING';
