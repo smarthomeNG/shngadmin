@@ -50,8 +50,13 @@ fi
 
 SHNG_CURRENT=$(git -C "$SHNG_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "")
 if [[ "$SHNG_CURRENT" != "$SHNG_BRANCH" ]]; then
-    echo "ERROR: $SHNG_DIR is on '$SHNG_CURRENT', expected '$SHNG_BRANCH'. Aborting." >&2
-    exit 1
+    if $RELEASE_MODE; then
+        echo "ERROR: $SHNG_DIR is on '$SHNG_CURRENT', expected '$SHNG_BRANCH'. Aborting." >&2
+        exit 1
+    else
+        echo "$LOG_TAG not deploying: shng is on '$SHNG_CURRENT', expected '$SHNG_BRANCH'"
+        exit 0
+    fi
 fi
 
 echo "$LOG_TAG building from '$CURRENT_BRANCH', deploying to $SHNG_TARGET"
