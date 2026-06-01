@@ -316,7 +316,8 @@
     "RENAME_LOGIC_NAME": "Nouveau nom de logique",
     "RENAME_FILE_NAME": "Nouveau nom de fichier (sans .py)",
     "RENAME_NAME_IN_USE": "Ce nom de logique est déjà utilisé.",
-    "RENAME_FILE_IN_USE": "Ce nom de fichier est déjà utilisé par une autre logique."
+    "RENAME_FILE_IN_USE": "Ce nom de fichier est déjà utilisé par une autre logique.",
+    "GROUP": "Groupe(s)"
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Nom de groupe",
@@ -506,7 +507,8 @@
     "CHOOSE_HANDLERS_TEXT": "Sélectionnez un ou plusieurs gestionnaires via lesquels la journalisation doit avoir lieu.",
     "CHOOSE_HANDLERS_PROPAGATION_TEXT": "De plus, la journalisation est effectuée par les gestionnaires des enregistreurs de niveau supérieur.",
     "DELETE": "Supprimer l'enregistreur",
-    "HANDLER": "Modifier les gestionnaires"
+    "HANDLER": "Modifier les gestionnaires",
+    "NO_HANDLER_DEFINED": "Aucun gestionnaire défini"
   },
   "LOGGING": {
     "CONFIG_FILE": "Fichier de configuration",
