@@ -14,9 +14,8 @@
 
 set -euo pipefail
 
-# ── Always run from the repo root ─────────────────────────────────────────────
-# Hooks live in .husky/; go one level up regardless of how the script was invoked.
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.."
+# ── Always run from the adminUI repo root ────────────────────────────────────
+cd "$HOME/shngadmin"
 
 # ── Mode ─────────────────────────────────────────────────────────────────────
 RELEASE_MODE=false
