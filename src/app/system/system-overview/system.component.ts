@@ -17,18 +17,25 @@ import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { ChartData } from 'chart.js';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subject, timer } from 'rxjs';
+import { switchMap, takeUntil } from 'rxjs/operators';
 
 import { DecimalPipe, NgOptimizedImage } from '@angular/common';
 import { Bind } from 'primeng/bind';
 import { UIChart } from 'primeng/chart';
+import { ProgressSpinner } from 'primeng/progressspinner';
 import { Ripple } from 'primeng/ripple';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-import { APP_NAME, APP_VERSION } from '../../app.component';
+import {
+  APP_BUILD_PATH,
+  APP_NAME,
+  APP_VERSION,
+  APP_VERSION_DETAIL,
+  APP_VERSION_REF,
+} from '../../app.component';
 import { PypiInfo } from '../../common/models/pypi-info';
 import { SystemInfo } from '../../common/models/system-info';
 import { LogService } from '../../common/services/log.service';
-import { OlddataService } from '../../common/services/olddata.service';
 import { ServerApiService } from '../../common/services/server-api.service';
 import { SharedService } from '../../common/services/shared.service';
 import { WebsocketPluginService } from '../../common/services/websocket-plugin.service';
@@ -52,14 +59,14 @@ import { WebsocketService } from '../../common/services/websocket.service';
     UIChart,
     DecimalPipe,
     TranslatePipe,
+    ProgressSpinner,
   ],
 })
 export class SystemComponent implements OnDestroy, OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
-  private dataService = inject(OlddataService);
-  private dataServiceServer = inject(ServerApiService);
+  private serverApi = inject(ServerApiService);
   private translate = inject(TranslateService);
   private websocketPluginService = inject(WebsocketPluginService);
   public shared = inject(SharedService);
@@ -70,10 +77,13 @@ export class SystemComponent implements OnDestroy, OnInit {
   faCheckCircle = faCheckCircle;
 
   loading: boolean = true;
+  licenseText = '';
+  pypiPending = false;
+  private readonly pypiPollStop$ = new Subject<void>();
 
   systeminfo: SystemInfo = <SystemInfo>{};
-  pypiinfo: PypiInfo[];
-  reqinfodisplay: {};
+  pypiinfo!: PypiInfo[];
+  reqinfodisplay!: Record<string, string>;
   plugincount = 0;
   documentationcount = 0;
   testsuitecount = 0;
@@ -151,7 +161,10 @@ export class SystemComponent implements OnDestroy, OnInit {
   chartdataDisk: ChartData = SystemComponent.emptyDataset('% disc usage');
 
   appName = APP_NAME;
-  appVersion = 'v' + APP_VERSION;
+  appVersion = 'v' + APP_VERSION; // short form used in page titles / navbar
+  appVersionDetail = APP_VERSION_DETAIL; // v{semver}-{commit}.{branch}
+  appVersionRef = APP_VERSION_REF; // (heads/branch)
+  appBuildPath = APP_BUILD_PATH; // absolute path to the frontend repo
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -160,121 +173,55 @@ export class SystemComponent implements OnDestroy, OnInit {
   ngOnInit() {
     this.log.log('SystemComponent.ngOnInit:');
 
-    this.dataServiceServer!.getServerinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.SYSTEM_PROPERTIES'));
-        this.initSystemInfo();
-        this.cdr.markForCheck();
-      });
+    this.setTitle(this.translate.instant('MENU.SYSTEM_PROPERTIES'));
+    this.initSystemInfo();
+    this.cdr.markForCheck();
   }
 
   ngOnDestroy(): void {
     this.websocketPluginService.disconnect();
+    this.pypiPollStop$.complete();
   }
 
   initSystemInfo() {
     // ---------------------------------------------
-    // Initialize system info (from OlddataService)
+    // Initialize system info
     //
-    this.dataService
-      .getSysteminfo()
+    this.serverApi
+      .getSystemStats()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response: SystemInfo) => {
-          this.systeminfo = response;
+        next: (response) => {
+          this.systeminfo = response as SystemInfo;
 
           this.os_uptime = this.shared.ageToString(this.systeminfo.uptime);
           this.sh_uptime = this.shared.ageToString(this.systeminfo.sh_uptime);
           this.cdr.markForCheck();
         },
         error: (error) => {
-          this.log.log('SystemComponent: dataService.getSysteminfo():');
+          this.log.log('SystemComponent: serverApi.getSystemStats():');
           this.log.log(error);
         },
       });
 
-    // -----------------------------------
-    // Initialize Pypi info
-    //
-    this.dataService
-      .getPypiinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response: PypiInfo[]) => {
-          this.pypiinfo = response;
-          this.loading = false;
-
-          // count if plugin requirements exist
-          this.plugincount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            if (this.pypiinfo[i].is_required_for_plugins === true) {
-              this.plugincount++;
-            }
-          }
-
-          // count if documentation requirements exist
-          this.documentationcount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            if (this.pypiinfo[i].is_required_for_docbuild === true) {
-              this.documentationcount++;
-            }
-          }
-
-          // count if testsuite requirements exist
-          this.testsuitecount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            if (this.pypiinfo[i].is_required_for_testsuite === true) {
-              this.testsuitecount++;
-            }
-          }
-
-          // count if package without requirements exist
-          this.norequirementcount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            if (
-              this.pypiinfo[i].is_required === false &&
-              this.pypiinfo[i].is_required_for_docbuild === false &&
-              this.pypiinfo[i].is_required_for_testsuite === false
-            ) {
-              this.norequirementcount++;
-            }
-          }
-
-          this.reqinfodisplay = {};
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            this.reqinfodisplay[this.pypiinfo[i].name] = this.buildreqinfostring(this.pypiinfo[i]);
-          }
-          this.cdr.markForCheck();
-        },
-        error: (error) => this.log.log('SystemComponent: dataService.getPypiinfo():' + error),
-      });
+    // PyPI data is fetched on demand when the user opens the PyPI tab.
 
     // -----------------------------------
     // Initialize info for the graph-tab
     //
     this.initCharts();
 
-    let filepath = '/3rdpartylicenses.txt';
-    const hostip = this.appConfig.hostIp;
-    const disclosureText = document.getElementById('disclosuretext');
-    // # TODO
-    // filepath = '/admin' + filepath;
     this.http
-      .get(filepath, { responseType: 'text' })
+      .get('assets/3rdpartylicenses.txt', { responseType: 'text' })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          const message = response.toString();
-          if (disclosureText) {
-            disclosureText.textContent = message;
-          }
+          this.licenseText = response;
+          this.cdr.markForCheck();
         },
         error: (error) => {
-          if (disclosureText) {
-            disclosureText.textContent =
-              '\nERROR ' + error.status + ':\n\n    ' + error.url + '   ' + error.statusText;
-          }
+          this.licenseText = `ERROR ${error.status}:\n\n    ${error.url}   ${error.statusText}`;
+          this.cdr.markForCheck();
         },
       });
   }
@@ -283,7 +230,62 @@ export class SystemComponent implements OnDestroy, OnInit {
   // methods for the Pypi check tab
   // -----------------------------------
   //
-  buildreqinfostring(element) {
+  onTabChange(value: string | number | undefined) {
+    if (String(value) === '2') {
+      this.startPypiPoll();
+    } else {
+      this.pypiPollStop$.next();
+      this.pypiPending = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private startPypiPoll() {
+    if (this.pypiinfo?.length && this.pypiinfo.every((p) => p.pypi_version !== '--')) {
+      return;
+    }
+    this.pypiPending = true;
+    this.cdr.markForCheck();
+
+    timer(0, 5000)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        takeUntil(this.pypiPollStop$),
+        switchMap(() => this.serverApi.getPypiInfo()),
+      )
+      .subscribe({
+        next: (response) => {
+          this.processPypiData(response as PypiInfo[]);
+          if (this.pypiinfo.every((p) => p.pypi_version !== '--')) {
+            this.pypiPending = false;
+            this.pypiPollStop$.next();
+          }
+          this.cdr.markForCheck();
+        },
+        error: (err) => this.log.log('SystemComponent: pypi poll error:', err),
+      });
+  }
+
+  private processPypiData(data: PypiInfo[]) {
+    this.pypiinfo = data;
+    this.loading = false;
+    this.plugincount = data.filter((p) => p.is_required_for_plugins).length;
+    this.documentationcount = data.filter((p) => p.is_required_for_docbuild).length;
+    this.testsuitecount = data.filter((p) => p.is_required_for_testsuite).length;
+    this.norequirementcount = data.filter(
+      (p) =>
+        !p.is_required &&
+        !p.is_required_for_plugins &&
+        !p.is_required_for_docbuild &&
+        !p.is_required_for_testsuite,
+    ).length;
+    this.reqinfodisplay = {};
+    for (const pkg of data) {
+      this.reqinfodisplay[pkg.name] = this.buildreqinfostring(pkg);
+    }
+  }
+
+  buildreqinfostring(element: PypiInfo): string {
     /* Build String for requirements column */
     let reqString = '';
 
@@ -499,7 +501,7 @@ export class SystemComponent implements OnDestroy, OnInit {
         const workerSeries = this.websocketPluginService.workerThreads.series;
         const idleSeries = this.websocketPluginService.idleWorkerThreads.series;
         const len = Math.min(workerSeries.length, idleSeries.length);
-        const activeSeries: number[][] = [];
+        const activeSeries: [number, number, { time: string }][] = [];
         for (let i = 0; i < len; i++) {
           activeSeries.push([
             workerSeries[i][0],
@@ -527,8 +529,8 @@ export class SystemComponent implements OnDestroy, OnInit {
 
   updateChartData(
     chartdata: ChartData,
-    dataseries: any[],
-    dataseries2: any[] | null = null,
+    dataseries: [number, number, { time: string }][],
+    dataseries2: [number, number, { time: string }][] | null = null,
   ): ChartData {
     const labels: string[] = [];
     const data0: number[] = [];

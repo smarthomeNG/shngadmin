@@ -6,9 +6,21 @@ import { LoggingConfigurationComponent } from './logging-configuration/logging-c
 
 export const LOGS_ROUTES: Routes = [
   { path: '', component: LogDisplayComponent, canActivate: [AuthGuardService] },
-  { path: 'display', component: LogDisplayComponent, canActivate: [AuthGuardService] },
-  { path: 'display/:logname', component: LogDisplayComponent, canActivate: [AuthGuardService] },
-  { path: 'logger-list', component: LoggerListComponent, canActivate: [AuthGuardService] },
+  {
+    path: 'display',
+    component: LogDisplayComponent,
+    canActivate: [AuthGuardService],
+  },
+  {
+    path: 'display/:logname',
+    component: LogDisplayComponent,
+    canActivate: [AuthGuardService],
+  },
+  {
+    path: 'logger-list',
+    component: LoggerListComponent,
+    canActivate: [AuthGuardService],
+  },
   {
     path: 'logging-configuration',
     component: LoggingConfigurationComponent,

@@ -17,7 +17,7 @@ import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
 import { Select } from 'primeng/select';
-import { LoggersType } from '../../common/models/loggers-info';
+import { LoggerInfo } from '../../common/models/loggers-info';
 import { LogService } from '../../common/services/log.service';
 
 @Component({
@@ -39,15 +39,18 @@ import { LogService } from '../../common/services/log.service';
   ],
 })
 export class LoggerLineComponent {
-  @Input() loggerName: string;
-  @Input() logger: LoggersType;
-  @Input() loggerActive: boolean;
-  @Input() definedHandlers: string[];
+  @Input() loggerName!: string;
+  @Input() logger!: LoggerInfo;
+  @Input() loggerActive!: boolean;
+  @Input() definedHandlers!: string[];
   // @Input() loggerActiveLevel: any;
   @Output() levelChange = new EventEmitter();
   @Output() loggerDelete = new EventEmitter();
   @Output() modifyHandlers = new EventEmitter();
 
+  // Ordered from least verbose (ERROR=40) to most verbose (DEVELOP=9).
+  // DEVELOP was added in SmartHomeNG core commit a95e1f0; it sits below DEBUG
+  // (level 9 vs 10) and is used by plugin developers via logger.develop().
   levelOptions: {}[] = [
     { label: 'ERROR', value: 'ERROR' },
     { label: 'WARNING', value: 'WARNING' },
@@ -57,15 +60,16 @@ export class LoggerLineComponent {
     { label: 'DBGMED', value: 'DBGMED' },
     { label: 'DBGLOW', value: 'DBGLOW' },
     { label: 'DEBUG', value: 'DEBUG' },
+    { label: 'DEVELOP', value: 'DEVELOP' },
   ];
 
   levelDefault: string = 'WARNING';
 
   confirmdelete_display: boolean = false;
   loggerToDelete: string = '';
-  delete_param: {};
+  delete_param!: {};
 
-  header_param: {};
+  header_param!: {};
   handlers: { name: string; key: string }[] = [];
   chooseHandlers_display: boolean = false;
   // loggerToModify: string = '';
@@ -77,13 +81,13 @@ export class LoggerLineComponent {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly log = inject(LogService);
 
-  getParent(logger) {
+  getParent(logger: string) {
     const parts = logger.split('.');
     parts.pop();
     return parts.join('.');
   }
 
-  baseName(str, withExtension = true) {
+  baseName(str: string, withExtension = true) {
     let base = str;
     base = base.substring(base.lastIndexOf('/') + 1);
     if (!withExtension && base.lastIndexOf('.') !== -1) {
@@ -92,7 +96,7 @@ export class LoggerLineComponent {
     return base;
   }
 
-  levelChanged(lg, level) {
+  levelChanged(lg: unknown, level: unknown) {
     let activeLevel = this.levelDefault;
     if (level !== null) {
       activeLevel = this.logger.active.level;
@@ -100,7 +104,7 @@ export class LoggerLineComponent {
     this.levelChange.emit(activeLevel);
   }
 
-  loggerIsDeletable(logger) {
+  loggerIsDeletable(logger: string) {
     if (
       logger === 'plugins' ||
       logger === 'logics' ||
@@ -138,7 +142,7 @@ export class LoggerLineComponent {
   //   functions to support choosing of handlers
   // ------------------------------------------------------------------------------
 
-  chooseHandlers(logger) {
+  chooseHandlers(logger: string) {
     // this.loggerToModify = logger;
     this.header_param = { logger: logger };
     this.handlers = [
@@ -162,10 +166,10 @@ export class LoggerLineComponent {
           found = this.logger.handlers.includes(key);
         }
         let val: boolean[] = [];
-        if (!parentFound || this.logger.propagate === false) {
-          if (found) {
-            val = [true];
-          }
+        if (parentFound && this.logger.propagate !== false) {
+          val = [true]; // inherited from parent — show as checked but disabled
+        } else if (found) {
+          val = [true];
         }
         this.choosableHandlers.push({ name: key, key: key, value: val, disabled: parentFound });
       }
@@ -192,6 +196,7 @@ export class LoggerLineComponent {
     this.log.log('choosableHandlers1', this.choosableHandlers1);
     this.log.log('choosableHandlers2', this.choosableHandlers2);
 
+    this.handlersChangeEnabled = true;
     this.chooseHandlers_display = true;
   }
 
@@ -211,7 +216,7 @@ export class LoggerLineComponent {
   //   functions to support logger deletion
   // ------------------------------------------------------------------------------
 
-  deleteLogger(logger) {
+  deleteLogger(logger: string) {
     this.loggerToDelete = logger;
     this.delete_param = { logger: logger };
     this.confirmdelete_display = true;

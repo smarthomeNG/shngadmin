@@ -1,43 +1,31 @@
-import 'codemirror/mode/python/python';
-import 'codemirror/mode/xml/xml';
-import 'codemirror/mode/yaml/yaml';
+import { APP_INITIALIZER, enableProdMode, importProvidersFrom, Injector } from '@angular/core';
 
-import 'codemirror/addon/dialog/dialog';
-import 'codemirror/addon/display/autorefresh';
-import 'codemirror/addon/display/fullscreen';
-import 'codemirror/addon/display/rulers';
-import 'codemirror/addon/fold/brace-fold';
-import 'codemirror/addon/fold/comment-fold';
-import 'codemirror/addon/fold/foldcode';
-import 'codemirror/addon/fold/foldgutter';
-import 'codemirror/addon/fold/indent-fold';
-import 'codemirror/addon/fold/xml-fold';
-import 'codemirror/addon/hint/anyword-hint';
-import 'codemirror/addon/hint/show-hint';
-import 'codemirror/addon/scroll/annotatescrollbar';
-import 'codemirror/addon/search/jump-to-line';
-import 'codemirror/addon/search/matchesonscrollbar';
-import 'codemirror/addon/search/search';
-import 'codemirror/addon/search/searchcursor';
-
-import 'codemirror/mode/javascript/javascript';
-import 'codemirror/mode/markdown/markdown';
-
-import { enableProdMode, importProvidersFrom, Injector } from '@angular/core';
-
-import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import {
+  HttpClient,
+  provideHttpClient,
+  withInterceptors,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter, withRouterConfig } from '@angular/router';
+import {
+  PreloadAllModules,
+  provideRouter,
+  withPreloading,
+  withRouterConfig,
+} from '@angular/router';
 import { JWT_OPTIONS, JwtModule } from '@auth0/angular-jwt';
 import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
+import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
+import { firstValueFrom } from 'rxjs';
 import { AppComponent, HttpLoaderFactory } from './app/app.component';
 import { appRoutes } from './app/app.routes';
 import { getBaseUrl, jwtOptionsFactory } from './app/bootstrap.utils';
-import { OlddataService } from './app/common/services/olddata.service';
+import { connectivityInterceptor } from './app/common/interceptors/connectivity.interceptor';
+import { ServerApiService } from './app/common/services/server-api.service';
 import { WebsocketPluginService } from './app/common/services/websocket-plugin.service';
 import { environment } from './environments/environment';
 
@@ -57,17 +45,26 @@ const ShngPreset = definePreset(Aura, {
       950: '#162836',
     },
   },
+  components: {
+    tabs: {
+      activeBar: {
+        height: '2px',
+      },
+    },
+  },
 });
 
 if (environment.production) {
   enableProdMode();
-  console.log = () => {};
-  console.debug = () => {};
 }
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideRouter(appRoutes, withRouterConfig({ onSameUrlNavigation: 'reload' })),
+    provideRouter(
+      appRoutes,
+      withPreloading(PreloadAllModules), // preload all lazy chunks after initial navigation
+      withRouterConfig({ onSameUrlNavigation: 'reload' }),
+    ),
     importProvidersFrom(
       JwtModule.forRoot({
         config: { throwNoTokenError: false },
@@ -86,11 +83,33 @@ bootstrapApplication(AppComponent, {
       }),
     ),
     { provide: 'BASE_URL', useFactory: getBaseUrl },
-    OlddataService,
+    {
+      // Fetch basic server config (including wsPort) before the router starts
+      // its initial navigation.  Without this, appReadyGuard subscribes to
+      // serverReady$ before getServerBasicinfo() is even called, which causes
+      // every first-load navigation to hang until the 5-second timeout fires.
+      provide: APP_INITIALIZER,
+      useFactory: (serverApi: ServerApiService) => () =>
+        firstValueFrom(serverApi.getServerBasicinfo()),
+      deps: [ServerApiService],
+      multi: true,
+    },
+    {
+      // Detect stale frontend: compare the server's index.html fingerprint
+      // (ETag / Last-Modified) with the value cached from the previous load.
+      // If they differ a new deployment has occurred and the page is reloaded
+      // automatically — no user action required.  Runs in parallel with
+      // getServerBasicinfo() during bootstrap so it adds zero extra latency.
+      provide: APP_INITIALIZER,
+      useFactory: (serverApi: ServerApiService) => () => serverApi.checkForUpdate(),
+      deps: [ServerApiService],
+      multi: true,
+    },
+    MessageService,
     WebsocketPluginService,
     TranslateService,
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(withInterceptorsFromDi(), withInterceptors([connectivityInterceptor])),
     providePrimeNG({ theme: { preset: ShngPreset, options: { darkModeSelector: false } } }),
   ],
 }).catch((err) => console.log(err));

@@ -1,5 +1,5 @@
-<div class="shngbody">
-  <div class="button-row-left">
+<app-file-editor-layout>
+  <div slot="buttons-left">
     <button
       pButton
       label="{{ 'BUTTON.RELOAD_FUNCTIONS' | translate }}"
@@ -12,7 +12,7 @@
     ></button>
   </div>
 
-  <div class="button-row">
+  <div slot="buttons-right">
     <button
       pButton
       label="{{ 'BUTTON.SAVE' | translate }}"
@@ -59,31 +59,33 @@
     }
   </div>
 
-  <div class="items-filelist">
-    <button
-      pButton
-      label="{{ 'BUTTON.NEW_FUNCTION' | translate }}"
-      type="button"
-      [disabled]="!(myEditFilename === '' || myTextarea === myTextareaOrig)"
-      icon="far fa-file"
-      style="margin-right: 10px"
-      (click)="newConfig()"
-      class="float-sm-left ui-button-success"
-    ></button>
-    <button
-      pButton
-      type="button"
-      [disabled]="myEditFilename === ''"
-      icon="far fa-trash-alt"
-      style="margin-right: 0; width: 25px"
-      (click)="deleteConfig()"
-      class="float-sm-left ui-button-danger"
-    ></button>
-    <br />
-    <br />
+  <div slot="filelist">
+    <div class="filelist-header">
+      <button
+        pButton
+        label="{{ 'BUTTON.NEW_FUNCTION' | translate }}"
+        type="button"
+        [disabled]="!(myEditFilename === '' || myTextarea === myTextareaOrig)"
+        icon="far fa-file"
+        style="margin-right: 10px"
+        (click)="newConfig()"
+        class="float-sm-left ui-button-success"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [disabled]="myEditFilename === ''"
+        icon="far fa-trash-alt"
+        style="margin-right: 0; width: 25px"
+        (click)="deleteConfig()"
+        class="float-sm-left ui-button-danger"
+      ></button>
+      <br />
+      <br />
 
-    <i class="fa fa-sitemap" style="margin-left: 5px; color: #a2a2a2"></i>
-    <a style="margin-left: 5px; color: #727272">{{ 'FUNCTION_CONFIG.DEFINITION_FILES' | translate }}</a>
+      <i class="fa fa-sitemap" style="margin-left: 5px; color: #a2a2a2"></i>
+      <a style="margin-left: 5px; color: #727272">{{ 'FUNCTION_CONFIG.DEFINITION_FILES' | translate }}</a>
+    </div>
 
     <p-listbox
       [options]="functionFiles"
@@ -92,16 +94,20 @@
       (onChange)="functionFileSelected()"
       optionLabel="label"
       [style]="{ width: '100%' }"
-      [listStyle]="{ height: 'calc(100vh - 253px)', 'min-height': '200px' }"
     >
     </p-listbox>
   </div>
 
-  <div class="items-fileeditor">
-    <ngx-codemirror #codeeditor [options]="cmOptions" [(ngModel)]="myTextarea" [autoFocus]="true"></ngx-codemirror>
-    <a style="font-size: small">{{ 'RELOAD FOR CHANGES' | translate }}</a>
+  <div slot="editor">
+    <app-code-editor
+      #codeeditor
+      [language]="'python'"
+      [readOnly]="cmReadOnly"
+      [(value)]="myTextarea"
+      [foldable]="true"
+    ></app-code-editor>
   </div>
-</div>
+</app-file-editor-layout>
 
 <!--
   -- Dialog for setting the name of the new function configuration file
@@ -122,18 +128,25 @@
   </ng-template>
 
   <br />
-  {{ 'FUNCTION_CONFIG.UNIQUE_NAME' | translate }}&nbsp;
-  <input
-    [(ngModel)]="newFilename"
-    type="text"
-    (input)="checkInput()"
-    pInputText
-    placeholder=""
-    [ngStyle]="{ width: 20 }"
-    autofocus
-  />
-
-  <br />
+  <div style="display: flex; align-items: center; gap: 8px">
+    {{ 'FUNCTION_CONFIG.UNIQUE_NAME' | translate }}
+    <input
+      [(ngModel)]="newFilename"
+      type="text"
+      (input)="checkInput()"
+      (keydown.enter)="add_enabled && addFile()"
+      (keydown.escape)="newconfig_display = false"
+      pInputText
+      placeholder=""
+      [ngStyle]="{ width: 20 }"
+      autofocus
+    />
+  </div>
+  @if (fileExists) {
+    <small class="p-error" style="display: block; margin-top: 6px">
+      {{ 'COMMON.FILE_EXISTS_HINT' | translate: { filename: newFilename } }}
+    </small>
+  }
   <br />
   <ng-template pTemplate="footer">
     <button

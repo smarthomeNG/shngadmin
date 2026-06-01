@@ -5,5 +5,9 @@ import { PluginsComponent } from './plugin-list/plugins.component';
 
 export const PLUGINS_ROUTES: Routes = [
   { path: '', component: PluginsComponent, canActivate: [AuthGuardService] },
-  { path: 'config', component: PluginConfigComponent, canActivate: [AuthGuardService] },
+  {
+    path: 'config',
+    component: PluginConfigComponent,
+    canActivate: [AuthGuardService],
+  },
 ];

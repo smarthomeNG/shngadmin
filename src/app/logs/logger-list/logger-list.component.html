@@ -3,7 +3,7 @@
   <div class="table-responsive">
 -->
 <div class="shngbody2">
-  <div>
+  <div class="body-content">
     <p-tabs value="0">
       <p-tablist>
         <p-tab value="0">{{ 'LOGGERS.LOGICS' | translate }}</p-tab>
@@ -18,7 +18,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 10px; margin-top: 6px; margin-bottom: 6px"
               id="newLoggerButtonL"
               [disabled]="false"
               (click)="newLogicLogger()"
@@ -26,7 +26,7 @@
               label="{{ 'BUTTON.NEW_LOGGER' | translate }}"
               class="ui-button-success float-sm-left"
             ></button>
-            <table class="table table-striped table-hover loggerList">
+            <table class="table table-striped table-hover loggerList shng-list-table">
               <thead>
                 <tr class="shng_heading">
                   <th class="py-1" style="border: 0">{{ 'LOGGERS.LOGGER_NAME' | translate }}</th>
@@ -38,7 +38,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (l of loggersList; track $index) {
+                @for (l of loggersList; track l) {
                   @if (l.startsWith('logics.') || l === 'logics') {
                     @if (loggers[l].level !== undefined) {
                       <tr>
@@ -68,7 +68,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 10px; margin-top: 6px; margin-bottom: 6px"
               id="newLoggerButtonP"
               [disabled]="false"
               (click)="newPluginLogger()"
@@ -76,7 +76,7 @@
               label="{{ 'BUTTON.NEW_LOGGER' | translate }}"
               class="ui-button-success float-sm-left"
             ></button>
-            <table class="table table-striped table-hover loggerList">
+            <table class="table table-striped table-hover loggerList shng-list-table">
               <thead>
                 <tr class="shng_heading">
                   <th class="py-1" style="border-top: 0">{{ 'LOGGERS.LOGGER_NAME' | translate }}</th>
@@ -88,7 +88,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (l of loggersList; track $index) {
+                @for (l of loggersList; track l) {
                   @if (l.startsWith('plugins.') || l === 'plugins') {
                     @if (loggers[l].level !== undefined) {
                       <tr>
@@ -117,7 +117,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 10px; margin-top: 6px; margin-bottom: 6px"
               id="newLoggerButtonI"
               [disabled]="false"
               (click)="newItemLogger()"
@@ -125,7 +125,7 @@
               label="{{ 'BUTTON.NEW_LOGGER' | translate }}"
               class="ui-button-success float-sm-left"
             ></button>
-            <table class="table table-striped table-hover loggerList">
+            <table class="table table-striped table-hover loggerList shng-list-table">
               <thead border="0">
                 <tr class="shng_heading">
                   <th class="py-1" style="border: 0">{{ 'LOGGERS.LOGGER_NAME' | translate }}</th>
@@ -137,7 +137,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (l of loggersList; track $index) {
+                @for (l of loggersList; track l) {
                   @if (l.startsWith('items.') || l === 'items') {
                     @if (loggers[l].level !== undefined) {
                       <tr>
@@ -166,7 +166,7 @@
             <button
               pButton
               type="button"
-              style="margin-left: 0; margin-top: 5px; font-size: medium"
+              style="margin-left: 10px; margin-top: 6px; margin-bottom: 6px"
               id="newLoggerButtonA"
               [disabled]="false"
               (click)="newAdvancedLogger()"
@@ -174,7 +174,7 @@
               label="{{ 'BUTTON.NEW_LOGGER' | translate }}"
               class="ui-button-success float-sm-left"
             ></button>
-            <table class="table table-striped table-hover loggerList">
+            <table class="table table-striped table-hover loggerList shng-list-table">
               <thead>
                 <tr class="shng_heading">
                   <th class="py-1" style="border: 0">{{ 'LOGGERS.LOGGER_NAME' | translate }}</th>
@@ -199,7 +199,7 @@
                   </tr>
                 }
 
-                @for (l of loggersList; track $index) {
+                @for (l of loggersList; track l) {
                   @if (
                     l.startsWith('functions.') ||
                     l.startsWith('lib.') ||
@@ -233,7 +233,7 @@
 
         <p-tabpanel value="4">
           <div class="tab-content-services">
-            <table class="table table-striped table-hover loggerList">
+            <table class="table table-striped table-hover loggerList shng-list-table">
               <thead>
                 <tr class="shng_heading">
                   <th class="py-1" style="border: 0">{{ 'LOGGERS.LOGGER_NAME' | translate }}</th>
@@ -244,7 +244,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (l of loggersList; track $index) {
+                @for (l of loggersList; track l) {
                   @if (
                     !(
                       l === 'functions' ||
@@ -263,7 +263,7 @@
                       l === '__main__'
                     )
                   ) {
-                    @if (loggers[l].level !== undefined) {
+                    @if (loggers[l].active !== undefined) {
                       <tr>
                         <app-logger-line
                           [loggerName]="l"
@@ -299,6 +299,7 @@
   [modal]="true"
   blockScroll="true"
   [closable]="false"
+  [closeOnEscape]="true"
   [maximizable]="false"
   [minY]="100"
   [style]="{ width: '600px', minWidth: '600px', minHeight: '450px' }"
@@ -310,8 +311,8 @@
   {{ 'LOGGERS.CREATE_LOGGER_TEXT' | translate }}
   <br />
   <br />
-  <label style="display: block">
-    <span style="display: inline-block; width: 120px">{{ 'LOGGERS.LOGGER_NAME' | translate }}:</span>
+  <label style="display: flex; align-items: center; gap: 8px">
+    <span style="min-width: 120px">{{ 'LOGGERS.LOGGER_NAME' | translate }}:</span>
 
     <p-select
       [options]="loggerOptions"
@@ -319,6 +320,7 @@
       placeholder="{{ 'none selected' }}"
       [(ngModel)]="this.newlogger_name"
       (ngModelChange)="newLoggerSelected($event)"
+      (keydown.enter)="newlogger_add_enabled && createLogger()"
     ></p-select>
     <!--
     <input [(ngModel)]="newlogger_name" id="nlog" type="text" (input)="checkNewLogicInput();" pInputText placeholder="" style="position: absolute; margin-left: 60px; width: 250px" [ngStyle]="{'width': 30}" autofocus/>

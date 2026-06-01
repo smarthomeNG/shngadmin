@@ -5,5 +5,9 @@ import { ServicesComponent } from './services.component';
 
 export const SERVICES_ROUTES: Routes = [
   { path: '', component: ServicesComponent, canActivate: [AuthGuardService] },
-  { path: 'functions', component: FunctionConfigurationComponent, canActivate: [AuthGuardService] },
+  {
+    path: 'functions',
+    component: FunctionConfigurationComponent,
+    canActivate: [AuthGuardService],
+  },
 ];

@@ -1,10 +1,17 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AppConfigService } from './app-config.service';
 import { LogService } from './log.service';
+
+export interface LoggingConfigSaveResult {
+  result: 'ok' | 'error';
+  config_reloaded?: boolean;
+  config_restored?: boolean;
+  description?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -14,7 +21,7 @@ export class FilesApiService {
   private appConfig = inject(AppConfigService);
   private readonly log = inject(LogService);
 
-  readFile(filetype, filename = '') {
+  readFile(filetype: string, filename = '') {
     // this.log.log('FilesApiService.readFile()', {filename});
 
     const apiUrl = this.appConfig.apiUrl;
@@ -34,7 +41,7 @@ export class FilesApiService {
             "FilesApiService (readFile): Could not read filetype '" +
               filetype +
               "' - error: " +
-              err.error.error,
+              err.error?.error,
           );
         } else {
           this.log.error(
@@ -43,16 +50,33 @@ export class FilesApiService {
               "', filename '" +
               filename +
               "' - error: " +
-              err.error.error,
+              err.error?.error,
           );
         }
 
-        return of('');
+        return throwError(() => err);
       }),
     );
   }
 
-  saveFile(filetype, filename = '', content = '') {
+  /**
+   * Create a new file via POST. Unlike saveFile (PUT), the backend will
+   * return HTTP 409 Conflict if a file with that name already exists.
+   */
+  createFile(filetype: string, filename: string, content: string) {
+    const url = this.appConfig.apiUrl + 'files/' + filetype + '/?filename=' + filename;
+    return this.http.post(url, content, { responseType: 'text' }).pipe(
+      map((response) => response),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error(
+          `FilesApiService.createFile: ${err.status} – filetype '${filetype}', filename '${filename}'`,
+        );
+        return throwError(() => err);
+      }),
+    );
+  }
+
+  saveFile(filetype: string, filename = '', content = '') {
     // this.log.log('FilesApiService.saveFile');
 
     const apiUrl = this.appConfig.apiUrl;
@@ -69,6 +93,7 @@ export class FilesApiService {
           return result;
         } else {
           this.log.log('FilesApiService.saveFile', 'fail: undefined result');
+          return undefined;
         }
       }),
       catchError((err: HttpErrorResponse) => {
@@ -80,7 +105,21 @@ export class FilesApiService {
     );
   }
 
-  deleteFile(filetype, filename = '') {
+  saveLoggingConfig(content: string) {
+    const url = this.appConfig.apiUrl + 'files/logging/';
+    return this.http.put<LoggingConfigSaveResult>(url, content).pipe(
+      catchError((err: HttpErrorResponse) => {
+        this.log.error('FilesApiService.saveLoggingConfig: ' + err.message);
+        return of<LoggingConfigSaveResult>({
+          result: 'error',
+          config_restored: false,
+          description: err.error?.error ?? err.message,
+        });
+      }),
+    );
+  }
+
+  deleteFile(filetype: string, filename = '') {
     this.log.log('FilesApiService.deleteFile()', { filename });
 
     const apiUrl = this.appConfig.apiUrl;
@@ -120,7 +159,7 @@ export class FilesApiService {
     );
   }
 
-  getfileList(filetype) {
+  getfileList(filetype: string) {
     this.log.log('FilesApiService.getfileList()', { filetype });
 
     const apiUrl = this.appConfig.apiUrl;

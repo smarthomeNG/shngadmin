@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -8,10 +7,7 @@ import {
   inject,
   OnDestroy,
   OnInit,
-  TemplateRef,
   ViewChild,
-  ViewContainerRef,
-  ViewRef,
 } from '@angular/core';
 import { AppConfigService } from '../../common/services/app-config.service';
 
@@ -30,12 +26,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { PrimeTemplate, TreeNode } from 'primeng/api';
+import { TreeNodeSelectEvent } from 'primeng/tree';
 
 import { ItemDetails } from '../../common/models/item-details';
 import { ItemTree } from '../../common/models/item-tree';
+import { ItemsApiService } from '../../common/services/items-api.service';
 import { LogService } from '../../common/services/log.service';
-import { OlddataService } from '../../common/services/olddata.service';
-import { ServerApiService } from '../../common/services/server-api.service';
 import { SharedService } from '../../common/services/shared.service';
 import { WebsocketPluginService } from '../../common/services/websocket-plugin.service';
 import { WebsocketService } from '../../common/services/websocket.service';
@@ -84,13 +80,9 @@ type MonitoredItem = [string, Record<string, unknown>];
     TranslatePipe,
   ],
 })
-export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
-  @ViewChild('vc', { read: ViewContainerRef, static: true }) vc: ViewContainerRef;
-  @ViewChild('tpl', { read: TemplateRef, static: true }) tpl: TemplateRef<any>;
-  @ViewChild('treeEl') private treeEl: ElementRef<HTMLElement>;
-  @ViewChild('treeDetailEl') private treeDetailEl: ElementRef<HTMLElement>;
-
-  childViewRef: ViewRef;
+export class ItemTreeComponent implements OnDestroy, OnInit {
+  @ViewChild('treeEl') private treeEl!: ElementRef<HTMLElement>;
+  @ViewChild('treeDetailEl') private treeDetailEl!: ElementRef<HTMLElement>;
 
   faSearch = faSearch;
   faCircleNotch = faCircleNotch;
@@ -103,25 +95,29 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   faThumbtack = faThumbtack;
 
   itemcount = 0;
-  itemtree: ItemTree;
+  itemtree!: ItemTree;
   itemdetails: ItemDetails = <ItemDetails>{};
   itemdetailsloaded = false;
 
-  monitoredItems: MonitoredItem[] = [];
+  /** Delegate to SharedService (true root singleton) so the list survives
+   *  navigation — WebsocketPluginService is component-scoped and gets destroyed */
+  get monitoredItems(): MonitoredItem[] {
+    return this.shared.monitoredItemsList;
+  }
 
-  filesTree0: {}[];
-  filteredTree: {}[];
+  filesTree0!: {}[];
+  filteredTree!: {}[];
   searchStart_param = {};
   treeIsFiltered = false;
-  selectedFile: TreeNode;
+  selectedFile!: TreeNode;
 
-  item_val: { value: unknown };
+  item_val!: { value: unknown };
   alertText = '';
 
   Object = Object;
   JSON = JSON;
 
-  selectedNode;
+  selectedNode: unknown;
 
   update_age = '';
   change_age = '';
@@ -132,8 +128,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private dataService = inject(OlddataService);
-  private dataServiceServer = inject(ServerApiService);
+  private itemsApi = inject(ItemsApiService);
   private translate = inject(TranslateService);
   private websocketPluginService = inject(WebsocketPluginService);
   public shared = inject(SharedService);
@@ -179,40 +174,22 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   ngOnInit() {
     this.log.log('ItemTreeComponent.ngOnInit:');
 
-    this.dataServiceServer
-      .getServerinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('ITEMS.ITEMS'));
-        this.getItemtree();
-      });
+    this.setTitle(this.translate.instant('ITEMS.ITEMS'));
+    this.getItemtree();
 
     window.addEventListener('resize', this.resizeHandler, false);
     this.resizeItemTree();
 
     this.websocketPluginService.connect();
+
+    // Re-register monitored items that survived navigation
+    if (this.monitoredItems.length > 0) {
+      const monitoredDataFunction = this.monitoredDataFunction.bind(this);
+      this.websocketPluginService.getMonitoredItems(this.monitoredItems, monitoredDataFunction);
+    }
   }
 
-  ngAfterViewInit() {
-    this.childViewRef = this.tpl.createEmbeddedView(null);
-  }
-
-  insertChildView() {
-    this.vc.insert(this.childViewRef);
-  }
-
-  removeChildView() {
-    this.vc.detach();
-  }
-
-  reloadChildView() {
-    this.removeChildView();
-    setTimeout(() => {
-      this.insertChildView();
-    }, 3000);
-  }
-
-  closeAlert(item_oldvalue) {
+  closeAlert(item_oldvalue: unknown) {
     this.item_val.value = item_oldvalue;
     this.showItemAlert = false;
   }
@@ -224,43 +201,62 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
   }
 
   getItemtree() {
-    this.dataService
-      .getItemtree()
+    this.itemsApi
+      .getItemTree()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response: [number, ItemTree]) => {
-          this.itemcount = response[0];
-          this.filesTree0 = response[1] as unknown as {}[];
+        next: (response) => {
+          const [itemcount, tree] = response as [number, ItemTree];
+          this.itemcount = itemcount;
+          this.filesTree0 = tree as unknown as {}[];
           this.filterNodes('');
           this.searchStart_param = { number: String(this.appConfig.itemtreeSearchstart) };
           this.cdr.markForCheck();
         },
         error: (error) => {
-          this.log.log('ERROR: ItemsComponent: dataService.getItemtree():');
+          this.log.log('ERROR: ItemsComponent: itemsApi.getItemTree():');
           this.log.log(error);
         },
       });
   }
 
-  updateValue(item_path, item_value, item_type, item_oldvalue) {
+  updateValue(
+    item_path: string,
+    item_value: boolean | string | { value: string | number | null },
+    item_type: string,
+    item_oldvalue: unknown,
+  ) {
     this.log.log('ItemTreeComponent.updateValue:');
     this.log.log({ item_path }, { item_value });
 
     if (typeof item_value === 'boolean') {
-      item_value = item_value.toString();
-      this.log.log('--> updateValue (bool): ' + item_value);
-      this.dataService.changeItemValue(item_path, item_value);
+      const strValue = item_value.toString();
+      this.log.log('--> updateValue (bool): ' + strValue);
+      this.itemsApi
+        .changeItemValue(item_path, strValue)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe();
+      return;
+    }
+
+    if (typeof item_value === 'string') {
+      this.log.log('--> updateValue (string): ' + item_value);
+      this.itemsApi
+        .changeItemValue(item_path, item_value)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe();
       return;
     }
 
     if (item_type === 'num' || item_type === 'scene') {
-      if (isNaN(item_value.value as any)) {
+      const numVal = Number(item_value.value);
+      if (isNaN(numVal)) {
         this.item_val = item_value;
         this.alertText = this.translate.instant('ITEMS.ALERT.NOT NUMERIC');
         this.showItemAlert = true;
         return;
       }
-      if (item_type === 'scene' && (item_value.value < 0 || item_value.value > 63)) {
+      if (item_type === 'scene' && (numVal < 0 || numVal > 63)) {
         this.item_val = item_value;
         this.alertText = this.translate.instant('ITEMS.ALERT.INVALID SCENE NUMBER');
         this.showItemAlert = true;
@@ -268,7 +264,10 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
       }
     }
     this.log.log('--> updateValue: ' + item_value.value);
-    this.dataService.changeItemValue(item_path, item_value.value);
+    this.itemsApi
+      .changeItemValue(item_path, item_value.value ?? '')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   sortMonitoredItems() {
@@ -281,15 +280,15 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
     });
   }
 
-  updateMonitoredItem(itempath, itemdata) {
+  updateMonitoredItem(itempath: string, itemdata: unknown) {
     for (let i = 0; i < this.monitoredItems.length; i++) {
       if (this.monitoredItems[i][0] === itempath) {
-        this.monitoredItems[i][1] = itemdata;
+        this.monitoredItems[i][1] = itemdata as Record<string, unknown>;
       }
     }
   }
 
-  remove_none(caller) {
+  remove_none(caller: string) {
     const caller_array = caller.split(':');
     if (caller_array.length === 1 || caller_array[1].toLowerCase() === 'none') {
       return caller_array[0];
@@ -297,13 +296,18 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
     return caller;
   }
 
-  monitoredDataFunction(data) {
+  monitoredDataFunction(raw: unknown) {
     // Callback function that receives the data from the websocket session
+    const data = raw as { items: MonitoredItem[] };
     this.data = data;
     const self = this;
     for (let i = 0; i < data.items.length; i++) {
-      data.items[i][1].last_update_by = this.remove_none(data.items[i][1].last_update_by);
-      data.items[i][1].last_change_by = this.remove_none(data.items[i][1].last_change_by);
+      data.items[i][1]['last_update_by'] = this.remove_none(
+        data.items[i][1]['last_update_by'] as string,
+      );
+      data.items[i][1]['last_change_by'] = this.remove_none(
+        data.items[i][1]['last_change_by'] as string,
+      );
       self.updateMonitoredItem(data.items[i][0], data.items[i][1]);
     }
   }
@@ -317,7 +321,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
 
       // this.getDetails(path);
 
-      const data = {};
+      const data: Record<string, unknown> = {};
       data['value'] = this.itemdetails.value;
       data['last_update'] = this.itemdetails.last_update;
       data['last_change'] = this.itemdetails.last_change;
@@ -366,12 +370,12 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
     this.log.log('ItemTreeComponent.getDetails: ' + path);
     this.log.warn('- this', this);
     if (path !== undefined) {
-      this.dataService
+      this.itemsApi
         .getItemDetails(path)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: (response: ItemDetails[]) => {
-            const details = response[0];
+          next: (response) => {
+            const details = (response as ItemDetails[])[0];
             details.value = ItemTreeComponent.htmlDecode(String(details.value));
             details.last_value = ItemTreeComponent.htmlDecode(details.last_value);
             details.previous_value = ItemTreeComponent.htmlDecode(details.previous_value);
@@ -399,7 +403,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
             this.cdr.markForCheck();
           },
           error: (error) => {
-            this.log.log('ERROR: ItemsComponent: dataService.getItemDetails():');
+            this.log.log('ERROR: ItemsComponent: itemsApi.getItemDetails():');
             this.log.log(error);
           },
         });
@@ -408,7 +412,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
     }
   }
 
-  showDetails(response?) {
+  showDetails(response?: unknown) {
     this.log.log('showDetails:');
     this.log.log({ response });
 
@@ -420,7 +424,7 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
       this.previous_update_age = this.shared.ageToString(0);
       this.previous_change_age = this.shared.ageToString(0);
     } else {
-      this.itemdetails = response;
+      this.itemdetails = response as ItemDetails;
 
       this.update_age = this.shared.ageToString(this.itemdetails.update_age);
       this.change_age = this.shared.ageToString(this.itemdetails.change_age);
@@ -434,15 +438,15 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
    * For PrimeNG Tree:
    */
 
-  filterTree(treeModel, value) {
-    if (value.length >= String(this.appConfig.itemtreeSearchstart)) {
+  filterTree(treeModel: unknown, value: string) {
+    if (value.length >= Number(this.appConfig.itemtreeSearchstart)) {
       this.filterNodes(value);
     } else {
       this.filterNodes('');
     }
   }
 
-  filterNodes(value) {
+  filterNodes(value: string) {
     value = value.toLowerCase();
     this.filteredTree = structuredClone(this.filesTree0);
     this.treeIsFiltered = false;
@@ -453,13 +457,13 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
     }
   }
 
-  clearFilter(event, filter) {
+  clearFilter(event: unknown, filter: { value: string }) {
     filter.value = '';
     this.filterTree(event, filter.value);
     this.itemdetailsloaded = false;
   }
 
-  prune(array, filter) {
+  prune(array: TreeNode[], filter: string) {
     for (let i = array.length - 1; i >= 0; i--) {
       const obj = array[i];
       if (obj.children) {
@@ -470,18 +474,20 @@ export class ItemTreeComponent implements OnDestroy, OnInit, AfterViewInit {
           return true;
         }
       }
-      if (obj.label.toLowerCase().indexOf(filter) === -1) {
-        if (obj.children.length === 0) {
+      if ((obj.label ?? '').toLowerCase().indexOf(filter) === -1) {
+        if ((obj.children ?? []).length === 0) {
           array.splice(i, 1);
         }
       }
     }
+    return false;
   }
 
-  nodeSelect(event) {
-    this.log.log('Node Selected: ' + event.node.label);
+  nodeSelect(event: TreeNodeSelectEvent) {
+    const node = event.node as TreeNode & { path: string };
+    this.log.log('Node Selected: ' + node.label);
     this.itemdetailsloaded = false;
-    this.getDetails(event.node.path);
+    this.getDetails(node.path);
   }
 
   expandAll() {

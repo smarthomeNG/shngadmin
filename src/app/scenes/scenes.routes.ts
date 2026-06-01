@@ -6,5 +6,9 @@ import { ScenesComponent } from './scene-list/scenes.component';
 export const SCENES_ROUTES: Routes = [
   { path: '', component: ScenesComponent, canActivate: [AuthGuardService] },
   { path: 'list', component: ScenesComponent, canActivate: [AuthGuardService] },
-  { path: 'config', component: SceneConfigurationComponent, canActivate: [AuthGuardService] },
+  {
+    path: 'config',
+    component: SceneConfigurationComponent,
+    canActivate: [AuthGuardService],
+  },
 ];

@@ -5,12 +5,12 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
-    "strict": false,
-    "noImplicitOverride": false,
+    "strict": true,
+    "noImplicitOverride": true,
     "strictNullChecks": true,
     "noPropertyAccessFromIndexSignature": false,
-    "strictPropertyInitialization": false,
-    "noImplicitReturns": false,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "isolatedModules": true,
@@ -36,6 +36,7 @@
     },
     "useDefineForClassFields": false
   },
+  "exclude": ["src/**/*.spec.ts"],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": false,

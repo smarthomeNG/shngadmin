@@ -1,20 +1,11 @@
-::ng-deep .tab-shng > a {
-  border-bottom: none !important;
-  outline: 0 !important;
-  color: rgb(160, 160, 160);
-}
-
 .shngbody {
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--navbar-height));
   width: 100%;
   margin: 0;
-  padding: 0;
-
-  padding-left: 10px; /* padding around tab border */
-  padding-right: 10px;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
 
   display: grid;
-  grid-template-rows: 0 auto 10px;
+  grid-template-rows: 0 auto 0;
   grid-template-columns: 1fr;
 
   grid-template-areas:
@@ -40,18 +31,8 @@
 .body-content {
   grid-area: body-content;
   width: 100%;
-  height: calc(100vh - 60px);
-
+  height: calc(100vh - var(--navbar-height));
   overflow: hidden;
-
-  display: grid;
-  grid-template-areas:
-    'tab-header'
-    'tab-content'
-    'tab-footer';
-  grid-template-columns: 1fr;
-  /* grid-auto-rows: minmax(50px, max-content); */
-  grid-template-rows: 0 auto 0;
 }
 
 .body-footer {
@@ -64,7 +45,7 @@
   width: 100%;
   height: 0;
   overflow: auto;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   border-bottom: 0;
   background: lightcyan;
@@ -73,12 +54,30 @@
 .tab-content {
   grid-area: tab-content;
   width: 100%;
-  /* height: 100%; */
-  height: calc(100vh - 60px - 41px - 10px - 00px - 0px);
-  border: 1px solid #dee2e6;
+  height: calc(100vh - var(--navbar-height) - var(--tab-height) - 10px);
+  border: 1px solid var(--shng-border);
   border-top: 0;
-  overflow: auto;
-  /* background: cornsilk; */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-button-row {
+  flex-shrink: 0;
+  padding: 10px 10px 8px 10px;
+}
+
+.tab-editor-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 5px 0 10px;
+}
+
+.tab-editor-area app-code-editor {
+  flex: 1;
+  min-height: 0;
 }
 
 .tab-footer {
@@ -92,7 +91,7 @@
 .body-content-parameter {
   grid-area: body-content;
   width: 100%;
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--navbar-height));
 
   overflow: hidden;
 
@@ -102,7 +101,6 @@
     'tab-content-parameter'
     'tab-footer';
   grid-template-columns: 1fr;
-  /* grid-auto-rows: minmax(50px, max-content); */
   grid-template-rows: 60px auto 0;
 }
 
@@ -111,7 +109,7 @@
   width: 100%;
   height: 60px;
   overflow: auto;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   border-bottom: 0;
   padding-left: 10px;
@@ -119,13 +117,20 @@
   padding-right: 20px;
 }
 
+/* Make the group autocomplete fill the table cell */
+:host ::ng-deep .group-autocomplete {
+  width: 100%;
+}
+
+:host ::ng-deep .group-autocomplete .p-autocomplete-input-multiple {
+  width: 100%;
+}
+
 .tab-content-parameter {
   grid-area: tab-content-parameter;
   width: 100%;
-  /*height: 100%; */
-  height: calc(100vh - 60px - 41px - 10px - 60px - 0px);
-  border: 1px solid #dee2e6;
+  height: calc(100vh - var(--navbar-height) - var(--tab-height) - 70px);
+  border: 1px solid var(--shng-border);
   border-top: 0;
   overflow: auto;
-  /*background: cornsilk; */
 }

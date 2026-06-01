@@ -7,11 +7,12 @@ import {
   ElementRef,
   inject,
   OnInit,
+  Renderer2,
   ViewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AppConfigService } from '../common/services/app-config.service';
 import { AuthService } from '../common/services/auth.service';
@@ -35,7 +36,7 @@ interface MenuItem {
   templateUrl: './top-navigation.component.html',
   styleUrls: ['./top-navigation.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgOptimizedImage, RouterLink, TranslatePipe],
+  imports: [NgOptimizedImage, RouterLink, RouterLinkActive, TranslatePipe],
 })
 export class TopNavigationComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
@@ -48,8 +49,10 @@ export class TopNavigationComponent implements OnInit {
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
   private readonly log = inject(LogService);
+  private readonly renderer = inject(Renderer2);
+  private readonly el = inject(ElementRef);
 
-  @ViewChild('topnav') private topnavEl: ElementRef<HTMLElement>;
+  @ViewChild('topnav') private topnavEl!: ElementRef<HTMLElement>;
 
   labels: string[] = [];
   menu: MenuItem[] = [];
@@ -116,43 +119,66 @@ export class TopNavigationComponent implements OnInit {
   // Label of the section whose dropdown is currently forced open (touch mode).
   openMenuLabel: string | null = null;
 
+  // Side-drawer state (mobile ≤720px)
+  drawerOpen = false;
+  drawerOpenSections = new Set<string>();
+
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
   }
 
-  toggleResponsiveMenu() {
-    this.log.log('TopNavigationComponent.toggleResponsiveMenu');
-    const x = this.topnavEl?.nativeElement;
-    if (!x) return;
-
-    if (x.className === 'topnav') {
-      x.className += ' responsive';
+  toggleDrawer() {
+    this.drawerOpen = !this.drawerOpen;
+    if (this.drawerOpen) {
+      // Pre-expand the section whose child route is currently active
+      const url = this.router.url;
+      for (const entry of this.menu) {
+        if (entry.items.some((sub) => sub.routerLink && url.startsWith(sub.routerLink[0]))) {
+          this.drawerOpenSections.add(entry.label);
+          break;
+        }
+      }
     } else {
-      x.className = 'topnav';
+      this.drawerOpenSections.clear();
     }
+    this.cdr.markForCheck();
+  }
+
+  closeDrawer() {
+    this.drawerOpen = false;
+    this.drawerOpenSections.clear();
+    this.cdr.markForCheck();
+  }
+
+  toggleDrawerSection(label: string) {
+    const wasOpen = this.drawerOpenSections.has(label);
+    this.drawerOpenSections.clear();
+    if (!wasOpen) {
+      this.drawerOpenSections.add(label);
+    }
+    this.cdr.markForCheck();
   }
 
   enableDropdownMenu() {
-    const x = document.getElementsByClassName('dropdown-content-hidden');
-    for (let i = 0; i < x.length; i++) {
-      x[i].className = 'dropdown-content';
-    }
+    this.el.nativeElement.querySelectorAll('.dropdown-content-hidden').forEach((x: Element) => {
+      this.renderer.removeClass(x, 'dropdown-content-hidden');
+      this.renderer.addClass(x, 'dropdown-content');
+    });
   }
 
-  disableResponsiveMenu(menuEntry, hideDropdown: boolean = true) {
+  disableResponsiveMenu(menuEntry: MenuItem, hideDropdown = true) {
     this.closeTouchDropdown();
 
-    // disable dropped down menu if in mobile mode
     const m = this.topnavEl?.nativeElement;
     if (!m) return;
 
-    m.className = 'topnav';
+    this.renderer.removeClass(m, 'responsive');
 
-    // hide dropdown after clicking on it (for menu in desktop mode)
     if (hideDropdown) {
-      const x = document.getElementById('menu-' + menuEntry.label);
-      if (x === null) return;
-      x.className = 'dropdown-content-hidden';
+      const x: Element | null = this.el.nativeElement.querySelector('#menu-' + menuEntry.label);
+      if (!x) return;
+      this.renderer.removeClass(x, 'dropdown-content');
+      this.renderer.addClass(x, 'dropdown-content-hidden');
     }
   }
 
@@ -168,7 +194,8 @@ export class TopNavigationComponent implements OnInit {
       } else {
         // First tap → open this dropdown, close any other
         this.closeTouchDropdown();
-        document.getElementById('menu-' + menuEntry.label)?.classList.add('dropdown-touch-open');
+        const el: Element | null = this.el.nativeElement.querySelector('#menu-' + menuEntry.label);
+        if (el) this.renderer.addClass(el, 'dropdown-touch-open');
         this.openMenuLabel = menuEntry.label;
       }
     } else {
@@ -182,9 +209,9 @@ export class TopNavigationComponent implements OnInit {
   }
 
   private closeTouchDropdown() {
-    document
+    this.el.nativeElement
       .querySelectorAll('.dropdown-touch-open')
-      .forEach((el) => el.classList.remove('dropdown-touch-open'));
+      .forEach((x: Element) => this.renderer.removeClass(x, 'dropdown-touch-open'));
     this.openMenuLabel = null;
   }
 
@@ -226,32 +253,22 @@ export class TopNavigationComponent implements OnInit {
       '/services/functions',
     ]);
 
-    this.setMenuEntry(2, this.translate.instant('MENU.ITEMS'), ['/item_tree']);
-    this.setSubmenuEntry(2, 0, this.translate.instant('MENU.ITEM_TREE'), ['/item_tree']);
+    this.setMenuEntry(2, this.translate.instant('MENU.ITEMS'), ['/items']);
+    this.setSubmenuEntry(2, 0, this.translate.instant('MENU.ITEM_TREE'), ['/items']);
     this.setSubmenuEntry(2, 1, this.translate.instant('MENU.ITEM_CONFIGURATION'), [
       '/items/config',
     ]);
-    if (this.developerMode === true && false) {
-      this.setSubmenuEntry(2, 2, this.translate.instant('MENU.ITEM_CONFIGURATION') + ' (dev)', [
-        '/items/config2',
-      ]);
-      this.setSubmenuEntry(2, 3, this.translate.instant('MENU.ITEM_STRUCTS'), ['/items/structs']);
-      this.setSubmenuEntry(2, 4, this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'), [
-        '/items/struct_config',
-      ]);
-    } else {
-      this.setSubmenuEntry(2, 2, this.translate.instant('MENU.ITEM_STRUCTS'), ['/items/structs']);
-      this.setSubmenuEntry(2, 3, this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'), [
-        '/items/struct_config',
-      ]);
-    }
+    this.setSubmenuEntry(2, 2, this.translate.instant('MENU.ITEM_STRUCTS'), ['/items/structs']);
+    this.setSubmenuEntry(2, 3, this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'), [
+      '/items/struct_config',
+    ]);
 
-    this.setMenuEntry(3, this.translate.instant('MENU.LOGICS'), ['/logics-list']);
-    this.setSubmenuEntry(3, 0, this.translate.instant('MENU.LOGICS_LIST'), ['/logics-list']);
-    this.setSubmenuEntry(3, 1, this.translate.instant('MENU.LOGICS_GROUPS'), ['/logics-groups']);
+    this.setMenuEntry(3, this.translate.instant('MENU.LOGICS'), ['/logics/list']);
+    this.setSubmenuEntry(3, 0, this.translate.instant('MENU.LOGICS_LIST'), ['/logics/list']);
+    this.setSubmenuEntry(3, 1, this.translate.instant('MENU.LOGICS_GROUPS'), ['/logics/groups']);
 
-    this.setMenuEntry(4, this.translate.instant('MENU.PLUGINS'), ['/plugins_list']);
-    this.setSubmenuEntry(4, 0, this.translate.instant('MENU.PLUGINS_LIST'), ['/plugins_list']);
+    this.setMenuEntry(4, this.translate.instant('MENU.PLUGINS'), ['/plugins']);
+    this.setSubmenuEntry(4, 0, this.translate.instant('MENU.PLUGINS_LIST'), ['/plugins']);
     this.setSubmenuEntry(4, 1, this.translate.instant('MENU.PLUGINS_CONFIGURATION'), [
       '/plugins/config',
     ]);

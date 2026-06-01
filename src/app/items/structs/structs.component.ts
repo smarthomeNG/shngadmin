@@ -45,16 +45,16 @@ import { StructsApiService } from '../../common/services/structs-api.service';
 export class StructsComponent implements OnInit {
   // ----
 
-  structsDict: Record<string, Record<string, unknown>>;
-  structsList: string[];
+  structsDict!: Record<string, Record<string, unknown>>;
+  structsList!: string[];
   structsGroups: string[] = [];
-  selectedItem: TreeNode;
-  displayTree: TreeNode[];
-  displayTrees: {};
-  groupExpanded: {};
-  structExpanded: {};
-  structExpanded2: {};
-  globalStructsID: string;
+  selectedItem!: TreeNode;
+  displayTree!: TreeNode[];
+  displayTrees!: Record<string, TreeNode[]>;
+  groupExpanded!: Record<string, unknown>;
+  structExpanded!: Record<string, unknown>;
+  structExpanded2!: Record<string, unknown>;
+  globalStructsID!: string;
 
   // systeminfo: SystemInfo = <SystemInfo>{};
 
@@ -146,26 +146,25 @@ export class StructsComponent implements OnInit {
   // -------------------------------------------------------------------------------------------
   // build a display tree for the PrimeNG component from the itemtree received from the backend
   //
-  buildDisplayTree(subtree) {
+  buildDisplayTree(subtree: Record<string, unknown> | unknown[]) {
     const displayTreeList: Record<string, unknown>[] = [];
+    const asRecord = subtree as Record<string, unknown>;
     for (const key in subtree) {
       if (key in subtree) {
-        const displayNode = {};
+        const displayNode: Record<string, unknown> = {};
         if (Array.isArray(subtree)) {
-          displayNode['label'] = '- ' + subtree[key];
+          displayNode['label'] = '- ' + asRecord[key];
         } else {
-          if (
-            typeof subtree[key] === 'string' ||
-            typeof subtree[key] === 'number' ||
-            typeof subtree[key] === 'boolean'
-          ) {
-            displayNode['label'] = key + ': ' + subtree[key];
+          const val = asRecord[key];
+          if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+            displayNode['label'] = key + ': ' + val;
           } else {
             displayNode['label'] = key;
           }
         }
-        if (typeof subtree[key] === 'object') {
-          const children = this.buildDisplayTree(subtree[key]);
+        const val = asRecord[key];
+        if (typeof val === 'object' && val !== null) {
+          const children = this.buildDisplayTree(val as Record<string, unknown>);
           if (children.length > 0) {
             displayNode['children'] = children;
           } else {
@@ -190,7 +189,7 @@ export class StructsComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  getStructListByGroup(group) {
+  getStructListByGroup(group: string) {
     const structSublist: string[] = [];
     // eslint-disable-next-line guard-for-in
     for (const entry in this.structsList) {
@@ -207,7 +206,7 @@ export class StructsComponent implements OnInit {
     return structSublist;
   }
 
-  doConsoleLog(s) {
+  doConsoleLog(s: unknown) {
     this.log.warn('doConsoleLog', s);
   }
 

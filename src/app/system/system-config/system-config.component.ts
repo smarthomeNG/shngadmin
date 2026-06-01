@@ -93,28 +93,28 @@ export class SystemConfigComponent implements OnInit {
   private appConfig = inject(AppConfigService);
   private readonly log = inject(LogService);
 
-  config: SystemConfig;
-  lang: string;
+  config!: SystemConfig;
+  lang!: string;
 
-  common_parameters: ConfigParameter[];
-  common_parameter_cols: TableColumn[];
-  common_parameters_beforeEdit: ConfigParameter[];
+  common_parameters!: ConfigParameter[];
+  common_parameter_cols!: TableColumn[];
+  common_parameters_beforeEdit!: ConfigParameter[];
 
-  http_parameters: ConfigParameter[];
-  http_parameter_cols: TableColumn[];
-  http_parameters_beforeEdit: ConfigParameter[];
+  http_parameters!: ConfigParameter[];
+  http_parameter_cols!: TableColumn[];
+  http_parameters_beforeEdit!: ConfigParameter[];
 
-  websocket_parameters: ConfigParameter[];
-  websocket_parameter_cols: TableColumn[];
-  websocket_parameters_beforeEdit: ConfigParameter[];
+  websocket_parameters!: ConfigParameter[];
+  websocket_parameter_cols!: TableColumn[];
+  websocket_parameters_beforeEdit!: ConfigParameter[];
 
-  admin_parameters: ConfigParameter[];
-  admin_parameter_cols: TableColumn[];
-  admin_parameters_beforeEdit: ConfigParameter[];
+  admin_parameters!: ConfigParameter[];
+  admin_parameter_cols!: TableColumn[];
+  admin_parameters_beforeEdit!: ConfigParameter[];
 
-  mqtt_parameters: ConfigParameter[];
-  mqtt_parameter_cols: TableColumn[];
-  mqtt_parameters_beforeEdit: ConfigParameter[];
+  mqtt_parameters!: ConfigParameter[];
+  mqtt_parameter_cols!: TableColumn[];
+  mqtt_parameters_beforeEdit!: ConfigParameter[];
 
   data_changed = false;
   restart_core_button = false;
@@ -130,15 +130,41 @@ export class SystemConfigComponent implements OnInit {
   pwd_new2: string | null = null;
   pwd_hash_old: string | null = null;
   pwd_hash_new: string | null = null;
-  pwd_show: boolean;
+  pwd_show!: boolean;
 
-  pwd_old_is_empty: boolean;
-  pwd_old_is_wrong: boolean;
-  pwd_new_not_identical: boolean;
+  pwd_old_is_empty!: boolean;
+  pwd_old_is_wrong!: boolean;
+  pwd_new_not_identical!: boolean;
 
   validation_dialog_display = false;
-  validation_dialog_parameter: string;
-  validation_dialog_text: string[];
+  validation_dialog_parameter!: string;
+  validation_dialog_text!: string[];
+
+  // config_etc migration check
+  configEtcCheckResult: Record<string, any> | null = null;
+  configEtcCheckDialogVisible = false;
+  configEtcChecking = true; // auto-check starts in ngOnInit
+  configEtcEnabling = false;
+
+  get configEtcActive(): boolean {
+    return this.config?.common?.data?.['config_etc'] === true;
+  }
+
+  get configEtcConflictDirs(): { dir: string; files: string[] }[] {
+    if (!this.configEtcCheckResult?.['conflicts']) return [];
+    return Object.entries(this.configEtcCheckResult['conflicts']).map(([dir, files]) => ({
+      dir,
+      files: files as string[],
+    }));
+  }
+
+  get configEtcMigrateDirs(): { dir: string; files: string[] }[] {
+    if (!this.configEtcCheckResult?.['to_migrate']) return [];
+    return Object.entries(this.configEtcCheckResult['to_migrate']).map(([dir, files]) => ({
+      dir,
+      files: files as string[],
+    }));
+  }
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -147,25 +173,24 @@ export class SystemConfigComponent implements OnInit {
   ngOnInit() {
     // this.log.log('SystemConfigComponent.ngOnInit');
 
-    this.dataServiceServer
-      .getServerinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.SYSTEM_CONFIGURATION'));
+    this.setTitle(this.translate.instant('MENU.SYSTEM_CONFIGURATION'));
 
-        this.dataService
-          .getConfig()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((configResponse) => {
-            this.config = configResponse as SystemConfig;
-            // this.log.log({response}, {configResponse});
-            this.fillDialogData();
-            this.cdr.markForCheck();
-          });
+    // Run migration check in parallel with config load (cheap, independent)
+    this.checkConfigEtc();
+
+    this.dataService
+      .getConfig()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((configResponse) => {
+        this.config = configResponse as SystemConfig;
+        // this.log.log({configResponse});
+        this.fillDialogData();
+        this.cdr.markForCheck();
       });
   }
 
   fillDialogData() {
+    this.lang = this.appConfig.defaultLanguage;
     this.fillCommonDialogData();
     this.fillHttpDialogData();
     this.fillWebsocketDialogData();
@@ -173,40 +198,51 @@ export class SystemConfigComponent implements OnInit {
     this.fillMqttDialogData();
   }
 
+  private hashPlainPasswords(data: Record<string, unknown>): void {
+    if (data['password'] && data['password'] !== '') {
+      if (!data['hashed_password']) {
+        data['hashed_password'] = sha512(data['password'] as string);
+        data['password'] = null;
+      }
+    }
+    if (data['service_password'] && data['service_password'] !== '') {
+      if (!data['service_hashed_password']) {
+        data['service_hashed_password'] = sha512(data['service_password'] as string);
+        data['service_password'] = null;
+      }
+    }
+  }
+
+  private buildSectionParams(section: ConfigSection, skip: string[] = []): ConfigParameter[] {
+    const params: ConfigParameter[] = [];
+    for (const param in section.meta.parameters) {
+      if (section.meta.parameters.hasOwnProperty(param) && !skip.includes(param)) {
+        params.push(this.fillParamData(section.meta, param, section.data));
+      }
+    }
+    return params;
+  }
+
   // ---------------------------------------------------------
   // Column definitions for parameter configuration tables
   //
   columnDefinitions() {
-    const columnDefinitions = [
+    return [
       { field: 'name', sfield: 'confname', header: 'PLUGIN.PARAMETER', width: '190px' },
       { field: 'type', sfield: 'conftype', header: 'PLUGIN.TYPE', width: '80px' },
       { field: 'value', sfield: 'paramvalue', header: 'PLUGIN.VALUE', width: '240px' },
       { field: 'desc', sfield: '', header: 'PLUGIN.DESCRIPTION', width: '' },
     ];
-
-    const paddingRight = 6; // distance between rnd of value field and beginning of description
-    const widthWide = 600; // width of wide value fields (gui_type: wide_str)
-
-    for (let i = 0; i < columnDefinitions.length; i++) {
-      const width = parseInt(columnDefinitions[i]['width'], 10);
-      if (columnDefinitions[i]['width'] !== '') {
-        columnDefinitions[i]['iwidth'] = String(width - paddingRight) + 'px';
-      } else {
-        columnDefinitions[i]['iwidth'] = '';
-      }
-      columnDefinitions[i]['iwidthwide'] = String(widthWide) + 'px';
-      if (i === 2) {
-        // if column = 2 (value) -> adjust padding for description (in column 3)
-        columnDefinitions[3]['paddingleft'] = String(widthWide - width + paddingRight) + 'px';
-      }
-    }
-    return columnDefinitions;
   }
 
   // ---------------------------------------------------------
   // Fill ParamData for display/editing of parameters
   //
-  fillParamData(meta, param, data) {
+  fillParamData(
+    meta: { parameters: Record<string, ParameterMeta> },
+    param: string,
+    data: Record<string, unknown>,
+  ) {
     // fill valuelist
     const vl: { label: string; value: unknown }[] = [];
     if (meta['parameters'][param]['valid_list'] !== undefined) {
@@ -263,197 +299,61 @@ export class SystemConfigComponent implements OnInit {
     return paramdata;
   }
 
-  // ---------------------------------------------------------
-  // Fill the mask with core parameter data
-  //
   fillCommonDialogData() {
-    this.lang = this.appConfig.defaultLanguage;
-
     this.common_parameter_cols = this.columnDefinitions();
-    this.common_parameters = [];
+    this.common_parameters = this.buildSectionParams(this.config.common);
 
-    const meta = this.config.common.meta;
-    const data = this.config.common.data;
-
-    // this.log.log({data});
-    for (const param in meta.parameters) {
-      // this.log.log({param}, data[param]);
-      if (meta.parameters.hasOwnProperty(param)) {
-        // Fill ParamData for display/editing of parameters
-        const paramdata = this.fillParamData(meta, param, data);
-        // add to the table of configured plugins
-        this.common_parameters.push(paramdata);
-      }
+    // Move config_etc to just after deprecated_warnings for logical grouping
+    const cfgIdx = this.common_parameters.findIndex((p) => p.name === 'config_etc');
+    const anchorIdx = this.common_parameters.findIndex((p) => p.name === 'deprecated_warnings');
+    if (cfgIdx > -1 && anchorIdx > -1 && cfgIdx !== anchorIdx + 1) {
+      const [cfgEntry] = this.common_parameters.splice(cfgIdx, 1);
+      const newAnchor = this.common_parameters.findIndex((p) => p.name === 'deprecated_warnings');
+      this.common_parameters.splice(newAnchor + 1, 0, cfgEntry);
     }
-    // deepcopy form data
+
     this.common_parameters_beforeEdit = JSON.parse(JSON.stringify(this.common_parameters));
   }
 
-  // ---------------------------------------------------------
-  // Fill the mask with http parameter data
-  //
   fillHttpDialogData() {
-    this.lang = this.appConfig.defaultLanguage;
-
+    this.hashPlainPasswords(this.config.http.data);
     this.http_parameter_cols = this.columnDefinitions();
-    this.http_parameters = [];
-
-    const meta = this.config.http.meta;
-    const data = this.config.http.data;
-
-    // if plain password is defined, create a hashed password and delete the plain password
-    if (data.password !== undefined && data.password !== null) {
-      if (data.password !== '') {
-        if (
-          data.hashed_password === undefined ||
-          data.hashed_password === null ||
-          data.hashed_password === ''
-        ) {
-          data.hashed_password = sha512(data.password as string);
-          data.password = null;
-        }
-      }
-    }
-
-    // if plain service-password is defined, create a hashed service-password and delete the plain service-password
-    if (data.service_password !== undefined && data.service_password !== null) {
-      if (data.service_password !== '') {
-        if (
-          data.service_hashed_password === undefined ||
-          data.service_hashed_password === null ||
-          data.service_hashed_password === ''
-        ) {
-          data.service_hashed_password = sha512(data.service_password as string);
-          data.service_password = null;
-        }
-      }
-    }
-
-    for (const param in meta.parameters) {
-      if (meta.parameters.hasOwnProperty(param)) {
-        // ignore plain text password fields
-        if (['password', 'service_password'].indexOf(param) === -1) {
-          // Fill ParamData for display/editing of parameters
-          const paramdata = this.fillParamData(meta, param, data);
-          // add to the table of configured plugins
-          this.http_parameters.push(paramdata);
-        }
-      }
-    }
-    // deepcopy form data
+    this.http_parameters = this.buildSectionParams(this.config.http, [
+      'password',
+      'service_password',
+    ]);
     this.http_parameters_beforeEdit = JSON.parse(JSON.stringify(this.http_parameters));
   }
 
-  // ---------------------------------------------------------
-  // Fill the mask with webocket parameter data
-  //
   fillWebsocketDialogData() {
-    this.lang = this.appConfig.defaultLanguage;
-
+    this.hashPlainPasswords(this.config.websocket.data);
     this.websocket_parameter_cols = this.columnDefinitions();
-    this.websocket_parameters = [];
-
-    const meta = this.config.websocket.meta;
-    const data = this.config.websocket.data;
-
-    // if plain password is defined, create a hashed password and delete the plain password
-    if (data.password !== undefined && data.password !== null) {
-      if (data.password !== '') {
-        if (
-          data.hashed_password === undefined ||
-          data.hashed_password === null ||
-          data.hashed_password === ''
-        ) {
-          data.hashed_password = sha512(data.password as string);
-          data.password = null;
-        }
-      }
-    }
-
-    // if plain service-password is defined, create a hashed service-password and delete the plain service-password
-    if (data.service_password !== undefined && data.service_password !== null) {
-      if (data.service_password !== '') {
-        if (
-          data.service_hashed_password === undefined ||
-          data.service_hashed_password === null ||
-          data.service_hashed_password === ''
-        ) {
-          data.service_hashed_password = sha512(data.service_password as string);
-          data.service_password = null;
-        }
-      }
-    }
-
-    for (const param in meta.parameters) {
-      if (meta.parameters.hasOwnProperty(param)) {
-        // ignore plain text password fields
-        if (['password', 'service_password'].indexOf(param) === -1) {
-          // Fill ParamData for display/editing of parameters
-          const paramdata = this.fillParamData(meta, param, data);
-          // add to the table of configured plugins
-          this.websocket_parameters.push(paramdata);
-        }
-      }
-    }
-    // deepcopy form data
+    this.websocket_parameters = this.buildSectionParams(this.config.websocket, [
+      'password',
+      'service_password',
+    ]);
     this.websocket_parameters_beforeEdit = JSON.parse(JSON.stringify(this.websocket_parameters));
   }
 
-  // ---------------------------------------------------------
-  // Fill the mask with admin parameter data
-  //
   fillAdminDialogData() {
-    this.lang = this.appConfig.defaultLanguage;
-
     this.admin_parameter_cols = this.columnDefinitions();
-    this.admin_parameters = [];
-
-    const meta = this.config.admin.meta;
-    const data = this.config.admin.data;
-
-    for (const param in meta.parameters) {
-      if (meta.parameters.hasOwnProperty(param)) {
-        // Fill ParamData for display/editing of parameters
-        const paramdata = this.fillParamData(meta, param, data);
-        // add to the table of configured plugins
-        this.admin_parameters.push(paramdata);
-      }
-    }
-    // deepcopy form data
+    this.admin_parameters = this.buildSectionParams(this.config.admin);
     this.admin_parameters_beforeEdit = JSON.parse(JSON.stringify(this.admin_parameters));
   }
 
-  // ---------------------------------------------------------
-  // Fill the mask with mqtt parameter data
-  //
   fillMqttDialogData() {
-    this.lang = this.appConfig.defaultLanguage;
-
     this.mqtt_parameter_cols = this.columnDefinitions();
-    this.mqtt_parameters = [];
-
-    const meta = this.config.mqtt.meta;
-    const data = this.config.mqtt.data;
-
-    for (const param in meta.parameters) {
-      if (meta.parameters.hasOwnProperty(param)) {
-        // Fill ParamData for display/editing of parameters
-        const paramdata = this.fillParamData(meta, param, data);
-        // add to the table of configured plugins
-        this.mqtt_parameters.push(paramdata);
-      }
-    }
-    // deepcopy form data
+    this.mqtt_parameters = this.buildSectionParams(this.config.mqtt);
     this.mqtt_parameters_beforeEdit = JSON.parse(JSON.stringify(this.mqtt_parameters));
   }
 
   // ---------------------------------------------------------
   // change password
   //
-  change_password_dialog($event, rowData, col_field) {
+  change_password_dialog($event: unknown, rowData: ConfigParameter, col_field: string) {
     this.log.log('change_password_dialog()');
     this.log.log('hash', rowData[col_field]);
-    this.pwd_hash_old = rowData[col_field];
+    this.pwd_hash_old = rowData[col_field] as string | null;
     this.pwd_rowData = rowData;
     this.pwd_col = col_field;
 
@@ -464,7 +364,7 @@ export class SystemConfigComponent implements OnInit {
     this.pwd_change_dialog_display = true;
   }
 
-  change_password($event) {
+  change_password($event: unknown) {
     this.log.log('change_password()');
     this.pwd_old_is_empty = false;
     this.pwd_old_is_wrong = false;
@@ -545,7 +445,7 @@ export class SystemConfigComponent implements OnInit {
     }
   }
 
-  check_value_restrictions(parameter) {
+  check_value_restrictions(parameter: ConfigParameter) {
     let error_found = false;
     let error_text = '';
 
@@ -555,31 +455,34 @@ export class SystemConfigComponent implements OnInit {
       parameter['value'] = null;
     }
 
+    const type = (parameter.type ?? '').toLowerCase();
+    const value = parameter.value as string;
+    const numVal = Number(parameter.value);
+    const validMin = parameter['valid_min'] as number | undefined;
+    const validMax = parameter['valid_max'] as number | undefined;
+
     // checking data types
-    if (parameter['value'] !== null && parameter['value'] !== '') {
-      error_text = "'" + parameter['value'] + "' ";
-      if (
-        parameter['type'].toLowerCase() === 'knx_ga' &&
-        !this.shared.is_knx_groupaddress(parameter['value'])
-      ) {
+    if (parameter.value !== null && parameter.value !== '') {
+      error_text = "'" + value + "' ";
+      if (type === 'knx_ga' && !this.shared.is_knx_groupaddress(value)) {
         error_found = true;
         error_text += this.translate.instant('PLUGIN.INVALID_KNX_ADDRESS');
       }
-      if (parameter['type'].toLowerCase() === 'mac' && !this.shared.is_mac(parameter['value'])) {
+      if (type === 'mac' && !this.shared.is_mac(value)) {
         error_found = true;
         error_text += this.translate.instant('PLUGIN.INVALID_MAC_ADDRESS');
       }
-      if (parameter['type'].toLowerCase() === 'ipv4' && !this.shared.is_ipv4(parameter['value'])) {
+      if (type === 'ipv4' && !this.shared.is_ipv4(value)) {
         error_found = true;
         error_text += this.translate.instant('PLUGIN.INVALID_IP_ADDRESS') + ' (v4)';
       }
-      if (parameter['type'].toLowerCase() === 'ipv6' && !this.shared.is_ipv6(parameter['value'])) {
+      if (type === 'ipv6' && !this.shared.is_ipv6(value)) {
         error_found = true;
         error_text += this.translate.instant('PLUGIN.INVALID_IP_ADDRESS') + ' (v6)';
       }
-      if (parameter['type'].toLowerCase() === 'ip') {
-        if (!this.shared.is_ipv4(parameter['value']) && !this.shared.is_ipv6(parameter['value'])) {
-          if (!this.shared.is_hostname(parameter['value'])) {
+      if (type === 'ip') {
+        if (!this.shared.is_ipv4(value) && !this.shared.is_ipv6(value)) {
+          if (!this.shared.is_hostname(value)) {
             error_found = true;
             error_text += this.translate.instant('PLUGIN.INVALID_HOSTNAME');
           }
@@ -588,23 +491,19 @@ export class SystemConfigComponent implements OnInit {
     }
 
     // check valid minimum and maximum value
-    if (parameter['value'] !== null && parameter['value'] < parameter['valid_min']) {
+    if (parameter.value !== null && validMin !== undefined && numVal < validMin) {
       error_found = true;
-      error_text =
-        this.translate.instant('PLUGIN.DEFINED_MIN') + " '" + parameter['valid_min'] + "'";
-      error_text +=
-        ', ' + this.translate.instant('PLUGIN.ACTUAL_VALUE') + " '" + parameter['value'] + "'";
+      error_text = this.translate.instant('PLUGIN.DEFINED_MIN') + " '" + validMin + "'";
+      error_text += ', ' + this.translate.instant('PLUGIN.ACTUAL_VALUE') + " '" + value + "'";
     }
-    if (parameter['value'] !== null && parameter['value'] > parameter['valid_max']) {
+    if (parameter.value !== null && validMax !== undefined && numVal > validMax) {
       error_found = true;
-      error_text =
-        this.translate.instant('PLUGIN.DEFINED_MAX') + " '" + parameter['valid_max'] + "'";
-      error_text +=
-        ', ' + this.translate.instant('PLUGIN.ACTUAL_VALUE') + " '" + parameter['value'] + "'";
+      error_text = this.translate.instant('PLUGIN.DEFINED_MAX') + " '" + validMax + "'";
+      error_text += ', ' + this.translate.instant('PLUGIN.ACTUAL_VALUE') + " '" + value + "'";
     }
 
     // check if value is mandantory
-    if ((parameter['value'] === null || parameter['value'] === '') && parameter['mandatory']) {
+    if ((parameter.value === null || parameter.value === '') && parameter['mandatory']) {
       error_found = true;
       error_text = this.translate.instant('PLUGIN.MANDATORY_VALUE');
     }
@@ -663,10 +562,10 @@ export class SystemConfigComponent implements OnInit {
     }
 
     if (errors_found) {
-      return false;
+      return;
     }
 
-    const data = {};
+    const data: Record<string, any> = {};
     data['common'] = {};
     data['common']['data'] = {};
     for (const p in this.common_parameters) {
@@ -751,6 +650,41 @@ export class SystemConfigComponent implements OnInit {
         } else {
           this.log.warn('saveSettings', 'fail');
         }
+      });
+  }
+
+  checkConfigEtc(showDialog = false) {
+    this.configEtcChecking = true;
+    this.dataService
+      .checkConfigEtc()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.configEtcCheckResult = result as Record<string, any>;
+        this.configEtcChecking = false;
+        if (showDialog) {
+          this.configEtcCheckDialogVisible = true;
+        }
+        this.cdr.markForCheck();
+      });
+  }
+
+  enableConfigEtc() {
+    this.configEtcEnabling = true;
+    this.dataService
+      .enableConfigEtc()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        this.configEtcEnabling = false;
+        const r = result as Record<string, any>;
+        if (r?.['result'] === 'ok') {
+          this.config.common.data['config_etc'] = true;
+          // keep the table row value in sync so saveSettings sends the correct value
+          const cfgParam = this.common_parameters?.find((p) => p.name === 'config_etc');
+          if (cfgParam) cfgParam.value = true;
+          this.configEtcCheckDialogVisible = false;
+          this.restart_core_button = true;
+        }
+        this.cdr.markForCheck();
       });
   }
 

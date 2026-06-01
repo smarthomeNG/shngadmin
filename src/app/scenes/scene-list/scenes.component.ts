@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -20,7 +19,6 @@ import { SceneInfo } from '../../common/models/scene-info';
 import { SystemInfo } from '../../common/models/system-info';
 import { LogService } from '../../common/services/log.service';
 import { ScenesApiService } from '../../common/services/scenes-api.service';
-import { ServerApiService } from '../../common/services/server-api.service';
 
 @Component({
   selector: 'app-scenes',
@@ -45,8 +43,6 @@ export class ScenesComponent implements OnInit {
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private http = inject(HttpClient);
-  private dataServiceServer = inject(ServerApiService);
   private translate = inject(TranslateService);
   private messageService = inject(MessageService);
   private dataService = inject(ScenesApiService);
@@ -59,22 +55,16 @@ export class ScenesComponent implements OnInit {
 
   ngOnInit() {
     this.log.log('ScenesComponent.ngOnInit');
+    this.setTitle(this.translate.instant('MENU.SCENE_LIST'));
 
-    this.dataServiceServer
-      .getServerinfo()
+    this.dataService
+      .getScenes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.SCENE_LIST'));
-
-        this.dataService
-          .getScenes()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((response2) => {
-            this.sceneList = <SceneInfo[]>response2;
-            //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
-            this.log.log('getScenes', { response2 });
-            this.cdr.markForCheck();
-          });
+        this.sceneList = response as SceneInfo[];
+        //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
+        this.log.log('getScenes', { response });
+        this.cdr.markForCheck();
       });
   }
 }

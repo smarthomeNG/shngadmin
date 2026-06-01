@@ -1,4 +1,7 @@
 {
+  "APP": {
+    "SERVER_CONNECTING": "Verbindung zum Server wird hergestellt…"
+  },
   "MENU": {
     "SYSTEM": "System",
     "SYSTEM_PROPERTIES": "System Eigenschaften",
@@ -68,6 +71,7 @@
     "PACKAGES_WO_REQ": "Pakete ohne Requirements",
     "MISSING": "fehlt",
     "UNKNOWN": "unbekannt",
+    "PYPI_DATA_PENDING": "Warte auf Vervollständigung der PyPI Versionsdaten...",
     "CONFIGURATION": "Konfiguration",
     "COMMON_SETTINGS": "Allgemein",
     "HTTP_SETTINGS": "Http Modul",
@@ -84,7 +88,18 @@
     "NEW_PASSWORD": "Neues Passwort",
     "NEW_PASSWORD_REPEAT": "Neues Passwort (Wiederholung)",
     "SHOW_PASSWORDS": "Passworte anzeigen",
-    "REMEMBER TO SAVE CHANGES": "Daran denken die Änderungen zu speichern, nachdem ein neues Passwort gesetzt wurde"
+    "REMEMBER TO SAVE CHANGES": "Daran denken die Änderungen zu speichern, nachdem ein neues Passwort gesetzt wurde",
+    "CONFIG_ETC_TITLE": "Konfiguration aus etc/ lesen",
+    "CONFIG_ETC_ACTIVE": "Aktiv — Konfigurationsverzeichnisse werden aus etc/ gelesen",
+    "CONFIG_ETC_CHECK": "Details anzeigen",
+    "CONFIG_ETC_CHECK_TITLE": "config_etc Migrationsprüfung",
+    "CONFIG_ETC_SAFE": "Migration ist sicher — keine Konflikte gefunden.",
+    "CONFIG_ETC_CONFLICTS": "Konflikte gefunden — folgende Dateien existieren bereits am Zielort und müssen manuell aufgelöst werden:",
+    "CONFIG_ETC_TO_MIGRATE": "Beim nächsten Neustart zu verschiebende Dateien:",
+    "CONFIG_ETC_ALREADY_DONE": "Bereits migriert",
+    "CONFIG_ETC_ENABLE": "config_etc aktivieren (Neustart erforderlich)",
+    "CONFIG_ETC_INACTIVE_SAFE": "Inaktiv — Migration bereit, keine Konflikte",
+    "CONFIG_ETC_INACTIVE_UNSAFE": "Inaktiv — Migration nicht möglich (Konflikte gefunden)"
   },
   "SPEEDCLASS": {
     "slow": "Langsam",
@@ -111,7 +126,8 @@
     "INACTIVE": "Nicht aktiv",
     "EVAL CHECKER": "eval Syntax Prüfer",
     "YAML CHECKER": "YAML Syntax Prüfer",
-    "CONF TO YAML": "CONF-YAML Konverter",
+    "CONF TO YAML": "CONF-YAML Konverter (veraltet)",
+    "CONF_YAML_DEPRECATED": "Das .conf-Format wird von SmartHomeNG nicht mehr unterstützt. Dieser Konverter ist nur noch für Migrationszwecke verfügbar.",
     "CACHE_CHECKER": "Cache Prüfung",
     "SERVICE": "Dienst",
     "STATUS": "Status",
@@ -186,6 +202,7 @@
     "EXPAND ALL": "Alle aufklappen",
     "REDUCE ALL": "Alle zuklappen",
     "MONITOR": "Überwachen",
+    "MONITORED": "Überwacht",
     "RELOAD": "Aktualisieren",
     "ITEM DETAILS": "Item Informationen",
     "CHOOSE ITEM IN TREE": "Item im Baum auswählen um Details zu sehen!",
@@ -224,6 +241,18 @@
     "STRUCT_TEMPLATES": "Item-Struktur Templates",
     "STRUCT_CONFIGFILE": "Item-Struktur Konfiguration"
   },
+  "STRUCT_CONFIG": {
+    "DEFINITION_FILES": "Struktur-Definitionsdateien",
+    "CONFIG_FILE": "Konfigurationsdatei",
+    "FILE_NOT_FOUND": "Datei nicht gefunden!",
+    "FILETYPE_UNSUPPORTED": "Dateityp nicht unterstützt!",
+    "CONFIG_ERROR": "Konfigurations-Fehler - Konfiguration nicht gespeichert!",
+    "CONFIG_ERROR_TEXT": "Fehler in der Konfigurationsdatei gefunden.\nUngültiges Format der Konfigurationsdatei.\n",
+    "NAME_CONFIGURATION": "Dateinamen für die neue Struktur-Konfigurationsdatei wählen",
+    "UNIQUE_NAME": "Eindeutiger Dateiname (ohne Erweiterung)",
+    "DELETE_CONFIG": "Löschen der Konfiguration bestätigen",
+    "DELETE_CONFIG_FILE": "Soll die Struktur-Konfigurationsdatei '{{config}}' wirklich gelöscht werden?"
+  },
   "ITEM_CONFIG": {
     "DEFINITION_FILES": "Item Definitionsdateien",
     "CONFIG_FILE": "Konfigurationsdatei",
@@ -240,8 +269,12 @@
     "USERLOGICS": "Nutzerlogiken",
     "SYSTEMLOGICS": "Systemlogiken",
     "GROUP": "Gruppe",
+    "GROUPED": "Gruppiert",
     "GROUPS": "Logik Gruppen",
     "NOGROUP_TITLE": "Logiken ohne Gruppenzugehörigkeit",
+    "UNKNOWN_GROUP": "(undefinierte Gruppe)",
+    "UNKNOWN_GROUPS_BANNER": "Die folgenden Gruppennamen werden in Logik-Dateien verwendet, sind aber nicht definiert:",
+    "USED_BY": "verwendet von",
     "LOGIC": "Logik",
     "NEXT_EXEC": "Nächste Ausführung",
     "CYCLE": "Cycle",
@@ -285,14 +318,31 @@
     "TYPE": "Typ",
     "DESCRIPTION": "Beschreibung",
     "ADD_ITEM": "Item hinzufügen",
-    "ITEM_INVALID": "Item ungültig oder bereits in der Liste vorhanden, bitte Eingabe prüfen!"
+    "ITEM_INVALID": "Item ungültig oder bereits in der Liste vorhanden, bitte Eingabe prüfen!",
+    "GROUP_PLACEHOLDER": "Gruppen eingeben oder filtern…",
+    "RENAME": "Logik umbenennen",
+    "RENAME_LOGIC_NAME": "Neuer Logikname",
+    "RENAME_FILE_NAME": "Neuer Dateiname (ohne .py)",
+    "RENAME_NAME_IN_USE": "Dieser Logikname ist bereits vergeben.",
+    "RENAME_FILE_IN_USE": "Dieser Dateiname wird bereits von einer anderen Logik verwendet.",
+    "RENAME_FILE_CASE_NOOP": "Dateinamen werden in Kleinbuchstaben gespeichert – diese Änderung hat keine Auswirkung."
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Gruppenname",
     "GROUP_TITLE": "Titel",
     "GROUP_DESCRIPTION": "Beschreibung",
+    "GROUP_MEMBERS": "Mitglieder",
+    "AVAILABLE_LOGICS": "Verfügbare Logiken",
     "NAME_NEW_GROUP": "Namen für die neue Logik-Gruppe wählen",
-    "UNIQUE_NAME": "Eindeutiger Name für eine neue Logik Gruppe"
+    "UNIQUE_NAME": "Eindeutiger Name für eine neue Logik Gruppe",
+    "DELETE_GROUP": "Logik-Gruppe löschen",
+    "DELETE_GROUP_CONFIRM": "Logik-Gruppe '{{group}}' löschen? Alle Mitgliedszuordnungen werden entfernt.",
+    "MERGE_INTO": "Eingliedern in…",
+    "MERGE_DIALOG_TITLE": "Logik-Gruppe eingliedern",
+    "MERGE_SELECT_TARGET": "'{{source}}' eingliedern in:",
+    "MERGE_PREVIEW": "{{added}} Mitglied(er) werden zu '{{target}}' hinzugefügt ({{before}} → {{after}} gesamt)",
+    "MERGE_CONFIRM": "Zusammenführen",
+    "MERGE_SELECT_PLACEHOLDER": "Gruppe auswählen…"
   },
   "SCHEDULERS": {
     "ITEM SCHEDULERS": "Item Scheduler",
@@ -320,6 +370,8 @@
     "GATEWAY": "Gateway Plugin",
     "CLASSIC": "Classic Plugin",
     "ADD": "Plugin hinzufügen",
+    "CATEGORIES": "Kategorien",
+    "FLAT_LIST": "Flache Liste",
     "ENABLED": "Aktiviert",
     "DISABLED": "Deaktiviert",
     "TYPE": "Typ",
@@ -423,10 +475,13 @@
     "SYSTEM-PID": "Prozess-Id",
     "ACTIVE": "Aktiv"
   },
+  "FILTER": "Filter",
   "LOGS": {
     "LOGFILE": "Log",
     "FILTER": "Filter",
     "SCROLL_DOWN": "Nach unten scrollen",
+    "ENTER_FULLSCREEN": "Editor auf Fenstergröße erweitern",
+    "EXIT_FULLSCREEN": "Editor auf normale Größe zurücksetzen",
     "SELECT_LOG": "Log auswählen",
     "TIMEFRAME": "Zeitrahmen",
     "SELECT_FILE": "Datei auswählen",
@@ -458,6 +513,7 @@
     "CHOOSE_HANDLERS": "Handler für Logger '{{logger}}' bearbeiten",
     "CHOOSE_HANDLERS_TEXT": "Wähle einen oder mehrere Handler aus, durch welche das Logging erfolgen soll.",
     "CHOOSE_HANDLERS_PROPAGATION_TEXT": "Zusätzlich erfolgt das Logging durch die Handler übergeordneter Logger.",
+    "FROM_PARENT": "vom übergeordneten Logger",
     "NO_HANDLER_DEFINED": "Es ist kein Handler definiert",
     "DELETE": "Logger löschen",
     "HANDLER": "Handler bearbeiten"
@@ -465,7 +521,10 @@
   "LOGGING": {
     "CONFIG_FILE": "Konfigurationsdatei",
     "CONFIG_ERROR": "Konfigurations-Fehler - Konfiguration nicht gespeichert!",
-    "CONFIG_ERROR_TEXT": "Fehler in der Konfigurationsdatei gefunden.\nUngültiges Format der Konfigurationsdatei.\n"
+    "CONFIG_ERROR_TEXT": "Fehler in der Konfigurationsdatei gefunden.\nUngültiges Format der Konfigurationsdatei.\n",
+    "SAVE_OK": "Logging-Konfiguration erfolgreich gespeichert und angewendet.",
+    "SAVE_ERROR_RESTORED": "Ungültige Logging-Konfiguration — die vorherige Konfiguration wurde wiederhergestellt.",
+    "SAVE_ERROR_NO_RESTORE": "Ungültige Logging-Konfiguration, Wiederherstellung fehlgeschlagen — logging.yaml.bak prüfen."
   },
   "BUTTON": {
     "OK": "Ok",
@@ -475,6 +534,7 @@
     "SAVE_LOAD": "Sichern & Laden",
     "DISCARD": "Verwerfen",
     "ABORT": "Abbrechen",
+    "RENAME": "Umbenennen",
     "HELP": "Hilfe",
     "CREATE": "Erstellen",
     "ADD": "Hinzufügen",
@@ -533,8 +593,8 @@
     "WATCHITEM_TAB": "Im Eingabefeld ergänzen",
     "WATCHITEM_ENTER": "Als Watch-Item Hinzufügen",
     "SHIFT-TAB": "Eine Ebene ausrücken",
-    "F11": "Fullscreen Modus ein- bzw. ausschalten",
-    "ESC": "Fullscreen Modus verlassen",
+    "F11": "Editor auf Fenstergröße erweitern (erneut drücken zum Zurücksetzen)",
+    "ESC": "Editor auf normale Größe zurücksetzen",
     "CTRL-L": "Zeilen-Umbruch ein- und ausschalten",
     "CTRL-Q": "Zeile an der Cursorposition falten oder entfalten",
     "SHIFT-CTRL-Q": "Gesamtes Dokument entfalten",
@@ -560,5 +620,17 @@
   "RESTART FOR CHANGES": "Änderungen werden erst nach einem Neustart von SmartHomeNG wirksam - Nach dem Neustart ein Reload der Admin GUI durchführen",
   "RELOAD FOR CHANGES": "Änderungen werden erst nach dem erneuten Laden der Datei(en) oder einem Neustart von SmartHomeNG wirksam",
   "RESTART LOGIC FOR CHANGES": "Änderungen werden erst nach einem Neustart der Logik wirksam",
-  "LINEBREAK": "Umbruch"
+  "LINEBREAK": "Umbruch",
+  "CONNECTIVITY": {
+    "OFFLINE": "Backend nicht erreichbar",
+    "RETRY_IN": "Neuer Versuch in {{seconds}}s",
+    "RETRYING": "Verbinde…",
+    "RETRY_NOW": "Jetzt versuchen",
+    "BACK_ONLINE": "Verbunden"
+  },
+  "COMMON": {
+    "FILE_EXISTS_TITLE": "Datei bereits vorhanden",
+    "FILE_EXISTS_HINT": "Eine Datei namens '{{filename}}' ist bereits vorhanden.",
+    "NO_DATA": "Keine Daten verfügbar"
+  }
 }

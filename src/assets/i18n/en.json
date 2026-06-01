@@ -1,4 +1,7 @@
 {
+  "APP": {
+    "SERVER_CONNECTING": "Connecting to server…"
+  },
   "MENU": {
     "SYSTEM": "System",
     "SYSTEM_PROPERTIES": "System Properties",
@@ -68,6 +71,7 @@
     "PACKAGES_WO_REQ": "Packages without requirements",
     "MISSING": "missing",
     "UNKNOWN": "unknown",
+    "PYPI_DATA_PENDING": "Waiting for completion of PyPI version data...",
     "CONFIGURATION": "Configuration",
     "COMMON_SETTINGS": "Common",
     "HTTP_SETTINGS": "Http Module",
@@ -84,7 +88,18 @@
     "NEW_PASSWORD": "New password",
     "NEW_PASSWORD_REPEAT": "New password (repeat)",
     "SHOW_PASSWORDS": "Show passwords",
-    "REMEMBER TO SAVE CHANGES": "Remember to save changes after setting a new password"
+    "REMEMBER TO SAVE CHANGES": "Remember to save changes after setting a new password",
+    "CONFIG_ETC_TITLE": "Read config from etc/",
+    "CONFIG_ETC_ACTIVE": "Active — config directories are served from etc/",
+    "CONFIG_ETC_CHECK": "Check details",
+    "CONFIG_ETC_CHECK_TITLE": "config_etc migration check",
+    "CONFIG_ETC_SAFE": "Migration is safe — no conflicts detected.",
+    "CONFIG_ETC_CONFLICTS": "Conflicts detected — the following files already exist at the target location and must be resolved manually:",
+    "CONFIG_ETC_TO_MIGRATE": "Files that will be moved on next restart:",
+    "CONFIG_ETC_ALREADY_DONE": "Already migrated",
+    "CONFIG_ETC_ENABLE": "Enable config_etc (requires restart)",
+    "CONFIG_ETC_INACTIVE_SAFE": "Inactive — migration ready, no conflicts",
+    "CONFIG_ETC_INACTIVE_UNSAFE": "Inactive — migration not possible (conflicts detected)"
   },
   "SPEEDCLASS": {
     "slow": "Slow",
@@ -111,7 +126,8 @@
     "INACTIVE": "Not active",
     "EVAL CHECKER": "eval Syntax Checker",
     "YAML CHECKER": "YAML Syntax Checker",
-    "CONF TO YAML": "CONF-YAML Converter",
+    "CONF TO YAML": "CONF-YAML Converter (deprecated)",
+    "CONF_YAML_DEPRECATED": "The .conf format is no longer supported by SmartHomeNG. This converter is kept for migration purposes only.",
     "CACHE_CHECKER": "Cache Checker",
     "SERVICE": "Service",
     "STATUS": "State",
@@ -137,8 +153,8 @@
     "Initalizing: Requirements checked": "Initalizing: Requirements checked",
     "Checking processor speed": "Checking processor speed...",
     "Starting": "Starting",
-    "Starting: Initializing and starting loadable modules": "Starting: Initalizing and starting loadable modules",
-    "Starting: Initializing plugins": "Starting: Initalizing plugins",
+    "Starting: Initializing and starting loadable modules": "Starting: Initializing and starting loadable modules",
+    "Starting: Initializing plugins": "Starting: Initializing plugins",
     "Starting: Loading item definitions": "Starting: Loading item definitions",
     "Starting: Preparing loaded items": "Starting: Preparing loaded items",
     "Starting: Initializing logics": "Starting: Initializing logics",
@@ -150,6 +166,7 @@
     "Stopped": "Stopped",
     "waiting": "waiting",
     "Restart clicked": "Restart clicked",
+    "Restore: Uploading": "Restore: Uploading",
     "not active": "not active",
     "Running (dummy)": "Running (dummy)"
   },
@@ -185,6 +202,7 @@
     "EXPAND ALL": "Expand All",
     "REDUCE ALL": "Reduce All",
     "MONITOR": "Monitor",
+    "MONITORED": "Monitored",
     "RELOAD": "Reload",
     "ITEM DETAILS": "Item Details",
     "CHOOSE ITEM IN TREE": "Choose item in tree to see details!",
@@ -223,6 +241,18 @@
     "STRUCT_TEMPLATES": "Item-Structure Templates",
     "STRUCT_CONFIGFILE": "Item-Structure Configuration"
   },
+  "STRUCT_CONFIG": {
+    "DEFINITION_FILES": "Struct-Definition Files",
+    "CONFIG_FILE": "Configuration-File",
+    "FILE_NOT_FOUND": "File not found!",
+    "FILETYPE_UNSUPPORTED": "Filetype not supported!",
+    "CONFIG_ERROR": "Configuration Error - Configuration data not saved!",
+    "CONFIG_ERROR_TEXT": "Error found in configuration file.\nInvalid format of configuration file. \n",
+    "NAME_CONFIGURATION": "Select a name for the new struct configuration file",
+    "UNIQUE_NAME": "Unique filename (without extension)",
+    "DELETE_CONFIG": "Confirm delete configuration",
+    "DELETE_CONFIG_FILE": "Please confirm, that you want to delete the struct configuration file '{{config}}'"
+  },
   "ITEM_CONFIG": {
     "DEFINITION_FILES": "Item-Definition Files",
     "CONFIG_FILE": "Configuration-File",
@@ -239,8 +269,12 @@
     "USERLOGICS": "User Logics",
     "SYSTEMLOGICS": "System Logics",
     "GROUP": "Group",
+    "GROUPED": "Grouped",
     "GROUPS": "Logic Groups",
     "NOGROUP_TITLE": "Logics without group membership",
+    "UNKNOWN_GROUP": "(undefined group)",
+    "UNKNOWN_GROUPS_BANNER": "The following group names are used in logic files but not defined:",
+    "USED_BY": "used by",
     "LOGIC": "Logic",
     "NEXT_EXEC": "Next Execution",
     "CYCLE": "Cycle",
@@ -283,14 +317,32 @@
     "TYPE": "Type",
     "DESCRIPTION": "Description",
     "ADD_ITEM": "Add item",
-    "ITEM_INVALID": "Item invalid or already added, please check your input!"
+    "ITEM_INVALID": "Item invalid or already added, please check your input!",
+    "GROUP_PLACEHOLDER": "Type to filter groups…",
+    "RENAME": "Rename logic",
+    "RENAME_LOGIC_NAME": "New logic name",
+    "RENAME_FILE_NAME": "New filename (without .py)",
+    "RENAME_NAME_IN_USE": "This logic name is already in use.",
+    "RENAME_FILE_IN_USE": "This filename is already used by another logic.",
+    "RENAME_FILE_CASE_NOOP": "Filenames are stored in lowercase — this change has no effect.",
+    "GROUP": "Group(s)"
   },
   "LOGIC_GROUPS": {
     "GROUP_NAME": "Groupname",
     "GROUP_TITLE": "Title",
     "GROUP_DESCRIPTION": "Description",
+    "GROUP_MEMBERS": "Members",
+    "AVAILABLE_LOGICS": "Available logics",
     "NAME_NEW_GROUP": "Choose a name for the new logic-group",
-    "UNIQUE_NAME": "Unique name for the new logic-group"
+    "UNIQUE_NAME": "Unique name for the new logic-group",
+    "DELETE_GROUP": "Delete logic group",
+    "DELETE_GROUP_CONFIRM": "Delete logic group '{{group}}'? All member assignments will be removed.",
+    "MERGE_INTO": "Merge into…",
+    "MERGE_DIALOG_TITLE": "Merge logic group",
+    "MERGE_SELECT_TARGET": "Merge '{{source}}' into:",
+    "MERGE_PREVIEW": "{{added}} member(s) will be added to '{{target}}' ({{before}} → {{after}} total)",
+    "MERGE_CONFIRM": "Merge",
+    "MERGE_SELECT_PLACEHOLDER": "Select group…"
   },
   "SCHEDULERS": {
     "ITEM SCHEDULERS": "Item Schedulers",
@@ -318,6 +370,8 @@
     "GATEWAY": "Gateway Plugin",
     "CLASSIC": "Classic Plugin",
     "ADD": "Add Plugin",
+    "CATEGORIES": "Categories",
+    "FLAT_LIST": "Flat list",
     "ENABLED": "Enabled",
     "DISABLED": "Disabled",
     "TYPE": "Type",
@@ -421,10 +475,13 @@
     "SYSTEM-PID": "Process-Id",
     "ACTIVE": "Active"
   },
+  "FILTER": "Filter",
   "LOGS": {
     "LOGFILE": "Log",
     "FILTER": "Filter",
     "SCROLL_DOWN": "Scroll down",
+    "ENTER_FULLSCREEN": "Expand editor to fill the window",
+    "EXIT_FULLSCREEN": "Restore editor to normal size",
     "SELECT_LOG": "Select a log",
     "TIMEFRAME": "Timeframe",
     "SELECT_FILE": "Select a file",
@@ -456,13 +513,18 @@
     "CHOOSE_HANDLERS": "Edit handler for logger '{{logger}}'",
     "CHOOSE_HANDLERS_TEXT": "Select one or more handlers through which the logging should take place.",
     "CHOOSE_HANDLERS_PROPAGATION_TEXT": "In addition, the logging is carried out by the handlers of higher-level loggers.",
+    "FROM_PARENT": "from parent",
     "DELETE": "Delete logger",
-    "HANDLER": "Edit handlers"
+    "HANDLER": "Edit handlers",
+    "NO_HANDLER_DEFINED": "No handler defined"
   },
   "LOGGING": {
     "CONFIG_FILE": "Configuration file",
     "CONFIG_ERROR": "Configuration Error - Configuration data not saved!",
-    "CONFIG_ERROR_TEXT": "Error found in configuration file.\nInvalid format of configuration file. \n"
+    "CONFIG_ERROR_TEXT": "Error found in configuration file.\nInvalid format of configuration file. \n",
+    "SAVE_OK": "Logging configuration saved and applied successfully.",
+    "SAVE_ERROR_RESTORED": "Invalid logging configuration — the previous configuration has been restored.",
+    "SAVE_ERROR_NO_RESTORE": "Invalid logging configuration and restore failed — check logging.yaml.bak."
   },
   "BUTTON": {
     "OK": "Ok",
@@ -472,6 +534,7 @@
     "SAVE_LOAD": "Save & Load",
     "DISCARD": "Discard",
     "ABORT": "Abort",
+    "RENAME": "Rename",
     "HELP": "Help",
     "CREATE": "Create",
     "ADD": "Add",
@@ -530,8 +593,8 @@
     "WATCHITEM_TAB": "Im Eingabefeld ergänzen",
     "WATCHITEM_ENTER": "Add as watch-item",
     "SHIFT-TAB": "Inindent one level",
-    "F11": "Switch fullscreen node on or off",
-    "ESC": "Leave fullscreen mode",
+    "F11": "Expand editor to fill the window (press again to restore)",
+    "ESC": "Restore editor to its normal size",
     "CTRL-L": "Toggle line wrapping",
     "CTRL-Q": "Fold or unfold the line the cursor is currently on",
     "SHIFT-CTRL-Q": "Unfold the whole document",
@@ -557,5 +620,17 @@
   "RESTART FOR CHANGES": "Restart SmartHomeNG for changes to take effect - Reload Admin GUI after restart",
   "RELOAD FOR CHANGES": "Reload file(s) or restart SmartHomeNG for changes to take effect.",
   "RESTART LOGIC FOR CHANGES": "Restart the logic for changes to take effect",
-  "LINEBREAK": "Line Break"
+  "LINEBREAK": "Line Break",
+  "CONNECTIVITY": {
+    "OFFLINE": "Backend unreachable",
+    "RETRY_IN": "Retrying in {{seconds}}s",
+    "RETRYING": "Retrying…",
+    "RETRY_NOW": "Retry now",
+    "BACK_ONLINE": "Reconnected"
+  },
+  "COMMON": {
+    "FILE_EXISTS_TITLE": "File Already Exists",
+    "FILE_EXISTS_HINT": "A file named '{{filename}}' already exists.",
+    "NO_DATA": "No data available"
+  }
 }

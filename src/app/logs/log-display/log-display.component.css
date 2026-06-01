@@ -1,4 +1,34 @@
-.CodeMirror {
-  width: 100%;
-  height: 75vh;
+.shngbody {
+  height: calc(100vh - var(--navbar-height));
+  overflow: hidden;
+  margin: 0;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
+  display: flex;
+  flex-direction: column;
+}
+
+/* .shng-page-header is global — see styles.css */
+
+.log-toolbar {
+  flex-shrink: 0;
+  padding-top: 8px;
+}
+
+.log-filter-row {
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+.log-editor-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* app-code-editor host element needs a definite height so .cm-host's
+   height:100% resolves against the flex cell, not content height */
+.log-editor-area app-code-editor {
+  flex: 1;
+  min-height: 0;
 }

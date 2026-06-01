@@ -33,7 +33,7 @@ export class ConfigApiService {
     );
   }
 
-  saveConfig(data) {
+  saveConfig(data: unknown) {
     // this.log.log('ConfigApiService.saveConfig');
 
     const apiUrl = this.appConfig.apiUrl;
@@ -49,6 +49,28 @@ export class ConfigApiService {
           this.log.log('ConfigApiService.saveConfig', 'fail');
           return false;
         }
+      }),
+    );
+  }
+
+  checkConfigEtc() {
+    const url = this.appConfig.apiUrl + 'config/check_config_etc/';
+    return this.http.get(url).pipe(
+      map((response) => response),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error('ConfigApiService (checkConfigEtc): ' + err.message);
+        return of({ result: 'error', description: err.message });
+      }),
+    );
+  }
+
+  enableConfigEtc() {
+    const url = this.appConfig.apiUrl + 'config/enable_config_etc/';
+    return this.http.put(url, '{}').pipe(
+      map((response) => response),
+      catchError((err: HttpErrorResponse) => {
+        this.log.error('ConfigApiService (enableConfigEtc): ' + err.message);
+        return of({ result: 'error', description: err.message });
       }),
     );
   }

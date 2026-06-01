@@ -5,6 +5,14 @@ import { SystemComponent } from './system-overview/system.component';
 
 export const SYSTEM_ROUTES: Routes = [
   { path: '', component: SystemComponent, canActivate: [AuthGuardService] },
-  { path: 'systemproperties', component: SystemComponent, canActivate: [AuthGuardService] },
-  { path: 'config', component: SystemConfigComponent, canActivate: [AuthGuardService] },
+  {
+    path: 'systemproperties',
+    component: SystemComponent,
+    canActivate: [AuthGuardService],
+  },
+  {
+    path: 'config',
+    component: SystemConfigComponent,
+    canActivate: [AuthGuardService],
+  },
 ];

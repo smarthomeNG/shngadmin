@@ -1,4 +1,3 @@
-// import { Component, OnInit } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -12,11 +11,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { HttpClient } from '@angular/common/http';
 
-import { LogicsGroupType, LogicsinfoType } from '../../common/models/logics-info';
-import { LogicsWatchItem } from '../../common/models/logics-watch-item';
-import { LogicsApiService } from '../../common/services/logics-api.service';
-import { OlddataService } from '../../common/services/olddata.service';
-// //// import {Log} from '@angular/core/testing/src/logger';
 import { NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
@@ -31,14 +25,15 @@ import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Ripple } from 'primeng/ripple';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-import { LogService } from '../../common/services/log.service';
-import { ServerApiService } from '../../common/services/server-api.service';
-
+import { ToggleSwitch } from 'primeng/toggleswitch';
+import { LogicsGroupType, LogicsinfoType } from '../../common/models/logics-info';
+import { LogicsWatchItem } from '../../common/models/logics-watch-item';
+import { LogicsApiService } from '../../common/services/logics-api.service';
 @Component({
   selector: 'app-logics',
   templateUrl: './logics-list.component.html',
   styleUrls: ['./logics-list.component.css'],
-  providers: [OlddataService],
+  providers: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Bind,
@@ -60,6 +55,7 @@ import { ServerApiService } from '../../common/services/server-api.service';
     InputText,
     NgStyle,
     Message,
+    ToggleSwitch,
     TranslatePipe,
   ],
 })
@@ -67,21 +63,120 @@ export class LogicsListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
-  private dataServiceServer = inject(ServerApiService);
   private dataService = inject(LogicsApiService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private renderer = inject(Renderer2);
-  private readonly log = inject(LogService);
 
-  groupdefinitions = {};
-  groupList: LogicsGroupType[];
+  groupdefinitions: Record<string, Record<string, string>> = {};
+  groupList!: LogicsGroupType[];
+
+  uSortField = '';
+  uSortOrder: 1 | -1 = 1;
+  sSortField = '';
+  sSortOrder: 1 | -1 = 1;
+
+  filterText = '';
+  private _grouped = true;
+  get grouped(): boolean {
+    return this._grouped;
+  }
+  set grouped(val: boolean) {
+    this._grouped = val;
+    localStorage.setItem('shng.logics.grouped', String(val));
+  }
+  activeTabIndex = '0';
+
+  onFilterChange(value: string): void {
+    this.filterText = value;
+    this.cdr.markForCheck();
+  }
+
+  clearFilter(): void {
+    this.filterText = '';
+    this.cdr.markForCheck();
+  }
+
+  /** Returns a comma-separated list of non-empty group names for display in the flat table. */
+  groupLabel(logic: LogicsinfoType): string {
+    if (!logic.group) return '';
+    const groups = Array.isArray(logic.group) ? logic.group : [logic.group];
+    return groups.filter((g) => g !== '').join(', ');
+  }
+
+  /** Returns true if any of the logic's groups are not defined in logic_groups.yaml. */
+  hasUnknownGroup(logic: LogicsinfoType): boolean {
+    if (!logic.group) return false;
+    const groups = Array.isArray(logic.group) ? logic.group : [logic.group];
+    return groups.some((g) => g !== '' && this._unknownGroupNames.has(g));
+  }
+
+  /** Returns the non-empty group names of a logic as an array (for flat-list rendering). */
+  getGroupsArray(logic: LogicsinfoType): string[] {
+    if (!logic.group) return [];
+    const groups = Array.isArray(logic.group) ? logic.group : [logic.group];
+    return groups.filter((g) => g !== '');
+  }
+
+  /** Returns true if the given group name is not defined in logic_groups.yaml. */
+  isUnknownGroup(groupname: string): boolean {
+    return this._unknownGroupNames.has(groupname);
+  }
+
+  /** When a filter is active, expand all accordion panels so no match is hidden. */
+  get effectiveExpanded(): number[] {
+    if (this.filterText) {
+      return this.groupList?.map((_, i) => i) ?? [];
+    }
+    return this.groupExpanded;
+  }
+
+  get filteredUserLogics(): LogicsinfoType[] {
+    if (!this.filterText) return this.userlogics;
+    const f = this.filterText.toLowerCase();
+    return this.userlogics.filter(
+      (l) => l.name.toLowerCase().includes(f) || (l.filename ?? '').toLowerCase().includes(f),
+    );
+  }
+
+  get filteredSysLogics(): LogicsinfoType[] {
+    if (!this.filterText) return this.systemlogics;
+    const f = this.filterText.toLowerCase();
+    return this.systemlogics.filter(
+      (l) => l.name.toLowerCase().includes(f) || (l.filename ?? '').toLowerCase().includes(f),
+    );
+  }
+
+  sortUserLogics(field: string): void {
+    this.uSortOrder = this.uSortField === field ? (this.uSortOrder === 1 ? -1 : 1) : 1;
+    this.uSortField = field;
+    const ord = this.uSortOrder;
+    this.userlogics.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
+
+  sortSysLogics(field: string): void {
+    this.sSortOrder = this.sSortField === field ? (this.sSortOrder === 1 ? -1 : 1) : 1;
+    this.sSortField = field;
+    const ord = this.sSortOrder;
+    this.systemlogics.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
   groupExpandedOnStart: number[] = [];
   groupExpanded: number[] = [];
   nogroups: boolean;
-  logics: LogicsinfoType[];
+  private _unknownGroupNames = new Set<string>();
+  logics!: LogicsinfoType[];
   userlogics: LogicsinfoType[] = [];
   systemlogics: LogicsinfoType[] = [];
   newlogics: LogicsinfoType[] = [];
@@ -96,7 +191,13 @@ export class LogicsListComponent implements OnInit {
   wrongNewLogicName: string = '';
   confirmdelete_display: boolean = false;
   logicToDelete: string = '';
-  delete_param: {};
+  delete_param!: {};
+
+  rename_display = false;
+  rename_oldLogicName = '';
+  rename_newLogicName = '';
+  rename_newFilename = '';
+  rename_currentFilename = '';
 
   constructor() {
     this.userlogics = [];
@@ -109,23 +210,18 @@ export class LogicsListComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.log.log('LogicsListComponent.ngOnInit');
-
-    this.log.warn('logics-list:ngOnInit');
     this.groupExpandedOnStart = this.dataService.groupExpanded;
     this.groupExpanded = this.dataService.groupExpanded;
 
-    this.dataServiceServer
-      .getServerinfo()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.LOGICS'));
+    // Restore persisted grouped preference; default true when groups exist
+    const stored = localStorage.getItem('shng.logics.grouped');
+    this._grouped = stored !== null ? stored === 'true' : true;
 
-        this.getLogics();
-      });
+    this.setTitle(this.translate.instant('MENU.LOGICS'));
+    this.getLogics();
   }
 
-  baseName(str, withExtension = true) {
+  baseName(str: string, withExtension = true) {
     let base = str;
     base = base.substring(base.lastIndexOf('/') + 1);
     if (!withExtension && base.lastIndexOf('.') !== -1) {
@@ -134,15 +230,16 @@ export class LogicsListComponent implements OnInit {
     return base;
   }
 
-  addGroup(name) {
+  addGroup(name: string) {
     if (this.groupList.find((g) => g.name === name) === undefined) {
       let title = '';
       let description = '';
+      const unknown = name !== '' && this._unknownGroupNames.has(name);
       if (this.groupdefinitions[name] !== undefined) {
         title = this.groupdefinitions[name]['title'];
         description = this.groupdefinitions[name]['description'];
       }
-      const group: LogicsGroupType = { name: name, title: title, description: description };
+      const group: LogicsGroupType = { name, title, description, unknown };
       this.groupList.push(group);
       if (name !== '') {
         this.nogroups = false;
@@ -150,33 +247,23 @@ export class LogicsListComponent implements OnInit {
     }
   }
 
-  groupOpened(event) {
+  groupOpened(event: { index: number }) {
     const index = event['index'];
-    this.log.warn('groupOpened', { index });
-
-    this.log.log('this.groupExpanded', this.groupExpanded);
-    this.log.log('this.groupExpandedOnStart', this.groupExpandedOnStart);
-
     if (this.groupExpanded.indexOf(index) === -1) {
       this.groupExpanded.push(index);
       this.dataService.groupExpanded = this.groupExpanded;
     }
-    this.log.log('this.groupExpanded', this.groupExpanded);
   }
 
-  groupClosed(event) {
+  groupClosed(event: { index: number }) {
     const index = event['index'];
-    this.log.warn('groupClosed', { index });
     if (this.groupExpanded === undefined) {
       this.groupExpanded = [];
     }
-    this.log.log('this.groupExpanded', this.groupExpanded);
-
     if (this.groupExpanded.indexOf(index) > -1) {
       this.groupExpanded.splice(this.groupExpanded.indexOf(index), 1);
       this.dataService.groupExpanded = this.groupExpanded;
     }
-    this.log.log('this.groupExpanded', this.groupExpanded);
   }
 
   sortGroupList() {
@@ -189,7 +276,6 @@ export class LogicsListComponent implements OnInit {
     });
     if (this.groupList[0].name === '') {
       // move 'no group' to end of list
-      // this.groupList[0].name = 'keine Gruppe';
       this.groupList.push(this.groupList[0]);
       this.groupList.shift();
     }
@@ -200,8 +286,12 @@ export class LogicsListComponent implements OnInit {
       .getLogics()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
-        this.groupdefinitions = response['groups'];
-        this.logics = <LogicsinfoType[]>response['logics'];
+        const resp = response as Record<string, unknown>;
+        this.groupdefinitions = resp['groups'] as Record<string, Record<string, string>>;
+        const unknownGroups = (resp['unknown_groups'] ?? {}) as Record<string, string[]>;
+        // Mark unknown group names so addGroup() can flag them
+        this._unknownGroupNames = new Set(Object.keys(unknownGroups));
+        this.logics = <LogicsinfoType[]>resp['logics'];
         this.logics.sort(function (a, b) {
           return a.name.toLowerCase() > b.name.toLowerCase()
             ? 1
@@ -214,20 +304,24 @@ export class LogicsListComponent implements OnInit {
         this.groupList = [];
         for (const logic of this.logics) {
           if (logic.userlogic === true) {
-            if (logic.group === undefined || logic.group.length === 0) {
+            if (logic.group == null || logic.group.length === 0) {
               logic.group = [''];
             }
             this.userlogics.push(logic);
-            for (const g in logic.group) {
-              if (logic.group.hasOwnProperty(g)) {
-                this.addGroup(logic.group[g]);
-              }
+            const groups = Array.isArray(logic.group) ? logic.group : [logic.group];
+            for (const g of groups) {
+              this.addGroup(g);
             }
           } else {
             this.systemlogics.push(logic);
           }
         }
         this.sortGroupList();
+
+        // If no logics are in any group, default to ungrouped view
+        if (this.nogroups && localStorage.getItem('shng.logics.grouped') === null) {
+          this._grouped = false;
+        }
 
         this.userlogics.sort(function (a, b) {
           return a.name.toLowerCase() > b.name.toLowerCase()
@@ -236,7 +330,7 @@ export class LogicsListComponent implements OnInit {
               ? -1
               : 0;
         });
-        this.newlogics = <LogicsinfoType[]>response['logics_new'];
+        this.newlogics = <LogicsinfoType[]>resp['logics_new'];
         this.newlogics.sort(function (a, b) {
           return a.name.toLowerCase() > b.name.toLowerCase()
             ? 1
@@ -248,8 +342,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  triggerLogic(logicName) {
-    // this.log.log('triggerLogic', {logicName});
+  triggerLogic(logicName: string) {
     this.dataService
       .setLogicState(logicName, 'trigger')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -258,8 +351,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  disableLogic(logicName) {
-    // this.log.log('disableLogic', {logicName});
+  disableLogic(logicName: string) {
     this.dataService
       .setLogicState(logicName, 'disable')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -268,8 +360,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  enableLogic(logicName) {
-    // this.log.log('enableLogic', {logicName});
+  enableLogic(logicName: string) {
     this.dataService
       .setLogicState(logicName, 'enable')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -278,8 +369,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  unloadLogic(logicName) {
-    // this.log.log('unloadLogic', {logicName});
+  unloadLogic(logicName: string) {
     this.dataService
       .setLogicState(logicName, 'unload')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -288,8 +378,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  reloadLogic(logicName) {
-    // this.log.log('reloadLogic', {logicName});
+  reloadLogic(logicName: string) {
     this.dataService
       .setLogicState(logicName, 'reload')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -298,8 +387,7 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  loadLogic(logicName) {
-    // this.log.log('loadLogic', {logicName});
+  loadLogic(logicName: string) {
     this.dataService
       .setLogicState(logicName, 'load')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -309,7 +397,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   newLogic() {
-    this.log.log('newLogic');
     this.newlogic_name = '';
     this.newlogic_filename = '';
     this.newlogic_add_enabled = false;
@@ -317,16 +404,11 @@ export class LogicsListComponent implements OnInit {
     this.newlogic_display = true;
   }
 
-  onShow() {
-    this.log.warn('onShow');
-  }
+  onShow() {}
 
-  onBlur() {
-    this.log.warn('onBlur');
-  }
+  onBlur() {}
 
   onFocus() {
-    this.log.warn('onFocus');
     if (this.newlogic_filename === '') {
       this.newlogic_filename = this.newlogic_name;
       if (this.newlogic_name !== '') {
@@ -345,7 +427,6 @@ export class LogicsListComponent implements OnInit {
     }
 
     for (let i = 0; i < this.logics.length; i++) {
-      // this.log.log({i}, this.logics[i].name);
       if (this.newlogic_name === this.logics[i].name) {
         this.newlogic_add_enabled = false;
         this.wrongNewLogicName = 'LOGICS.NAME_ALREADY_EXISTS';
@@ -354,7 +435,6 @@ export class LogicsListComponent implements OnInit {
     }
 
     for (let i = 0; i < this.logics.length; i++) {
-      // this.log.log({i}, this.baseName(this.logics[i].pathname, false));
       if (this.newlogic_filename === this.baseName(this.logics[i].pathname, false)) {
         this.newlogic_add_enabled = false;
         this.wrongNewLogicName = 'LOGICS.FILENAME_ALREADY_EXISTS';
@@ -372,7 +452,6 @@ export class LogicsListComponent implements OnInit {
   }
 
   createLogic() {
-    this.log.warn('createLogic', this.newlogic_name, this.newlogic_filename);
     this.newlogic_display = false;
     this.dataService
       .setLogicState(this.newlogic_name, 'create', this.newlogic_filename)
@@ -383,16 +462,13 @@ export class LogicsListComponent implements OnInit {
       });
   }
 
-  deleteLogic(logicName, fileName) {
-    // this.log.log('deleteLogic', {logicName});
-
+  deleteLogic(logicName: string, fileName: string) {
     this.logicToDelete = logicName;
     this.delete_param = { config: logicName, filename: fileName };
     this.confirmdelete_display = true;
   }
 
-  deleteLogicConfirm(with_code) {
-    // this.log.log('deleteLogicConfirm', this.logicToDelete);
+  deleteLogicConfirm(with_code: boolean) {
     this.confirmdelete_display = false;
 
     let action = 'delete';
@@ -411,5 +487,48 @@ export class LogicsListComponent implements OnInit {
   deleteLogicAbort() {
     this.confirmdelete_display = false;
     this.logicToDelete = '';
+  }
+
+  openRenameDialog(logicName: string, filename: string) {
+    this.rename_oldLogicName = logicName;
+    this.rename_newLogicName = logicName;
+    this.rename_currentFilename = filename.endsWith('.py') ? filename.slice(0, -3) : filename;
+    this.rename_newFilename = this.rename_currentFilename;
+    this.rename_display = true;
+  }
+
+  get renameEnabled(): boolean {
+    const nameChanged = this.rename_newLogicName.trim() !== this.rename_oldLogicName;
+    const fileChanged = this.rename_newFilename.trim() !== this.rename_currentFilename;
+    return (
+      this.rename_newLogicName.trim() !== '' &&
+      this.rename_newFilename.trim() !== '' &&
+      (nameChanged || fileChanged)
+    );
+  }
+
+  /** True when the filename field changed but only in case — the backend will normalise it to the same lowercase value. */
+  get filenameChangeIsNoop(): boolean {
+    const newFile = this.rename_newFilename.trim();
+    return (
+      newFile !== this.rename_currentFilename &&
+      newFile.toLowerCase() === this.rename_currentFilename.toLowerCase()
+    );
+  }
+
+  doRename() {
+    const newName = this.rename_newLogicName.trim();
+    const newFile = this.rename_newFilename.trim();
+    const newFilenameArg = newFile !== this.rename_currentFilename ? newFile : '';
+    this.dataService
+      .renameLogic(this.rename_oldLogicName, newName, newFilenameArg)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result === true) {
+          this.rename_display = false;
+          this.getLogics();
+        }
+        this.cdr.markForCheck();
+      });
   }
 }

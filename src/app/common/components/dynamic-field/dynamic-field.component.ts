@@ -1,4 +1,3 @@
-import { NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
@@ -9,11 +8,11 @@ import { ConfigParameter, TableColumn } from '../../models/interfaces';
 @Component({
   selector: 'app-dynamic-field',
   templateUrl: './dynamic-field.component.html',
-  imports: [Bind, Select, FormsModule, InputText, NgStyle],
+  imports: [Bind, Select, FormsModule, InputText],
 })
 export class DynamicFieldComponent {
-  @Input() row: ConfigParameter;
-  @Input() col: TableColumn;
+  @Input() row!: ConfigParameter;
+  @Input() col!: TableColumn;
   @Output() changed = new EventEmitter<void>();
 
   readonly NUM_TYPES = ['int', 'num', 'float', 'scene', 'hide-int'];

@@ -36,17 +36,13 @@ export class LogsApiService {
 
   readLogfile(filename: string, chunk: number | null = null) {
     const apiUrl = this.appConfig.apiUrl;
-    let url = apiUrl + 'logs/' + filename;
-    let part = 0;
-    if (apiUrl === null) {
+    if (!apiUrl) {
       this.log.error('readLogfile for ' + filename + ' had an empty apiUrl');
       return of({} as object);
     }
-
-    if (chunk === null) {
-      part = 1;
-    }
-    url += '?chunk=' + String(part);
+    // chunk=null → 1 (first); chunk=0 → 0 (server convention for last chunk)
+    const part = chunk ?? 1;
+    let url = apiUrl + 'logs/' + filename + '?chunk=' + String(part);
 
     // return this.http.get(url, { responseType: 'text' })
     return this.http.get(url).pipe(
@@ -63,7 +59,7 @@ export class LogsApiService {
             err.error.error,
         );
 
-        const result = {};
+        const result: Record<string, unknown> = {};
         result['file'] = filename;
         result['filesize'] = 0;
         result['chunk'] = 1;

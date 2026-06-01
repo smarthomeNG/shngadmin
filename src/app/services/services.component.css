@@ -1,184 +1,109 @@
-/*
-::ng-deep .tab-shng > a{
-  border-bottom: none !important;
-  outline: 0 !important;
-  color:rgb(160, 160, 160);
-}
-*/
-
-.tab-shng > a {
-  border-bottom: none !important;
-  outline: 0 !important;
-  color: rgb(160, 160, 160);
-}
-
-.CodeMirror {
-  width: 48vw;
-  height: 70vh;
-}
-
 .body {
   margin: 0;
 }
 .shngbody2 {
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--navbar-height));
+  overflow: hidden;
   width: 100%;
   margin: 0;
-  padding: 0;
-
-  padding-left: 10px; /* padding around tab border */
-  padding-right: 10px;
-
-  display: grid;
-  grid-template-rows: 0 auto 0;
-  grid-template-columns: 1fr;
-
-  grid-template-areas:
-    'body-header-services'
-    'body-content-services'
-    'body-footer-services';
-
-  grid-gap: 0;
-  grid-auto-flow: row;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
+  display: flex;
+  flex-direction: column;
 }
 
-/*
-.body-header-services {
-  grid-area: body-header-services;
-  width: 100%;
-
-  display: grid;
-  overflow: auto;
-
-  grid-template-columns: 110px minmax(140px, 280px) 1fr;
-  grid-auto-rows: minmax(50px, max-content);
+/* The anonymous wrapper div containing p-tabs */
+.shngbody2 > div {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.body-content-services {
-  grid-area: body-content-services;
-  width: 100%;
-
-  display: grid;
-  overflow: auto;
-
-  grid-template-columns: 1fr;
-  grid-auto-rows: minmax(50px, max-content);
+/* p-tabs host — fills the wrapper; flex column so the global
+   .p-tabs/.p-tabpanels flex rules take effect all the way down */
+p-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.body-footer-services {
-  grid-area: body-footer-services;
-  width: 100%;
+.tab-content-services table td button,
+.tab-content-services table td p-select {
+  min-width: 170px;
 }
-*/
-
-/*
-.tab-header {
-  grid-area: tab-header;
-  width: 100%;
-}
-*/
 
 .tab-content-services {
   grid-area: tab-content;
-  width: calc(100vw - 20px);
-  height: calc(100vh - 60px - 41px - 10px);
-  border: 1px solid #dee2e6;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--shng-border);
   border-top: 0;
   padding-left: 10px; /* padding around striped table inside tab border */
   padding-right: 10px;
   overflow: auto;
-  /*
-  display: grid;
-  grid-template-rows: 0px auto 0px;
-  grid-template-columns: 1fr;
-
-  grid-template-areas: "tab-content-services-header"
-                       "tab-content-services-content"
-                       "tab-content-services-footer";
-
-  grid-gap: 0px;
-  grid-auto-flow: row;
-*/
 }
 
-.tab-content-services table td {
-  padding-top: 23px;
-}
-.tab-content-services .row-icon {
-  padding-top: 15px;
-}
-.tab-content-services .row-button {
-  padding-top: 22px;
-}
-
-/*
-.tab-footer {
-  grid-area: tab-footer;
-  width: 100%;
-}
-*/
-
-.tab-content-services-header {
-  grid-area: tab-content-services-header;
-  width: 100%;
-  border-left: 1px solid #dee2e6;
-  border-right: 1px solid #dee2e6;
+/* Side-by-side editor panels (YAML checker, CONF→YAML converter).
+   Overrides tab-content-services overflow:auto so the editors fill
+   the tab panel height and scroll internally rather than the whole
+   tab scrolling with a fixed-pixel editor. */
+.tab-content-editors {
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden !important;
 }
 
-.tab-content-services-content {
-  grid-area: tab-content-services-content;
-  width: 100%;
-  height: calc(100vh - 60px - 41px - 50px - 50px - 10px);
-  border: 1px solid #dee2e6;
-  border-left: 0;
-  overflow: auto;
+.editors-toolbar {
+  flex-shrink: 0;
 }
 
-.tab-content-services-footer {
-  grid-area: tab-content-services-footer;
-  width: 100%;
-  padding-top: 15px;
+.editors-pair {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 5px;
+  padding: 5px 5px 5px 0;
+}
+
+.editors-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .tab-content-services-cache {
-  grid-area: tab-content;
   width: 100%;
-  height: calc(100vh - 60px - 41px - 50px - 10px);
-  border: 1px solid #dee2e6;
+  height: 100%;
+  border: 1px solid var(--shng-border);
   border-top: 0;
-  /*overflow: auto;*/
-
-  display: grid;
-  grid-template-rows: 50px auto 50px;
-  grid-template-columns: 1fr;
-
-  grid-template-areas:
-    'tab-content-services-cache-header'
-    'tab-content-services-cache-content'
-    'tab-content-services-cache-footer';
-
-  grid-gap: 0;
-  grid-auto-flow: row;
+  display: flex;
+  flex-direction: column;
 }
 
 .tab-content-services-cache-header {
-  grid-area: tab-content-services-cache-header;
+  flex-shrink: 0;
   width: 100%;
-  border-left: 1px solid #dee2e6;
-  border-right: 1px solid #dee2e6;
 }
 
 .tab-content-services-cache-content {
-  grid-area: tab-content-services-cache-content;
+  flex: 1 1 0;
+  min-height: 0;
   width: 100%;
-  height: calc(100vh - 60px - 41px - 50px - 50px - 10px);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--shng-border);
   border-left: 0;
   overflow: auto;
 }
 
 .tab-content-services-cache-footer {
-  grid-area: tab-content-services-cache-footer;
+  flex-shrink: 0;
   width: 100%;
   padding-top: 15px;
+  padding-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .tab-content-services-cache-footer {
+    padding-bottom: calc(var(--page-padding) / 2);
+  }
 }

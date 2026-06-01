@@ -1,52 +1,86 @@
 <div class="shngbody">
-  <div class="button-row">
-    <button
-      pButton
-      label="{{ 'BUTTON.SAVE' | translate }}"
-      type="button"
-      [disabled]="!this.groupChanged"
-      icon="fa fa-check"
-      style="margin-right: 0"
-      (click)="saveGroup()"
-      class="float-sm-right ui-button-success"
-    ></button>
-    <button
-      pButton
-      label="{{ 'BUTTON.DISCARD' | translate }}"
-      type="button"
-      [disabled]="!this.groupChanged"
-      icon="fa fa-times"
-      style="margin-right: 10px"
-      (click)="this.discardChanges()"
-      class="float-sm-right ui-button-secondary"
-    ></button>
+  <div class="shng-page-header page-header-bar">{{ 'MENU.LOGICS_GROUPS' | translate }}</div>
+  <div class="button-toolbar">
+    <div class="button-toolbar-left">
+      <button
+        pButton
+        label="{{ 'BUTTON.NEW_GROUP' | translate }}"
+        type="button"
+        [disabled]="!(myEditGroup === '' || !this.groupChanged)"
+        icon="far fa-file"
+        (click)="newGroup()"
+        class="ui-button-success"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [disabled]="myEditGroup === ''"
+        icon="far fa-trash-alt"
+        style="width: 25px"
+        (click)="deleteGroup()"
+        class="ui-button-danger"
+      ></button>
+      <button
+        pButton
+        label="{{ 'LOGIC_GROUPS.MERGE_INTO' | translate }}"
+        type="button"
+        [disabled]="myEditGroup === '' || groupList.length < 2"
+        icon="fa fa-code-merge"
+        (click)="openMergeDialog()"
+        class="ui-button-secondary"
+      ></button>
+    </div>
+    <div class="button-toolbar-right">
+      <button
+        pButton
+        label="{{ 'BUTTON.DISCARD' | translate }}"
+        type="button"
+        [disabled]="!this.groupChanged"
+        icon="fa fa-times"
+        (click)="this.discardChanges()"
+        class="ui-button-secondary"
+      ></button>
+      <button
+        pButton
+        label="{{ 'BUTTON.SAVE' | translate }}"
+        type="button"
+        [disabled]="!this.groupChanged"
+        icon="fa fa-check"
+        (click)="saveGroup()"
+        class="ui-button-success"
+      ></button>
+    </div>
   </div>
 
-  <div class="logics-groupslist">
-    <button
-      pButton
-      label="{{ 'BUTTON.NEW_GROUP' | translate }}"
-      type="button"
-      [disabled]="!(myEditGroup === '' || !this.groupChanged)"
-      icon="far fa-file"
-      style="margin-left: 3px; margin-right: 10px"
-      (click)="newGroup()"
-      class="float-sm-left ui-button-success"
-    ></button>
-    <button
-      pButton
-      type="button"
-      [disabled]="myEditGroup === ''"
-      icon="far fa-trash-alt"
-      style="margin-right: 0; width: 25px"
-      (click)="deleteGroup()"
-      class="float-sm-left ui-button-danger"
-    ></button>
-    <br />
-    <br />
+  @if (unknownGroupNames().length > 0) {
+    <div class="unknown-groups-banner">
+      <i class="fa fa-exclamation-triangle" style="margin-right: 8px"></i>
+      <strong>{{ 'LOGICS.UNKNOWN_GROUPS_BANNER' | translate }}</strong>
+      <ul class="unknown-groups-list">
+        @for (gname of unknownGroupNames(); track gname) {
+          <li>
+            <span class="unknown-group-name">{{ gname }}</span>
+            <span class="unknown-group-members"
+              >({{ 'LOGICS.USED_BY' | translate }}: {{ unknownGroups[gname].join(', ') }})</span
+            >
+            <button
+              pButton
+              type="button"
+              icon="far fa-file"
+              [label]="'BUTTON.CREATE' | translate"
+              class="ui-button-warning btn-sm"
+              style="margin-left: 12px"
+              (click)="createUnknownGroup(gname)"
+            ></button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
 
-    <i class="fa fa-sitemap" style="margin-left: 5px; color: #a2a2a2"></i>
-    <a style="margin-left: 5px; color: #727272">{{ 'LOGICS.GROUPS' | translate }}</a>
+  <div class="logics-groupslist">
+    <i class="fa fa-sitemap" style="margin-left: 5px; color: var(--text-caption)"></i>
+    <a style="margin-left: 5px; color: var(--text-muted)">{{ 'LOGICS.GROUPS' | translate }}</a>
 
     <p-listbox
       [options]="menuGroupList"
@@ -55,81 +89,91 @@
       (onChange)="groupSelected()"
       optionLabel="label"
       [style]="{ width: '100%' }"
-      [listStyle]="{ height: 'calc(100vh - 213px)', 'min-height': '200px' }"
+      [listStyle]="{ 'min-height': '200px' }"
     >
     </p-listbox>
   </div>
 
   <div class="logics-groupeditor">
-    <table id="1" class="table table-striped">
-      <tr>
-        <td width="120px">{{ 'LOGIC_GROUPS.GROUP_NAME' | translate }}</td>
-        <td>
-          <input
-            [(ngModel)]="myEditGroup"
-            [disabled]="true"
-            type="text"
-            pInputText
-            placeholder=""
-            pInputText
-            name="name"
-            style="width: 100%"
-            [ngStyle]="{ width: 50 }"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td width="120px">{{ 'LOGIC_GROUPS.GROUP_TITLE' | translate }}</td>
-        <td>
-          <input
-            [(ngModel)]="group.title"
+    <div class="group-form">
+      <div class="group-form-row">
+        <span class="group-form-label">{{ 'LOGIC_GROUPS.GROUP_NAME' | translate }}</span>
+        <input
+          [(ngModel)]="myEditGroup"
+          [disabled]="true"
+          type="text"
+          pInputText
+          placeholder=""
+          name="name"
+          style="flex: 1"
+        />
+      </div>
+      <div class="group-form-row">
+        <span class="group-form-label">{{ 'LOGIC_GROUPS.GROUP_TITLE' | translate }}</span>
+        <input
+          [(ngModel)]="group.title"
+          (keyup)="this.groupChanged = hasGroupChanged()"
+          type="text"
+          pInputText
+          placeholder=""
+          name="title"
+          style="flex: 1"
+        />
+      </div>
+      <div class="group-form-row">
+        <span class="group-form-label">{{ 'LOGIC_GROUPS.GROUP_DESCRIPTION' | translate }}</span>
+        <div class="description" style="flex: 1">
+          <div
+            #groupDesc
+            class="description-text"
+            id="group-desc"
+            contenteditable="true"
             (keyup)="this.groupChanged = hasGroupChanged()"
-            type="text"
-            pInputText
-            placeholder=""
-            pInputText
-            name="description"
-            style="width: 100%"
-            [ngStyle]="{ width: 50 }"
-          />
-        </td>
-      </tr>
-      <!--
-      <tr>
-        <td>{{ 'LOGIC_EDIT.GROUP_DESCRIPTION'|translate }}</td>
-        <td>
-          <input [(ngModel)]="group.description"
-                 (keyup)="this.groupChanged = hasGroupChanged()"
-                 type="text" pInputText placeholder=""
-                 pInputText name="description"
-                 style="width: 100%;"
-                 [ngStyle]="{'width': 50}"/>
-        </td>
-      </tr>
--->
-      <tr>
-        <td>{{ 'LOGIC_GROUPS.GROUP_DESCRIPTION' | translate }}</td>
-        <td>
-          <div class="description">
-            <div
-              #groupDesc
-              class="description-text"
-              id="group-desc"
-              contenteditable="true"
-              (keyup)="this.groupChanged = hasGroupChanged()"
-            >
-              {{ group.description }}
-            </div>
+          >
+            {{ group.description }}
           </div>
-        </td>
-      </tr>
-    </table>
+        </div>
+      </div>
+      <div class="group-form-row group-form-row-fill">
+        <span class="group-form-label" style="padding-top: 12px">{{ 'LOGIC_GROUPS.GROUP_MEMBERS' | translate }}</span>
+        <div class="group-members-wrapper">
+          <p-pickList
+            [source]="membersAvailable"
+            [target]="membersInGroup"
+            [sourceHeader]="'LOGIC_GROUPS.AVAILABLE_LOGICS' | translate"
+            [targetHeader]="'LOGIC_GROUPS.GROUP_MEMBERS' | translate"
+            [dragdrop]="true"
+            [responsive]="true"
+            [showSourceControls]="false"
+            [showTargetControls]="false"
+            filterBy="name,logic_description"
+            [sourceFilterPlaceholder]="'FILTER' | translate"
+            [targetFilterPlaceholder]="'FILTER' | translate"
+            (onMoveToTarget)="onPickListChange()"
+            (onMoveToSource)="onPickListChange()"
+            (onMoveAllToTarget)="onPickListChange()"
+            (onMoveAllToSource)="onPickListChange()"
+            [disabled]="myEditGroup === ''"
+            styleClass="members-picklist"
+            [style]="{ height: '100%' }"
+          >
+            <ng-template #item let-logic>
+              <div class="picklist-item">
+                <span class="picklist-name">{{ logic.name }}</span>
+                @if (logic.logic_description) {
+                  <span class="picklist-desc">{{ logic.logic_description }}</span>
+                }
+              </div>
+            </ng-template>
+          </p-pickList>
+        </div>
+      </div>
+    </div>
   </div>
-  <!-- <a style="font-size: small; padding-topt: 5px; padding-left: 10px;">{{ 'RESTART FOR CHANGES'|translate }}</a> -->
 </div>
 
 <!--
-  -- Dialog for setting the name of the new item configuration file
+  -- Dialog for setting the name of the new group
   -->
 
 <p-dialog
@@ -147,18 +191,19 @@
   </ng-template>
 
   <br />
-  {{ 'LOGIC_GROUPS.UNIQUE_NAME' | translate }}&nbsp;
-  <input
-    [(ngModel)]="newGroupname"
-    type="text"
-    (input)="checkInput()"
-    pInputText
-    placeholder=""
-    [ngStyle]="{ width: 20 }"
-    autofocus
-  />
-
-  <br />
+  <div style="display: flex; align-items: center; gap: 8px">
+    {{ 'LOGIC_GROUPS.UNIQUE_NAME' | translate }}
+    <input
+      [(ngModel)]="newGroupname"
+      type="text"
+      (input)="checkInput()"
+      (keydown.enter)="add_enabled && addGroup()"
+      (keydown.escape)="newGroupAbort()"
+      pInputText
+      placeholder=""
+      autofocus
+    />
+  </div>
   <br />
   <ng-template pTemplate="footer">
     <button
@@ -183,7 +228,7 @@
 </p-dialog>
 
 <!--
-  -- Confirm dialog vor configuration deletion
+  -- Error dialog
   -->
 <p-dialog header="" [(visible)]="error_display" [closable]="false" [modal]="true" blockScroll="true">
   <ng-template pTemplate="header">
@@ -208,14 +253,14 @@
 </p-dialog>
 
 <!--
-  -- Confirm dialog vor configuration deletion
+  -- Confirm delete dialog
   -->
 <p-dialog header="" [(visible)]="confirmdelete_display" [modal]="true" blockScroll="true">
   <ng-template pTemplate="header">
-    {{ 'ITEM_CONFIG.DELETE_CONFIG' | translate }}
+    {{ 'LOGIC_GROUPS.DELETE_GROUP' | translate }}
   </ng-template>
   <br />
-  {{ 'ITEM_CONFIG.DELETE_CONFIG_FILE' | translate: delete_param }}
+  {{ 'LOGIC_GROUPS.DELETE_GROUP_CONFIRM' | translate: delete_param }}
   <br />
   <br />
   <ng-template pTemplate="footer">
@@ -232,6 +277,61 @@
       type="button"
       icon="fa fa-times"
       (click)="confirmdelete_display = false"
+      label="{{ 'BUTTON.ABORT' | translate }}"
+      class="ui-button-secondary"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!--
+  -- Merge group dialog
+  -->
+<p-dialog
+  header=""
+  [(visible)]="mergeDialog"
+  [modal]="true"
+  blockScroll="true"
+  [closable]="false"
+  [style]="{ minWidth: '480px', minHeight: '260px' }"
+>
+  <ng-template pTemplate="header">
+    {{ 'LOGIC_GROUPS.MERGE_DIALOG_TITLE' | translate }}
+  </ng-template>
+
+  <br />
+  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+    <span>{{ 'LOGIC_GROUPS.MERGE_SELECT_TARGET' | translate: { source: myEditGroup } }}</span>
+    <p-select
+      [(ngModel)]="mergeTargetName"
+      [options]="mergeGroupOptions"
+      optionLabel="label"
+      optionValue="value"
+      [placeholder]="'LOGIC_GROUPS.MERGE_SELECT_PLACEHOLDER' | translate"
+      appendTo="body"
+      style="min-width: 220px"
+    ></p-select>
+  </div>
+  @if (mergeTargetName) {
+    <div style="margin-top: 12px; font-style: italic; color: var(--text-muted)">
+      {{ 'LOGIC_GROUPS.MERGE_PREVIEW' | translate: mergePreviewParams }}
+    </div>
+  }
+  <br />
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      icon="fa fa-code-merge"
+      (click)="executeMerge()"
+      [disabled]="!mergeTargetName"
+      label="{{ 'LOGIC_GROUPS.MERGE_CONFIRM' | translate }}"
+      class="ui-button-success"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="fa fa-times"
+      (click)="mergeDialog = false"
       label="{{ 'BUTTON.ABORT' | translate }}"
       class="ui-button-secondary"
     ></button>

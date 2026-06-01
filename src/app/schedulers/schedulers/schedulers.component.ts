@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -18,7 +17,6 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { SchedulerInfo } from '../../common/models/scheduler-info';
 import { LogService } from '../../common/services/log.service';
 import { SchedulersApiService } from '../../common/services/schedulers-api.service';
-import { ServerApiService } from '../../common/services/server-api.service';
 
 @Component({
   selector: 'app-schedulers',
@@ -30,16 +28,45 @@ import { ServerApiService } from '../../common/services/server-api.service';
 export class SchedulersComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private http = inject(HttpClient);
-  private dataServiceServer = inject(ServerApiService);
   private dataService = inject(SchedulersApiService);
   private translate = inject(TranslateService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
   private readonly log = inject(LogService);
 
-  schedulerinfo: SchedulerInfo[];
-  developerMode: boolean;
+  schedulerinfo: SchedulerInfo[] = [];
+  developerMode!: boolean;
+
+  get itemSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'item');
+  }
+  get logicSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'logic');
+  }
+  get pluginSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'plugin');
+  }
+  get otherSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'other');
+  }
+  get triggerSchedulers(): SchedulerInfo[] {
+    return this.schedulerinfo.filter((s) => s.group === 'trigger');
+  }
+
+  sortField = '';
+  sortOrder: 1 | -1 = 1;
+
+  sortBy(field: string): void {
+    this.sortOrder = this.sortField === field ? (this.sortOrder === 1 ? -1 : 1) : 1;
+    this.sortField = field;
+    const ord = this.sortOrder;
+    this.schedulerinfo.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -48,23 +75,18 @@ export class SchedulersComponent implements OnInit {
   ngOnInit() {
     this.log.log('SchedulersComponent.ngOnInit');
 
-    this.dataServiceServer
-      .getServerinfo()
+    this.setTitle(this.translate.instant('MENU.SCHEDULERS'));
+
+    this.dataService
+      .getSchedulers()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((response) => {
-        this.setTitle(this.translate.instant('MENU.SCHEDULERS'));
+      .subscribe((response2) => {
+        this.schedulerinfo = <SchedulerInfo[]>response2;
+        //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
+        this.developerMode = this.appConfig.developerMode;
 
-        this.dataService
-          .getSchedulers()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe((response2) => {
-            this.schedulerinfo = <SchedulerInfo[]>response2;
-            //          this.schedulerinfo.sort(function (a, b) {return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)});
-            this.developerMode = this.appConfig.developerMode;
-
-            this.log.log('getSchedulers', { response2 });
-            this.cdr.markForCheck();
-          });
+        this.log.log('getSchedulers', { response2 });
+        this.cdr.markForCheck();
       });
   }
 }

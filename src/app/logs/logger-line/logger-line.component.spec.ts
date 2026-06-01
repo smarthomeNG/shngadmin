@@ -13,7 +13,9 @@ describe('LoggerLineComponent', () => {
       imports: [LoggerLineComponent, translateTestingModule],
       schemas: [NO_ERRORS_SCHEMA],
     })
-      .overrideComponent(LoggerLineComponent, { set: { imports: [TranslatePipe] } })
+      .overrideComponent(LoggerLineComponent, {
+        set: { imports: [TranslatePipe], schemas: [NO_ERRORS_SCHEMA] },
+      })
       .compileComponents();
 
     fixture = TestBed.createComponent(LoggerLineComponent);
@@ -57,7 +59,10 @@ describe('LoggerLineComponent', () => {
     expect(component.loggerIsDeletable('some.other')).toBe(false);
   });
 
-  it('levelOptions has 8 entries', () => {
-    expect(component.levelOptions).toHaveLength(8);
+  it('levelOptions has 9 entries including DEVELOP', () => {
+    expect(component.levelOptions).toHaveLength(9);
+    expect(component.levelOptions).toEqual(
+      expect.arrayContaining([expect.objectContaining({ value: 'DEVELOP' })]),
+    );
   });
 });

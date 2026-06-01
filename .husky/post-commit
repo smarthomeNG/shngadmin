@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Build and deploy AdminUI to the shng repo.
+#
+# Hook mode (default — called by husky after every commit):
+#   Runs only on the 'develop' branch.
+#   Requires shng to be checked out on 'develop-adminui'.
+#   Returns to the 'work' branch when done.
+#
+# Release mode (called by release.sh):
+#   sa-deploy.sh --release
+#   Runs only on the 'master' branch.
+#   Requires shng to be checked out on 'develop'.
+#   Does NOT switch branches when done — caller manages branch state.
+
+set -euo pipefail
+
+# ── Always run from the adminUI repo root ────────────────────────────────────
+cd "$HOME/shngadmin"
+
+# ── Mode ─────────────────────────────────────────────────────────────────────
+RELEASE_MODE=false
+[[ "${1:-}" == "--release" ]] && RELEASE_MODE=true
+
+# ── Configuration ─────────────────────────────────────────────────────────────
+SHNG_DIR="$HOME/shng"
+SHNG_TARGET="$SHNG_DIR/modules/admin/webif/static"
+
+if $RELEASE_MODE; then
+    REQUIRED_BRANCH="master"
+    SHNG_BRANCH="develop"
+    LOG_TAG="[sa-deploy --release]"
+else
+    REQUIRED_BRANCH="develop"
+    SHNG_BRANCH="develop-adminui"
+    LOG_TAG="[sa-deploy]"
+    # Hook guard: only run for the repo owner
+    [ "$(whoami)" = "sh" ] || exit 0
+fi
+
+# ── Branch checks ─────────────────────────────────────────────────────────────
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+echo "$LOG_TAG adminUI branch: '$CURRENT_BRANCH'"
+
+if [[ "$CURRENT_BRANCH" != "$REQUIRED_BRANCH" ]]; then
+    if $RELEASE_MODE; then
+        echo "ERROR: adminUI must be on '$REQUIRED_BRANCH' for release build (is '$CURRENT_BRANCH')." >&2
+        exit 1
+    else
+        echo "$LOG_TAG not '$REQUIRED_BRANCH', skipping"
+        exit 0
+    fi
+fi
+
+SHNG_CURRENT=$(git -C "$SHNG_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "")
+if [[ "$SHNG_CURRENT" != "$SHNG_BRANCH" ]]; then
+    if $RELEASE_MODE; then
+        echo "ERROR: $SHNG_DIR is on '$SHNG_CURRENT', expected '$SHNG_BRANCH'. Aborting." >&2
+        exit 1
+    else
+        echo "$LOG_TAG not deploying: shng is on '$SHNG_CURRENT', expected '$SHNG_BRANCH'"
+        exit 0
+    fi
+fi
+
+echo "$LOG_TAG building from '$CURRENT_BRANCH', deploying to $SHNG_TARGET"
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+echo "$LOG_TAG running tests"
+npm test -- --watchAll=false --passWithNoTests
+
+# ── Build ─────────────────────────────────────────────────────────────────────
+echo "$LOG_TAG building production bundle"
+NODE_OPTIONS="--trace-deprecation --trace-warnings" \
+    npx ng build --configuration production --aot --base-href /admin/
+
+# ── Deploy ────────────────────────────────────────────────────────────────────
+echo "$LOG_TAG deploying to $SHNG_TARGET"
+rm -rf "$SHNG_TARGET"/*
+cp -r dist/static/* "$SHNG_TARGET/"
+
+# ── Post-deploy branch switch (hook mode only) ────────────────────────────────
+if ! $RELEASE_MODE; then
+    git checkout work
+fi
+
+echo "$LOG_TAG done"

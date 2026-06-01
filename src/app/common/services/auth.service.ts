@@ -32,10 +32,10 @@ export class AuthService {
   /** Emits whenever the login state changes (login success / logout). */
   readonly loggedIn$ = new BehaviorSubject<boolean>(false);
 
-  currentUser: DecodedJwtToken | null;
+  currentUser!: DecodedJwtToken | null;
   isLoginRequired: boolean;
   isLoginRequiredCount = 0;
-  expiredLogin: boolean;
+  expiredLogin!: boolean;
 
   ttl: number = 0;
   renewAfter: number = 0;
@@ -62,7 +62,7 @@ export class AuthService {
     return Math.round(new Date().getTime() / 1000);
   }
 
-  login(credentials) {
+  login(credentials: { username: string; password: string }) {
     this.log.log('authService.login() entering');
     this.logTimestamp = this.getTimestamp();
 

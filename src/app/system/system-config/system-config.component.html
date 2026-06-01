@@ -2,12 +2,6 @@
 <div style="margin-left: 10px; margin-right: 10px;">
 -->
 <div class="shngbody">
-  <div class="body-header">
-    <h3 style="color: #707070; margin-left: 5px">
-      {{ 'SYSTEM.CONFIGURATION' | translate }}
-    </h3>
-  </div>
-
   <div class="body-content">
     <p-tabs value="0">
       <p-tablist>
@@ -23,7 +17,7 @@
             <p-table [columns]="common_parameter_cols" [value]="common_parameters" selectionMode="single">
               <ng-template pTemplate="header" let-columns>
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <th [pSortableColumn]="col.field" [ngStyle]="{ width: col.width }">
                       {{ col.header | translate }}
                       @if (col.field !== '') {
@@ -40,21 +34,48 @@
               </ng-template>
               <ng-template pTemplate="body" let-rowData let-columns="columns">
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <td>
-                      @if (dialog_readonly === false && col.field === 'value') {
+                      @if (rowData.name === 'config_etc' && col.field === 'value') {
+                        <!-- config_etc value cell: "true" text when active, button otherwise -->
+                        @if (configEtcActive) {
+                          <span>true</span>
+                        } @else {
+                          <button
+                            pButton
+                            type="button"
+                            class="btn-shng btn btn-sm"
+                            style="width: 100%"
+                            [disabled]="configEtcChecking"
+                            (click)="checkConfigEtc(true)"
+                            icon="fas fa-search"
+                            label="{{ 'SYSTEM.CONFIG_ETC_CHECK' | translate }}"
+                          ></button>
+                        }
+                      } @else if (rowData.name === 'config_etc' && col.field === 'desc') {
+                        <!-- config_etc description cell: module.yaml text + status on second line -->
+                        <div [innerHTML]="rowData[col.field]"></div>
+                        <div style="margin-top: 6px">
+                          @if (configEtcChecking) {
+                            <i class="pi pi-spin pi-spinner"></i>
+                          } @else if (configEtcActive) {
+                            <p-message severity="success" [text]="'SYSTEM.CONFIG_ETC_ACTIVE' | translate"></p-message>
+                          } @else if (configEtcCheckResult?.['safe'] === true) {
+                            <p-message
+                              severity="info"
+                              [text]="'SYSTEM.CONFIG_ETC_INACTIVE_SAFE' | translate"
+                            ></p-message>
+                          } @else if (configEtcCheckResult !== null) {
+                            <p-message
+                              severity="warn"
+                              [text]="'SYSTEM.CONFIG_ETC_INACTIVE_UNSAFE' | translate"
+                            ></p-message>
+                          }
+                        </div>
+                      } @else if (dialog_readonly === false && col.field === 'value') {
                         <app-dynamic-field [row]="rowData" [col]="col" (changed)="check_values()"></app-dynamic-field>
-                      }
-
-                      @if (dialog_readonly === true || col.field !== 'value') {
-                        @if (col.field !== 'desc' || rowData.gui_type !== 'wide_str') {
-                          <div [innerHTML]="rowData[col.field]"></div>
-                        }
-                        @if (col.field === 'desc' && rowData.gui_type === 'wide_str') {
-                          <div [ngStyle]="{ 'padding-left': col.paddingleft }">
-                            <div [innerHTML]="rowData[col.field]"></div>
-                          </div>
-                        }
+                      } @else {
+                        <div [innerHTML]="rowData[col.field]"></div>
                       }
                     </td>
                   }
@@ -69,7 +90,7 @@
             <p-table [columns]="http_parameter_cols" [value]="http_parameters" selectionMode="single">
               <ng-template pTemplate="header" let-columns>
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <th [pSortableColumn]="col.field" [ngStyle]="{ width: col.width }">
                       {{ col.header | translate }}
                       @if (col.field !== '') {
@@ -86,7 +107,7 @@
               </ng-template>
               <ng-template pTemplate="body" let-rowData let-columns="columns">
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <td>
                       @if (dialog_readonly === false && col.field === 'value') {
                         <app-dynamic-field [row]="rowData" [col]="col" (changed)="check_values()"></app-dynamic-field>
@@ -113,14 +134,7 @@
                       }
 
                       @if (dialog_readonly === true || col.field !== 'value') {
-                        @if (col.field !== 'desc' || rowData.gui_type !== 'wide_str') {
-                          <div [innerHTML]="rowData[col.field]"></div>
-                        }
-                        @if (col.field === 'desc' && rowData.gui_type === 'wide_str') {
-                          <div [ngStyle]="{ 'padding-left': col.paddingleft }">
-                            <div [innerHTML]="rowData[col.field]"></div>
-                          </div>
-                        }
+                        <div [innerHTML]="rowData[col.field]"></div>
                       }
                     </td>
                   }
@@ -135,7 +149,7 @@
             <p-table [columns]="websocket_parameter_cols" [value]="websocket_parameters" selectionMode="single">
               <ng-template pTemplate="header" let-columns>
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <th [pSortableColumn]="col.field" [ngStyle]="{ width: col.width }">
                       {{ col.header | translate }}
                       @if (col.field !== '') {
@@ -152,7 +166,7 @@
               </ng-template>
               <ng-template pTemplate="body" let-rowData let-columns="columns">
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <td>
                       @if (dialog_readonly === false && col.field === 'value') {
                         <app-dynamic-field
@@ -183,14 +197,7 @@
                       }
 
                       @if (dialog_readonly === true || col.field !== 'value') {
-                        @if (col.field !== 'desc' || rowData.gui_type !== 'wide_str') {
-                          <div [innerHTML]="rowData[col.field]"></div>
-                        }
-                        @if (col.field === 'desc' && rowData.gui_type === 'wide_str') {
-                          <div [ngStyle]="{ 'padding-left': col.paddingleft }">
-                            <div [innerHTML]="rowData[col.field]"></div>
-                          </div>
-                        }
+                        <div [innerHTML]="rowData[col.field]"></div>
                       }
                     </td>
                   }
@@ -205,7 +212,7 @@
             <p-table [columns]="admin_parameter_cols" [value]="admin_parameters" selectionMode="single">
               <ng-template pTemplate="header" let-columns>
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <th [pSortableColumn]="col.field" [ngStyle]="{ width: col.width }">
                       {{ col.header | translate }}
                       @if (col.field !== '') {
@@ -222,21 +229,14 @@
               </ng-template>
               <ng-template pTemplate="body" let-rowData let-columns="columns">
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <td>
                       @if (dialog_readonly === false && col.field === 'value') {
                         <app-dynamic-field [row]="rowData" [col]="col" (changed)="check_values()"></app-dynamic-field>
                       }
 
                       @if (dialog_readonly === true || col.field !== 'value') {
-                        @if (col.field !== 'desc' || rowData.gui_type !== 'wide_str') {
-                          <div [innerHTML]="rowData[col.field]"></div>
-                        }
-                        @if (col.field === 'desc' && rowData.gui_type === 'wide_str') {
-                          <div [ngStyle]="{ 'padding-left': col.paddingleft }">
-                            <div [innerHTML]="rowData[col.field]"></div>
-                          </div>
-                        }
+                        <div [innerHTML]="rowData[col.field]"></div>
                       }
                     </td>
                   }
@@ -251,7 +251,7 @@
             <p-table [columns]="mqtt_parameter_cols" [value]="mqtt_parameters" selectionMode="single">
               <ng-template pTemplate="header" let-columns>
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <th [pSortableColumn]="col.field" [ngStyle]="{ width: col.width }">
                       {{ col.header | translate }}
                       @if (col.field !== '') {
@@ -268,21 +268,14 @@
               </ng-template>
               <ng-template pTemplate="body" let-rowData let-columns="columns">
                 <tr>
-                  @for (col of columns; track $index) {
+                  @for (col of columns; track col.field) {
                     <td>
                       @if (dialog_readonly === false && col.field === 'value') {
                         <app-dynamic-field [row]="rowData" [col]="col" (changed)="check_values()"></app-dynamic-field>
                       }
 
                       @if (dialog_readonly === true || col.field !== 'value') {
-                        @if (col.field !== 'desc' || rowData.gui_type !== 'wide_str') {
-                          <div [innerHTML]="rowData[col.field]"></div>
-                        }
-                        @if (col.field === 'desc' && rowData.gui_type === 'wide_str') {
-                          <div [ngStyle]="{ 'padding-left': col.paddingleft }">
-                            <div [innerHTML]="rowData[col.field]"></div>
-                          </div>
-                        }
+                        <div [innerHTML]="rowData[col.field]"></div>
                       }
                     </td>
                   }
@@ -296,10 +289,10 @@
   </div>
   <div class="body-footer">
     @if (dialog_readonly === false && restart_core_button) {
-      <a style="font-size: small">{{ 'RESTART FOR CHANGES' | translate }}</a>
+      <a class="shng-text-sm">{{ 'RESTART FOR CHANGES' | translate }}</a>
     }
     @if (dialog_readonly === false && !restart_core_button) {
-      <a style="font-size: small">&nbsp;</a>
+      <a class="shng-text-sm">&nbsp;</a>
     }
     <br />
     <button
@@ -353,6 +346,81 @@
       (click)="validation_dialog_display = false"
       label="{{ 'BUTTON.CLOSE' | translate }}"
       class="ui-button-success"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!--
+  -- config_etc migration check dialog
+  -->
+
+<p-dialog
+  header=""
+  [(visible)]="configEtcCheckDialogVisible"
+  [modal]="true"
+  blockScroll="true"
+  [style]="{ width: '600px' }"
+>
+  <ng-template pTemplate="header">
+    {{ 'SYSTEM.CONFIG_ETC_CHECK_TITLE' | translate }}
+  </ng-template>
+
+  @if (configEtcCheckResult) {
+    @if (configEtcCheckResult['safe']) {
+      <p-message severity="success" [text]="'SYSTEM.CONFIG_ETC_SAFE' | translate"></p-message>
+    } @else {
+      <p-message severity="error" [text]="'SYSTEM.CONFIG_ETC_CONFLICTS' | translate"></p-message>
+      @for (entry of configEtcConflictDirs; track entry.dir) {
+        <div style="margin-top: 6px">
+          <b>{{ entry.dir }}/</b>
+          @for (f of entry.files; track f) {
+            <div style="margin-left: 16px; font-family: monospace">{{ f }}</div>
+          }
+        </div>
+      }
+    }
+
+    @if (configEtcMigrateDirs.length > 0) {
+      <div style="margin-top: 12px">
+        <b>{{ 'SYSTEM.CONFIG_ETC_TO_MIGRATE' | translate }}</b>
+        @for (entry of configEtcMigrateDirs; track entry.dir) {
+          <div style="margin-top: 4px">
+            <span>{{ entry.dir }}/</span>
+            @for (f of entry.files; track f) {
+              <div style="margin-left: 16px; font-family: monospace">{{ f }}</div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (configEtcCheckResult['already_done']?.length > 0) {
+      <div style="margin-top: 12px">
+        <b>{{ 'SYSTEM.CONFIG_ETC_ALREADY_DONE' | translate }}</b
+        >: {{ configEtcCheckResult['already_done'].join(', ') }}
+      </div>
+    }
+  }
+
+  <ng-template pTemplate="footer">
+    @if (configEtcCheckResult?.['safe'] && !configEtcActive) {
+      <button
+        pButton
+        type="button"
+        icon="pi pi-check"
+        [disabled]="configEtcEnabling"
+        (click)="enableConfigEtc()"
+        label="{{ 'SYSTEM.CONFIG_ETC_ENABLE' | translate }}"
+        class="ui-button-success"
+      ></button>
+    }
+    <button
+      pButton
+      type="button"
+      icon="pi pi-times"
+      (click)="configEtcCheckDialogVisible = false"
+      label="{{ 'BUTTON.CLOSE' | translate }}"
+      class="ui-button-secondary"
     ></button>
   </ng-template>
 </p-dialog>
@@ -430,7 +498,7 @@
     <tr>
       <td style="padding-right: 10px"></td>
       <td>
-        <input [(ngModel)]="pwd_show" type="checkbox" style="font-size: small" id="showtext" />{{
+        <input [(ngModel)]="pwd_show" type="checkbox" class="shng-text-sm" id="showtext" />{{
           'SYSTEM.SHOW_PASSWORDS' | translate
         }}
       </td>
@@ -438,7 +506,7 @@
   </table>
 
   <ng-template pTemplate="footer">
-    <p style="text-align: left; font-size: small">{{ 'SYSTEM.REMEMBER TO SAVE CHANGES' | translate }}</p>
+    <p style="text-align: left" class="shng-text-sm">{{ 'SYSTEM.REMEMBER TO SAVE CHANGES' | translate }}</p>
     <button
       pButton
       type="button"

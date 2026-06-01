@@ -1,43 +1,48 @@
-::ng-deep .tab-shng > a {
-  border-bottom: none !important;
-  outline: 0 !important;
-  color: rgb(160, 160, 160);
-}
-
 .body {
   margin: 0;
 }
+
+/* Outer page shell — flex column so the tab area fills the remaining height */
 .shngbody {
-  width: 100vw;
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--navbar-height));
+  overflow: hidden;
   margin: 0;
-  padding: 0;
-
-  padding-left: 10px;
-  padding-right: 10px;
-
-  display: grid;
-  grid-template-rows: auto;
+  padding: 0 var(--page-padding) var(--page-padding) var(--page-padding);
+  display: flex;
+  flex-direction: column;
 }
 
-/*
-.shngtabbody {
-  height: calc(100vh - 60px - 41px);
-  REMARK background-color: cornsilk;
+/* The inner wrapper div (carries position:relative for the pypi spinner
+   overlay). Must be flex: 1 so it fills shngbody, and itself a flex column
+   so the p-tabs host can grow inside it. */
+.shngbody > div {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
-*/
+
+/* p-tabs host element — grows to fill the wrapper, is itself flex so
+   the global .p-tabs / .p-tabpanels flex-fill rules take effect. */
+p-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
 /* css for System-Info tab */
 
 .shngsysinfo {
-  height: calc(100vh - 60px - 41px - 10px);
-  width: calc(100vw - 20px);
+  height: 100%;
+  width: 100%;
 
   border: 1px solid #dee2e6;
   border-top: 0;
 
   display: grid;
-  grid-template-rows: 50px auto 10px;
+  grid-template-rows: 50px 1fr 10px;
   grid-template-columns: 1fr;
 
   grid-template-areas:
@@ -89,7 +94,6 @@
   min-height: 50px;
   padding: 12px 0;
   align-self: stretch;
-  /*border-bottom: 1px solid #ddd;*/
   width: 100%;
 }
 
@@ -142,14 +146,14 @@
 
 /* css for SmartHomeNG Charts tab */
 .shngcharts {
-  height: calc(100vh - 60px - 41px - 10px);
-  width: calc(100vw - 20px);
+  height: 100%;
+  width: 100%;
 
   border: 1px solid #dee2e6;
   border-top: 0;
 
   display: grid;
-  grid-template-rows: 0 auto 10px;
+  grid-template-rows: 0 1fr 10px;
   grid-template-columns: 1fr;
 
   grid-template-areas:
@@ -185,14 +189,14 @@
 
 /* css for SmartHomeNG PyPI check tab */
 .shngpypi {
-  height: calc(100vh - 60px - 41px - 10px);
-  width: calc(100vw - 20px);
+  height: 100%;
+  width: 100%;
 
   border: 1px solid #dee2e6;
   border-top: 0;
 
   display: grid;
-  grid-template-rows: 50px auto 10px;
+  grid-template-rows: 50px 1fr 10px;
   grid-template-columns: 1fr;
 
   grid-template-areas:
@@ -232,7 +236,6 @@
 
 .shngpypitable {
   width: 100%;
-  /*margin-bottom: 1rem;*/
   color: #212529;
 
   border-color: grey;
@@ -243,14 +246,16 @@
 }
 
 .shngdisclosure {
+  height: 100%;
   overflow: hidden;
   border-top: 0;
   padding: 0;
   padding-top: 5px;
+  box-sizing: border-box;
 }
 
 .shngdisclosure-text {
-  height: calc(100vh - 60px - 41px - 20px);
+  height: 100%;
   overflow-y: auto;
   white-space: pre-wrap;
   background: white;

@@ -1,5 +1,4 @@
 import {
-  AfterViewChecked,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -11,10 +10,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
+import { timer } from 'rxjs';
 import { AppConfigService } from '../common/services/app-config.service';
 import { UserPreferencesService } from '../common/services/user-preferences.service';
-// import { Title } from '@angular/platform-browser';
-import { HttpClient } from '@angular/common/http';
 
 import { saveAs } from 'file-saver';
 
@@ -29,19 +27,18 @@ import { SharedService } from '../common/services/shared.service';
 
 import { NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CodemirrorModule } from '@ctrl/ngx-codemirror';
 import { sha512 } from 'js-sha512';
-import { PrimeTemplate } from 'primeng/api';
+import { MessageService, PrimeTemplate } from 'primeng/api';
 import { Bind } from 'primeng/bind';
 import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { FileUpload } from 'primeng/fileupload';
 import { InputText } from 'primeng/inputtext';
+import { Message } from 'primeng/message';
 import { Ripple } from 'primeng/ripple';
 import { Select } from 'primeng/select';
 import { Tab as Tab_1, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-// import {LogicsWatchItem} from '../common/models/logics-watch-item';
-// import {SelectItem} from 'primeng/api';
+import { CodeEditorComponent } from '../common/components/code-editor/code-editor.component';
 
 export interface CacheEntryType {
   filename: string;
@@ -69,22 +66,23 @@ export interface CacheEntryType {
     Select,
     FormsModule,
     ButtonDirective,
-    CodemirrorModule,
+    CodeEditorComponent,
     InputText,
     Dialog,
     PrimeTemplate,
     FileUpload,
     TranslatePipe,
+    Message,
   ],
 })
-export class ServicesComponent implements AfterViewChecked, OnInit {
+export class ServicesComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private http = inject(HttpClient);
   private translate = inject(TranslateService);
   public shared = inject(SharedService);
   private fileService = inject(FilesApiService);
   private dataService = inject(ServicesApiService);
+  private readonly messageService = inject(MessageService);
   private dataServiceServer = inject(ServerApiService);
   private titleService = inject(Title);
   private appConfig = inject(AppConfigService);
@@ -94,8 +92,8 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   //  schedulerinfo: SchedulerInfo[];
 
   serverInfo = <ServerInfo>{};
-  default_language: string;
-  shng_status: string;
+  default_language!: string;
+  shng_status!: string;
   status_errorcount = 0;
 
   valid_languagelist: { label: string; value: string }[] = [];
@@ -105,152 +103,64 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   shng_statuscode = 0;
 
   pwd_clear = '';
-  pwd_hash: string;
-  pwd_show: boolean;
+  pwd_hash!: string;
+  pwd_show!: boolean;
 
   backup_disabled = false;
   restore_disabled = false;
   show_backup_confirm = false;
   show_restore_chooser = false;
 
-  // -----------------------------------------------------------------
-  //  Vars for the codemirror components
-  //
-  rulers: { color: string; column: number; lineStyle: string }[] = [];
-
   // -----------------------------------------------------
   //  Vars for the EVAL syntax checker
   //
-  @ViewChild('evalcodeeditor', { static: true }) private evalCodeEditor;
-  @ViewChild('evalcodeeditor2', { static: true }) private evalCodeEditor2;
+  @ViewChild('evalcodeeditor') evalCodeEditor?: CodeEditorComponent;
+  @ViewChild('evalcodeeditor2') evalCodeEditor2?: CodeEditorComponent;
 
   myEvalTextarea = '';
   myRelativeTo = '';
   myEvalResult = '';
   myResultType = '';
-  cmEvalOptions = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      Tab: 'insertSoftTab',
-      'Shift-Tab': 'indentLess',
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'python',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   myEvalTextOutput = '';
-  cmEvalOptionsOutput = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      Tab: 'insertSoftTab',
-      'Shift-Tab': 'indentLess',
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'python',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   // -----------------------------------------------------
   //  Vars for the YAML syntax checker
   //
-  @ViewChild('codeeditor', { static: true }) private codeEditor;
-  @ViewChild('codeeditor2', { static: true }) private codeEditor2;
+  @ViewChild('codeeditor') codeEditor?: CodeEditorComponent;
+  @ViewChild('codeeditor2') codeEditor2?: CodeEditorComponent;
 
   myTextarea = '';
-  cmOptions = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      Tab: 'insertSoftTab',
-      'Shift-Tab': 'indentLess',
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   myTextOutput = '';
-  cmOptionsOutput = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      Tab: 'insertSoftTab',
-      'Shift-Tab': 'indentLess',
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   // -----------------------------------------------------
   //  Vars for the YAML converter
   //
-  @ViewChild('convertercodeeditor', { static: true }) private converterCodeEditor;
-  @ViewChild('convertercodeeditor2', { static: true }) private converterCodeEditor2;
+  @ViewChild('convertercodeeditor') converterCodeEditor?: CodeEditorComponent;
+  @ViewChild('convertercodeeditor2') converterCodeEditor2?: CodeEditorComponent;
 
   myConverterTextarea = '';
-  cmConveterOptions = {
-    lineNumbers: true,
-    readOnly: false,
-    indentUnit: 4,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    // mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    indentWithTabs: false,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   myConverterTextOutput = '';
-  cmConverterOptionsOutput = {
-    lineNumbers: true,
-    readOnly: false,
-    indentUnit: 4,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    indentWithTabs: false,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   cacheInfo: CacheEntryType[] = [];
-  cacheAllChecked: boolean;
+  cacheAllChecked!: boolean;
+
+  cacheSortField = '';
+  cacheSortOrder: 1 | -1 = 1;
+
+  sortCache(field: string): void {
+    this.cacheSortOrder = this.cacheSortField === field ? (this.cacheSortOrder === 1 ? -1 : 1) : 1;
+    this.cacheSortField = field;
+    const ord = this.cacheSortOrder;
+    this.cacheInfo.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
@@ -258,10 +168,6 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
 
   ngOnInit() {
     // this.log.log('ServicesComponent.ngOnInit');
-
-    for (let i = 1; i <= 100; i++) {
-      this.rulers.push({ color: '#eee', column: i * 4, lineStyle: 'dashed' });
-    }
 
     this.dataServiceServer
       .getServerinfo()
@@ -304,7 +210,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
       });
   }
 
-  deleteCacheEntry(entryNr) {
+  deleteCacheEntry(entryNr: number) {
     // this.log.log('deleteCacheEntry', this.cacheInfo[entryNr].filename);
     this.dataService
       .deleteCacheFile(this.cacheInfo[entryNr].filename)
@@ -336,26 +242,6 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     }
   }
 
-  ngAfterViewChecked() {
-    const evalEditor1 = this.evalCodeEditor.codeMirror;
-    const evalEditor2 = this.evalCodeEditor2.codeMirror;
-    // const h = evalEditor1.getViewport();
-
-    evalEditor1.setSize('100%', 160);
-    evalEditor1.refresh();
-    evalEditor2.setSize('100%', 160);
-    evalEditor2.refresh();
-
-    const editor1 = this.codeEditor.codeMirror;
-    const editor2 = this.codeEditor2.codeMirror;
-    editor1.refresh();
-    editor2.refresh();
-    const editor3 = this.converterCodeEditor.codeMirror;
-    const editor4 = this.converterCodeEditor2.codeMirror;
-    editor3.refresh();
-    editor4.refresh();
-  }
-
   createPwdHash() {
     this.log.log('createPwdHash');
     this.pwd_hash = sha512(this.pwd_clear);
@@ -369,13 +255,6 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
         this.myTextOutput = response as string;
-        this.cmOptionsOutput.lineNumbers = true;
-        // if (this.myTextOutput.startsWith('ERROR:')) {
-        //   this.cmOptionsOutput.lineNumbers = false;
-        // }
-        this.cmOptionsOutput.lineNumbers = !this.myTextOutput.startsWith('ERROR:');
-        const editor2 = this.codeEditor2.codeMirror;
-        editor2.refresh();
         this.cdr.markForCheck();
       });
   }
@@ -406,12 +285,6 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
         this.myConverterTextOutput = response as string;
-        this.cmConverterOptionsOutput.lineNumbers = true;
-        //          if (this.myConverterTextOutput.startsWith('ERROR:')) {
-        //            this.cmConverterOptionsOutput.lineNumbers = false;
-        //          }
-        //          const editor4 = this.converterCodeEditor2.codeMirror;
-        //          editor4.refresh();
         this.cdr.markForCheck();
       });
   }
@@ -427,7 +300,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
   // -------------------------------------------------------
   // translate status text of SmartHomeNG
   //
-  translate_shngStatus(text) {
+  translate_shngStatus(text: string) {
     //    const translated_text = this.translate.instant('SHNG_STATE.' + text);
     //    if (translated_text.startsWith('SHNG_STATE.')) {
     //      return text;
@@ -456,7 +329,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
         } else {
           // this.log.log('getShngStatus', res.code, res.text);
           this.shng_statuscode = res.code;
-          this.shng_status = this.translate_shngStatus(res.text);
+          this.shng_status = this.translate_shngStatus(res.text ?? '');
           if (res.details !== undefined) {
             this.shng_status += ' (' + res.details + ')';
           }
@@ -473,9 +346,9 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
               interval = interval3;
             }
           }
-          this.sleep(interval).then(() => {
-            this.getShngStatus();
-          });
+          timer(interval)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.getShngStatus());
         } else {
           this.log.warn('getShngStatus', 'Statuspolling aborted');
           this.shng_status = this.translate_shngStatus('not active');
@@ -483,11 +356,6 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
         }
         this.cdr.markForCheck();
       });
-  }
-
-  sleep(time) {
-    // https://davidwalsh.name/javascript-sleep-function
-    return new Promise((resolve) => setTimeout(resolve, time));
   }
 
   // -------------------------------------------------------
@@ -550,7 +418,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     this.restore_disabled = false;
   }
 
-  myUploader(event, form) {
+  myUploader(event: { files: File[] }, form: { clear: () => void }) {
     this.log.log('myUploader', event.files);
     this.log.log('myUploader', event.files[0].name);
 
@@ -571,8 +439,13 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     });
 
     // file reading failed
-    reader.addEventListener('error', function () {
-      alert('Error : Failed to read file');
+    reader.addEventListener('error', () => {
+      this.log.error('Error: Failed to read file');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'File read error',
+        detail: 'Failed to read the selected file.',
+      });
     });
 
     // file read progress
@@ -604,7 +477,7 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     reader.readAsDataURL(event.files[0]);
   }
 
-  doUpload(form) {
+  doUpload(form: { clear: () => void }) {
     this.log.log('doUpload');
 
     /*
