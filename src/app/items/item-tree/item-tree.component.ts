@@ -50,6 +50,7 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
 import { Tree } from 'primeng/tree';
 import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 type MonitoredItem = [string, Record<string, unknown>];
 
@@ -180,13 +181,18 @@ export class ItemTreeComponent implements OnDestroy, OnInit {
     window.addEventListener('resize', this.resizeHandler, false);
     this.resizeItemTree();
 
-    this.websocketPluginService.connect();
-
-    // Re-register monitored items that survived navigation
-    if (this.monitoredItems.length > 0) {
-      const monitoredDataFunction = this.monitoredDataFunction.bind(this);
-      this.websocketPluginService.getMonitoredItems(this.monitoredItems, monitoredDataFunction);
-    }
+    // Defer the WebSocket connection until wsPort is available (same reasoning
+    // as system.component — see serverReady$ comment there).
+    this.appConfig.serverReady$
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.websocketPluginService.connect();
+        // Re-register monitored items that survived navigation
+        if (this.monitoredItems.length > 0) {
+          const monitoredDataFunction = this.monitoredDataFunction.bind(this);
+          this.websocketPluginService.getMonitoredItems(this.monitoredItems, monitoredDataFunction);
+        }
+      });
   }
 
   closeAlert(item_oldvalue: unknown) {

@@ -57,7 +57,12 @@ export class ServerApiService {
   async checkForUpdate(): Promise<void> {
     const STORAGE_KEY = 'shng.index_fingerprint';
     try {
-      const resp = await fetch('/index.html', { method: 'HEAD', cache: 'no-store' });
+      // Use document.baseURI so the URL is correct in both the dev server
+      // (base href '/') and production (base href e.g. '/admin/').
+      // A hardcoded '/index.html' would be root-relative and return 404 on
+      // any deployment where the app is mounted under a sub-path.
+      const indexUrl = new URL('index.html', document.baseURI).toString();
+      const resp = await fetch(indexUrl, { method: 'HEAD', cache: 'no-store' });
       const fingerprint = resp.headers.get('etag') || resp.headers.get('last-modified');
       if (!fingerprint) return;
       const stored = localStorage.getItem(STORAGE_KEY);
