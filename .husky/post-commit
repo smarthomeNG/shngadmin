@@ -17,9 +17,16 @@ set -euo pipefail
 # ── Always run from the adminUI repo root ────────────────────────────────────
 cd "$HOME/shngadmin"
 
-# ── Mode ─────────────────────────────────────────────────────────────────────
+# ── Parse flags ───────────────────────────────────────────────────────────────
 RELEASE_MODE=false
-[[ "${1:-}" == "--release" ]] && RELEASE_MODE=true
+SHNG_BRANCH_OVERRIDE=""
+for _arg in "$@"; do
+    case "$_arg" in
+        --release)        RELEASE_MODE=true ;;
+        --shng-branch=*)  SHNG_BRANCH_OVERRIDE="${_arg#*=}" ;;
+    esac
+done
+unset _arg
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 SHNG_DIR="$HOME/shng"
@@ -31,7 +38,7 @@ if $RELEASE_MODE; then
     LOG_TAG="[sa-deploy --release]"
 else
     REQUIRED_BRANCH="develop"
-    SHNG_BRANCH="develop-adminui"
+    SHNG_BRANCH="${SHNG_BRANCH_OVERRIDE:-develop-adminui}"
     LOG_TAG="[sa-deploy]"
     # Hook guard: only run for the repo owner
     [ "$(whoami)" = "sh" ] || exit 0

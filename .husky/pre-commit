@@ -3,16 +3,28 @@
 SHNG_DIR="$HOME/shng"
 SHNG_BRANCH="develop-adminui"
 REQUIRED_BRANCH="develop"
+FORCE=false   # --force: skip the shng-branch guard and always run
+
+# ── Parse optional flags ──────────────────────────────────────────────────────
+for _arg in "$@"; do
+    case "$_arg" in
+        --force) FORCE=true ;;
+    esac
+done
+unset _arg
 
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
 echo "[pre-commit] branch: '$CURRENT_BRANCH'"
 
-# Skip everything when shng is not on its deployment branch — all code
-# commits were already tested before reaching this point (release workflow).
-SHNG_CURRENT=$(git -C "$SHNG_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "")
-if [[ "$SHNG_CURRENT" != "$SHNG_BRANCH" ]]; then
-    echo "[pre-commit] not deploying context (shng is on '$SHNG_CURRENT', expected '$SHNG_BRANCH') — skipping"
-    exit 0
+# Skip everything when shng is not on its deployment branch.
+# This optimisation only applies to the automatic git-hook path (e.g. release
+# workflow commits); callers that pass --force bypass it and always run.
+if ! $FORCE; then
+    SHNG_CURRENT=$(git -C "$SHNG_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "")
+    if [[ "$SHNG_CURRENT" != "$SHNG_BRANCH" ]]; then
+        echo "[pre-commit] not deploying context (shng is on '$SHNG_CURRENT', expected '$SHNG_BRANCH') — skipping"
+        exit 0
+    fi
 fi
 
 # Run prettier via lint-staged (formats and re-stages changed files)
