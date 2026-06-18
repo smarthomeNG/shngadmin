@@ -29,7 +29,7 @@
     ></button>
   </div>
 
-  <div class="log-filter-row" style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 98%">
+  <div class="log-filter-row" [class.log-filter-row--fullscreen]="editorFullscreen" style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 98%">
     <div>{{ 'LOGS.FILTER' | translate }}:</div>
     <input
       type="text"
@@ -53,6 +53,24 @@
       style="margin-top: 2px; margin-left: 12px; margin-right: 10px"
       icon="fa fa-filter"
       (click)="text_filter = ''; level_filter = 'ALL'; filterLogChunk()"
+      class="ui-button-success"
+    ></button>
+    <button
+      pButton
+      type="button"
+      style="margin-top: 2px; width: 25px"
+      title="{{ 'LOGS.GOTO_LINE' | translate }}"
+      icon="fa fa-level-down"
+      (click)="gotoLine()"
+      class="ui-button-success"
+    ></button>
+    <button
+      pButton
+      type="button"
+      style="margin-top: 2px; margin-left: 2px; width: 25px"
+      title="{{ 'LOGS.TOGGLE_WRAP' | translate }}"
+      icon="fa fa-align-justify"
+      (click)="toggleLineWrap()"
       class="ui-button-success"
     ></button>
 
@@ -184,12 +202,12 @@
         <td>{{ 'HELP.CTRL-L' | translate }}</td>
       </tr>
       <tr>
-        <td>Ctrl-F</td>
+        <td>Ctrl-F / Cmd-F</td>
         <td></td>
         <td>{{ 'HELP.CTRL-F' | translate }}</td>
       </tr>
       <tr>
-        <td>Alt-G</td>
+        <td>Ctrl-Alt-G / Cmd-Alt-G</td>
         <td></td>
         <td>{{ 'HELP.ALT-G' | translate }}</td>
       </tr>

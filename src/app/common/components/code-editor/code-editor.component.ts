@@ -14,6 +14,7 @@ import {
   ViewChild,
   ViewEncapsulation,
   inject,
+  NgZone,
 } from '@angular/core';
 import {
   CompletionContext,
@@ -37,7 +38,7 @@ import {
   syntaxHighlighting,
   unfoldAll,
 } from '@codemirror/language';
-import { searchKeymap } from '@codemirror/search';
+import { gotoLine, openSearchPanel, searchKeymap } from '@codemirror/search';
 import {
   Compartment,
   EditorSelection,
@@ -90,6 +91,7 @@ export type CmCompletionSource = (
 })
 export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
   private readonly el = inject(ElementRef);
+  private readonly zone = inject(NgZone);
 
   @ViewChild('host', { static: true }) private hostRef!: ElementRef<HTMLDivElement>;
 
@@ -136,11 +138,33 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
     this._lineWrapping = this.lineWrapping;
   }
 
+  // Capture-phase document listener so Escape exits fullscreen regardless of
+  // which element has focus, but yields to CM6 when its own panels are open.
+  // Also acts as CSS-only fallback when native fullscreen is unavailable.
+  private readonly _onDocKeydown = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || !this._fullscreen) return;
+    const host = this.hostRef.nativeElement as HTMLElement;
+    const cmPanelOpen = host.querySelector('.cm-search, .cm-dialog') !== null;
+    if (!cmPanelOpen) {
+      this.zone.run(() => this.exitFullscreen());
+    }
+  };
+
+  // Sync CSS state when the user exits native fullscreen externally (Esc / F11 /
+  // browser button) — fullscreenchange fires after the transition completes.
+  private readonly _onFullscreenChange = () => {
+    if (!document.fullscreenElement && this._fullscreen) {
+      this.zone.run(() => this.exitFullscreen());
+    }
+  };
+
   ngAfterViewInit() {
     this._view = new EditorView({
       state: this._buildState(this.value),
       parent: this.hostRef.nativeElement,
     });
+    document.addEventListener('keydown', this._onDocKeydown, true);
+    document.addEventListener('fullscreenchange', this._onFullscreenChange);
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -177,6 +201,8 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
   }
 
   ngOnDestroy() {
+    document.removeEventListener('keydown', this._onDocKeydown, true);
+    document.removeEventListener('fullscreenchange', this._onFullscreenChange);
     this._view?.destroy();
   }
 
@@ -189,8 +215,15 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
     const host = this.el.nativeElement as HTMLElement;
     if (this._fullscreen) {
       host.classList.add('cm-fullscreen');
+      this._view?.focus();
+      document.documentElement.requestFullscreen().catch(() => {
+        // Native fullscreen unavailable (e.g. iframe, security policy) — CSS overlay is sufficient
+      });
     } else {
       host.classList.remove('cm-fullscreen');
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
     }
     this.fullscreenChange.emit(this._fullscreen);
   }
@@ -199,6 +232,9 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
     if (this._fullscreen) {
       this._fullscreen = false;
       (this.el.nativeElement as HTMLElement).classList.remove('cm-fullscreen');
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
       this.fullscreenChange.emit(false);
     }
   }
@@ -219,6 +255,20 @@ export class CodeEditorComponent implements OnInit, AfterViewInit, OnChanges, On
         scroller.scrollTop = scroller.scrollHeight;
       }
     });
+  }
+
+  openSearch() {
+    if (this._view) {
+      this._view.focus();
+      openSearchPanel(this._view);
+    }
+  }
+
+  triggerGotoLine() {
+    if (this._view) {
+      this._view.focus();
+      gotoLine(this._view);
+    }
   }
 
   foldAtCursor() {

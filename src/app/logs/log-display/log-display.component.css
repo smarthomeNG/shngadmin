@@ -19,6 +19,25 @@
   padding-bottom: 4px;
 }
 
+.log-filter-row--fullscreen {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100% !important;
+  box-sizing: border-box;
+  z-index: 10000;
+  background: Canvas;
+  padding: 4px var(--page-padding) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Push the CM editor down so the floating filter bar doesn't cover the first line */
+.log-filter-row--fullscreen ~ .log-editor-area app-code-editor.cm-fullscreen {
+  top: 44px !important;
+  height: calc(100vh - 44px) !important;
+}
+
 .log-editor-area {
   flex: 1;
   min-height: 0;

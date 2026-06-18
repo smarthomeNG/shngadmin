@@ -236,6 +236,18 @@ export class LogDisplayComponent implements OnInit {
     this.codeEditor?.scrollToEnd();
   }
 
+  openSearch() {
+    this.codeEditor?.openSearch();
+  }
+
+  gotoLine() {
+    this.codeEditor?.triggerGotoLine();
+  }
+
+  toggleLineWrap() {
+    this.codeEditor?.toggleLineWrapping();
+  }
+
   toggleEditorFullscreen() {
     this.codeEditor?.toggleFullscreen();
     // editorFullscreen is kept in sync via (fullscreenChange) binding
