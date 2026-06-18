@@ -1,51 +1,89 @@
-
-import { Component, OnInit, OnDestroy, ViewChildren, EventEmitter } from '@angular/core';
-import { BrowserModule, Title } from '@angular/platform-browser';
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { AppConfigService } from '../../common/services/app-config.service';
 
-import { Subscription } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { TranslateService } from '@ngx-translate/core';
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
-import { UIChart } from 'primeng/primeng';
+import { ChartData } from 'chart.js';
+import { combineLatest, Subject, timer } from 'rxjs';
+import { switchMap, take, takeUntil } from 'rxjs/operators';
 
-import * as $ from 'jquery';
-
-import { OlddataService } from '../../common/services/olddata.service';
-import { SystemInfo } from '../../common/models/system-info';
+import { DecimalPipe, NgOptimizedImage } from '@angular/common';
+import { Bind } from 'primeng/bind';
+import { UIChart } from 'primeng/chart';
+import { ProgressSpinner } from 'primeng/progressspinner';
+import { Ripple } from 'primeng/ripple';
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
+import {
+  APP_BUILD_PATH,
+  APP_NAME,
+  APP_VERSION,
+  APP_VERSION_DETAIL,
+  APP_VERSION_REF,
+} from '../../app.component';
 import { PypiInfo } from '../../common/models/pypi-info';
-import { WebsocketService } from '../../common/services/websocket.service';
-import { WebsocketPluginService } from '../../common/services/websocket-plugin.service';
-import { SharedService } from '../../common/services/shared.service';
+import { SystemInfo } from '../../common/models/system-info';
+import { LogService } from '../../common/services/log.service';
 import { ServerApiService } from '../../common/services/server-api.service';
-import {AppComponent} from '../../app.component';
-
+import { SharedService } from '../../common/services/shared.service';
+import { WebsocketPluginService } from '../../common/services/websocket-plugin.service';
+import { WebsocketService } from '../../common/services/websocket.service';
 
 @Component({
   selector: 'app-system',
   templateUrl: './system.component.html',
   styleUrls: ['./system.component.css'],
-  providers: [ WebsocketService, WebsocketPluginService ]
+  providers: [WebsocketService, WebsocketPluginService],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    Bind,
+    Tabs,
+    TabList,
+    Ripple,
+    Tab,
+    TabPanels,
+    TabPanel,
+    NgOptimizedImage,
+    UIChart,
+    DecimalPipe,
+    TranslatePipe,
+    ProgressSpinner,
+  ],
 })
 export class SystemComponent implements OnDestroy, OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
+  private serverApi = inject(ServerApiService);
+  private translate = inject(TranslateService);
+  private websocketPluginService = inject(WebsocketPluginService);
+  public shared = inject(SharedService);
+  private titleService = inject(Title);
+  private appConfig = inject(AppConfigService);
+  private readonly log = inject(LogService);
 
   faCheckCircle = faCheckCircle;
 
   loading: boolean = true;
-
-  @ViewChildren('chrtSystemload') chartSystemload: UIChart;
-  @ViewChildren('chrtSystemMemory') chartSystemMemory: UIChart;
-  @ViewChildren('chrtSwap') chartSwap: UIChart;
-  @ViewChildren('chrtMemory') chartMemory: UIChart;
-  @ViewChildren('chrtThreads') chartThreads: UIChart;
-  @ViewChildren('chrtWorkerThreads') chartWorkerThreads: UIChart;
-  @ViewChildren('chrtDisk') chartDisk: UIChart;
+  licenseText = '';
+  pypiPending = false;
+  private readonly pypiPollStop$ = new Subject<void>();
 
   systeminfo: SystemInfo = <SystemInfo>{};
-  pypiinfo: PypiInfo[];
-  reqinfodisplay: {};
+  pypiinfo!: PypiInfo[];
+  reqinfodisplay!: Record<string, string>;
   plugincount = 0;
   documentationcount = 0;
   testsuitecount = 0;
@@ -54,193 +92,219 @@ export class SystemComponent implements OnDestroy, OnInit {
   os_uptime = '';
   sh_uptime = '';
 
-  chartoptions1: any;
-  chartoptionsSystem: any;
-  chartoptionsShng: any;
-  chartoptionsScheduler: any;
-  chartoptionsDisc: any;
+  chartoptions1: Record<string, unknown> = { scales: { x: {}, y: {} } };
+  chartoptionsSystem: Record<string, unknown> = {
+    plugins: { title: { display: true, text: 'System' } },
+    scales: { x: {}, y: {} },
+  };
+  chartoptionsShng: Record<string, unknown> = {
+    plugins: { title: { display: true, text: 'SmartHomeNG' } },
+    scales: { x: {}, y: { min: 0 } },
+  };
+  chartoptionsScheduler: Record<string, unknown> = {
+    plugins: { title: { display: true, text: 'SmartHomeNG Scheduler' } },
+    scales: { x: {}, y: { min: 0 } },
+  };
+  chartoptionsDisc: Record<string, unknown> = {
+    plugins: { title: { display: true, text: 'Disc' } },
+    scales: { x: {}, y: {} },
+  };
 
-  chartdataLoad: any;
-  chartdataSystemMemory: any;
-  chartdataSwap: any;
-  chartdataMemory: any;
-  chartdataThreads: any;
-  chartdataWorkerThreads: any;
-  chartdataDisk: any;
-
-  changed_chartdataLoad: any;
-  loadData: any;
-  varChartSystemload: any;
-
-  systemloadUpdateSubscription: Subscription = null;
-  systemmemoryUpdateSubscription: Subscription = null;
-  systemswapUpdateSubscription: Subscription = null;
-  memoryUpdateSubscription: Subscription = null;
-  threadsUpdateSubscription: Subscription = null;
-  workerThreadsUpdateSubscription: Subscription = null;
-  idleWorkerThreadsUpdateSubscription: Subscription = null;
-  activeWorkerThreadsUpdateSubscription: Subscription = null;
-  diskUpdateSubscription: Subscription = null;
-
-
-  constructor(private http: HttpClient,
-              private dataService: OlddataService,
-              private dataServiceServer: ServerApiService,
-              private translate: TranslateService,
-              private websocketPluginService: WebsocketPluginService,
-              public app: AppComponent,
-              public shared: SharedService,
-              private titleService: Title) {
+  private static emptyDataset(label: string): ChartData {
+    return {
+      labels: [],
+      datasets: [
+        {
+          label,
+          data: [],
+          fill: false,
+          backgroundColor: '#709cc2',
+          borderColor: '#709cc2',
+          pointRadius: 0,
+        },
+      ],
+    };
+  }
+  private static emptyDataset2(label1: string, label2: string): ChartData {
+    return {
+      labels: [],
+      datasets: [
+        {
+          label: label1,
+          data: [],
+          fill: false,
+          backgroundColor: '#ff8000',
+          borderColor: '#ff8000',
+          pointRadius: 0,
+        },
+        {
+          label: label2,
+          data: [],
+          fill: false,
+          backgroundColor: '#709cc2',
+          borderColor: '#709cc2',
+          pointRadius: 0,
+        },
+      ],
+    };
   }
 
-  appName = this.app.APP_NAME;
-  appVersion = 'v' + this.app.APP_VERSION;
+  chartdataLoad: ChartData = SystemComponent.emptyDataset('Load');
+  chartdataSystemMemory: ChartData = SystemComponent.emptyDataset('Memory (MByte)');
+  chartdataSwap: ChartData = SystemComponent.emptyDataset('Swap used (MByte)');
+  chartdataMemory: ChartData = SystemComponent.emptyDataset('Memory (MByte)');
+  chartdataThreads: ChartData = SystemComponent.emptyDataset('Threads');
+  chartdataWorkerThreads: ChartData = SystemComponent.emptyDataset2(
+    'Started Workers',
+    'Active Workers',
+  );
+  chartdataDisk: ChartData = SystemComponent.emptyDataset('% disc usage');
+
+  appName = APP_NAME;
+  appVersion = 'v' + APP_VERSION; // short form used in page titles / navbar
+  appVersionDetail = APP_VERSION_DETAIL; // v{semver}-{commit}.{branch}
+  appVersionRef = APP_VERSION_REF; // (heads/branch)
+  appBuildPath = APP_BUILD_PATH; // absolute path to the frontend repo
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
   }
 
   ngOnInit() {
-    console.log('SystemComponent.ngOnInit:');
+    this.log.log('SystemComponent.ngOnInit:');
 
-    // this.setTitle(this.translate.instant('System Eigenschaften'));
-
-    this.dataServiceServer.getServerinfo()
-      .subscribe(
-        (response) => {
-          this.setTitle(this.translate.instant('MENU.SYSTEM_PROPERTIES'));
-          this.initSystemInfo();
-        }
-      );
+    this.setTitle(this.translate.instant('MENU.SYSTEM_PROPERTIES'));
+    this.initSystemInfo();
+    this.cdr.markForCheck();
   }
-
 
   ngOnDestroy(): void {
     this.websocketPluginService.disconnect();
+    this.pypiPollStop$.complete();
   }
 
-
   initSystemInfo() {
-
     // ---------------------------------------------
-    // Initialize system info (from OlddataService)
+    // Initialize system info
     //
-    this.dataService.getSysteminfo()
-      .subscribe(
-        (response: SystemInfo) => {
-          this.systeminfo = response;
+    this.serverApi
+      .getSystemStats()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.systeminfo = response as SystemInfo;
 
           this.os_uptime = this.shared.ageToString(this.systeminfo.uptime);
           this.sh_uptime = this.shared.ageToString(this.systeminfo.sh_uptime);
-
+          this.cdr.markForCheck();
         },
-        (error) => {
-          console.log('SystemComponent: dataService.getSysteminfo():');
-          console.log(error);
-        }
-      );
-
-
-    // -----------------------------------
-    // Initialize Pypi info
-    //
-    this.dataService.getPypiinfo()
-      .subscribe(
-        (response: PypiInfo[]) => {
-          this.pypiinfo = response;
-          this.loading = false;
-
-          // count if plugin requirements exist
-          this.plugincount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            // if (this.pypiinfo[i].name === 'ruamel.yaml') {
-            //   console.log(this.pypiinfo[i]);
-            // }
-            if (this.pypiinfo[i].is_required_for_plugins === true) {
-              this.plugincount++;
-            }
-          }
-
-          // count if documentation requirements exist
-          this.documentationcount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            if (this.pypiinfo[i].is_required_for_docbuild === true) {
-              this.documentationcount++;
-            }
-          }
-
-          // count if testsuite requirements exist
-          this.testsuitecount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            if (this.pypiinfo[i].is_required_for_testsuite === true) {
-              this.testsuitecount++;
-            }
-          }
-
-          // count if package without requirements exist
-          this.norequirementcount = 0;
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            if (this.pypiinfo[i].is_required === false && this.pypiinfo[i].is_required_for_docbuild === false &&
-              this.pypiinfo[i].is_required_for_testsuite === false) {
-              this.norequirementcount++;
-            }
-          }
-
-          this.reqinfodisplay = {};
-          for (let i = 0; i < this.pypiinfo.length; ++i) {
-            this.reqinfodisplay[this.pypiinfo[i].name] = this.buildreqinfostring(this.pypiinfo[i]);
-          }
-
+        error: (error) => {
+          this.log.log('SystemComponent: serverApi.getSystemStats():');
+          this.log.log(error);
         },
-        (error) => console.log('SystemComponent: dataService.getPypiinfo():' + error)
-      );
+      });
 
+    // PyPI data is fetched on demand when the user opens the PyPI tab.
 
     // -----------------------------------
     // Initialize info for the graph-tab
     //
     this.initCharts();
 
-
-    let filepath = '/3rdpartylicenses.txt';
-    const hostip = sessionStorage.getItem('hostIp');
-    if (hostip !== 'localhost') {
-      filepath = '/admin' + filepath;
-      this.http.get(filepath, {responseType: 'text'})
-        .subscribe(
-          response => {
-            const message = response.toString();
-            $('#disclosuretext').text(message);
-          },
-          error => {
-            $('#disclosuretext').text( '\nERROR ' + error.status + ':\n\n    ' + error.url + '   ' + error.statusText);
-          });
-
-    } else {
-      $('#disclosuretext').text("\nYou are in develop mode: \n\nThe file '3dpartylicenses.txt' is created only in production mode. In develop mode the file does not exist.");
-    }
-
+    this.http
+      .get('assets/3rdpartylicenses.txt', { responseType: 'text' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.licenseText = response;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.licenseText = `ERROR ${error.status}:\n\n    ${error.url}   ${error.statusText}`;
+          this.cdr.markForCheck();
+        },
+      });
   }
-
 
   // ===================================
   // methods for the Pypi check tab
   // -----------------------------------
   //
-  buildreqinfostring(element) {
+  onTabChange(value: string | number | undefined) {
+    if (String(value) === '2') {
+      this.startPypiPoll();
+    } else {
+      this.pypiPollStop$.next();
+      this.pypiPending = false;
+      this.cdr.markForCheck();
+    }
+  }
 
+  private startPypiPoll() {
+    if (this.pypiinfo?.length && this.pypiinfo.every((p) => p.pypi_version !== '--')) {
+      return;
+    }
+    this.pypiPending = true;
+    this.cdr.markForCheck();
+
+    timer(0, 5000)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        takeUntil(this.pypiPollStop$),
+        switchMap(() => this.serverApi.getPypiInfo()),
+      )
+      .subscribe({
+        next: (response) => {
+          this.processPypiData(response as PypiInfo[]);
+          if (this.pypiinfo.every((p) => p.pypi_version !== '--')) {
+            this.pypiPending = false;
+            this.pypiPollStop$.next();
+          }
+          this.cdr.markForCheck();
+        },
+        error: (err) => this.log.log('SystemComponent: pypi poll error:', err),
+      });
+  }
+
+  private processPypiData(data: PypiInfo[]) {
+    this.pypiinfo = data;
+    this.loading = false;
+    this.plugincount = data.filter((p) => p.is_required_for_plugins).length;
+    this.documentationcount = data.filter((p) => p.is_required_for_docbuild).length;
+    this.testsuitecount = data.filter((p) => p.is_required_for_testsuite).length;
+    this.norequirementcount = data.filter(
+      (p) =>
+        !p.is_required &&
+        !p.is_required_for_plugins &&
+        !p.is_required_for_docbuild &&
+        !p.is_required_for_testsuite,
+    ).length;
+    this.reqinfodisplay = {};
+    for (const pkg of data) {
+      this.reqinfodisplay[pkg.name] = this.buildreqinfostring(pkg);
+    }
+  }
+
+  buildreqinfostring(element: PypiInfo): string {
     /* Build String for requirements column */
     let reqString = '';
 
-    if (element['vers_req_min'] !== '' && element['vers_req_max'] !== '' && (element['vers_req_min'] !== element['vers_req_max'])) {
+    if (
+      element['vers_req_min'] !== '' &&
+      element['vers_req_max'] !== '' &&
+      element['vers_req_min'] !== element['vers_req_max']
+    ) {
       // MIN and MAX filled, MIN != MAX
       reqString += element['vers_req_min'] + ' <= ';
     } else {
-      if (element['vers_req_min'] !== '' && element['vers_req_max'] != '' && (element['vers_req_min'] == element['vers_req_max'])) {
+      if (
+        element['vers_req_min'] !== '' &&
+        element['vers_req_max'] != '' &&
+        element['vers_req_min'] == element['vers_req_max']
+      ) {
         // ELSE: MIN and MAX filled, MIN == MAX
         reqString += ' == ' + element['vers_req_min'];
       } else {
-        // ELSE: MIN or MAX filled * /
         if (element['vers_req_min'] !== '') {
           reqString += ' >= ' + element['vers_req_min'];
         } else if (element['vers_req_max'] !== '') {
@@ -249,7 +313,7 @@ export class SystemComponent implements OnDestroy, OnInit {
       }
 
       if (reqString === '') {
-        // Element required due to Doku, Testsuite or SmartHomeNG in general, but no MIN and MAX version -> all versions valid * /
+        // No MIN/MAX version constraint → all versions are valid
         reqString = ' == *';
       }
     }
@@ -257,101 +321,12 @@ export class SystemComponent implements OnDestroy, OnInit {
     return reqString;
   }
 
-
   // ===================================
   // methods for the graph tab
   // -----------------------------------
   //
   initCharts() {
-    console.log('initCharts()');
-
-
-
-    this.chartoptions1 = {
-      scales: {
-        xAxes: [{
-//          type: 'time',
-          distribution: 'linear',
-          time: {
-            unit: 'minute'
-          },
-        }]
-      }
-    };
-
-    this.chartoptionsSystem = {
-      title: {
-        display: true,
-        text: 'System',
-      },
-      scales: {
-        xAxes: [{
-//          type: 'time',
-          distribution: 'linear',
-          time: {
-            unit: 'minute'
-          },
-        }]
-      }
-    };
-
-    this.chartoptionsShng = {
-      title: {
-        display: true,
-        text: 'SmartHomeNG',
-      },
-      scales: {
-        xAxes: [{
-//          type: 'time',
-          distribution: 'linear',
-          time: {
-            unit: 'minute'
-          },
-        }],
-        yAxes: [{
-          ticks: {
-            min: 0
-          }
-        }]
-      }
-    };
-
-    this.chartoptionsScheduler = {
-      title: {
-        display: true,
-        text: 'SmartHomeNG Scheduler',
-      },
-      scales: {
-        xAxes: [{
-//          type: 'time',
-          distribution: 'linear',
-          time: {
-            unit: 'minute'
-          },
-        }],
-        yAxes: [{
-          ticks: {
-            min: 0
-          }
-        }]
-      }
-    };
-
-    this.chartoptionsDisc = {
-      title: {
-        display: true,
-        text: 'System',
-      },
-      scales: {
-        xAxes: [{
-//          type: 'time',
-          distribution: 'linear',
-          time: {
-            unit: 'minute'
-          },
-        }]
-      }
-    };
+    this.log.log('initCharts()');
 
     this.chartdataLoad = {
       labels: [],
@@ -363,9 +338,8 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#709cc2',
           borderColor: '#709cc2',
           pointRadius: 0,
-
-        }
-      ]
+        },
+      ],
     };
 
     this.chartdataThreads = {
@@ -378,9 +352,8 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#709cc2',
           borderColor: '#709cc2',
           pointRadius: 0,
-
-        }
-      ]
+        },
+      ],
     };
 
     this.chartdataWorkerThreads = {
@@ -393,7 +366,6 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#ff8000',
           borderColor: '#ff8000',
           pointRadius: 0,
-
         },
         {
           label: 'Active Workers',
@@ -402,18 +374,8 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#709cc2',
           borderColor: '#709cc2',
           pointRadius: 0,
-
-        }
-        // {
-        //   label: 'Idle Workers',
-        //   data: [],
-        //   fill: false,
-        //   backgroundColor: '008000',
-        //   borderColor: '#008000',
-        //   pointRadius: 0,
-        //
-        // }
-      ]
+        },
+      ],
     };
 
     this.chartdataSystemMemory = {
@@ -426,9 +388,8 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#709cc2',
           borderColor: '#709cc2',
           pointRadius: 0,
-
-        }
-      ]
+        },
+      ],
     };
 
     this.chartdataSwap = {
@@ -441,9 +402,8 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#709cc2',
           borderColor: '#709cc2',
           pointRadius: 0,
-
-        }
-      ]
+        },
+      ],
     };
 
     this.chartdataMemory = {
@@ -456,9 +416,8 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#709cc2',
           borderColor: '#709cc2',
           pointRadius: 0,
-
-        }
-      ]
+        },
+      ],
     };
 
     this.chartdataDisk = {
@@ -471,125 +430,134 @@ export class SystemComponent implements OnDestroy, OnInit {
           backgroundColor: '#709cc2',
           borderColor: '#709cc2',
           pointRadius: 0,
-
-        }
-      ]
+        },
+      ],
     };
 
-    this.websocketPluginService.connect();
-    this.websocketPluginService.getSeriesLoad();
-    this.websocketPluginService.getSeriesSystemMemory();
-    this.websocketPluginService.getSeriesSwap();
-    this.websocketPluginService.getSeriesMemory();
-    this.websocketPluginService.getSeriesThreads();
-    this.websocketPluginService.getSeriesWorkerThreads();
-    this.websocketPluginService.getSeriesDisk();
-    this.drawCharts();
+    // Defer the WebSocket connection until wsPort is available.
+    // getServerBasicinfo() (APP_INITIALIZER) does not return websocket_port,
+    // so wsPort is '' until getServerinfo() completes from TopNavigationComponent.
+    // serverReady$ emits once wsPort becomes non-empty, which is the correct
+    // moment to open the connection and start requesting chart series data.
+    this.appConfig.serverReady$
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.websocketPluginService.connect();
+        this.websocketPluginService.getSeriesLoad();
+        this.websocketPluginService.getSeriesSystemMemory();
+        this.websocketPluginService.getSeriesSwap();
+        this.websocketPluginService.getSeriesMemory();
+        this.websocketPluginService.getSeriesThreads();
+        this.websocketPluginService.getSeriesWorkerThreads();
+        this.websocketPluginService.getSeriesDisk();
+        this.drawCharts();
+      });
   }
 
   drawCharts() {
-    console.log('DrawCharts()');
-    this.systemloadUpdateSubscription = this.websocketPluginService.systemloadUpdate$.subscribe(() => {
-      // console.error('systemloadUpdate$');
-      this.updateChartData(this.chartSystemload, this.chartdataLoad, this.websocketPluginService.systemload.series);
-    });
-    this.systemmemoryUpdateSubscription = this.websocketPluginService.systemmemoryUpdate$.subscribe(() => {
-//      console.error('systemmemoryUpdate$');
-      this.updateChartData(this.chartSystemMemory, this.chartdataSystemMemory, this.websocketPluginService.systemmemory.series);
-    });
-    this.systemswapUpdateSubscription = this.websocketPluginService.systemswapUpdate$.subscribe(() => {
-//      console.error('systemswapUpdate$');
-      this.updateChartData(this.chartSwap, this.chartdataSwap, this.websocketPluginService.systemswap.series);
-    });
-    this.memoryUpdateSubscription = this.websocketPluginService.memoryUpdate$.subscribe(() => {
-//      console.error('memoryUpdate$');
-      this.updateChartData(this.chartMemory, this.chartdataMemory, this.websocketPluginService.memory.series);
-    });
-    this.threadsUpdateSubscription = this.websocketPluginService.threadsUpdate$.subscribe(() => {
-//      console.error('threadsUpdate$');
-      this.updateChartData(this.chartThreads, this.chartdataThreads, this.websocketPluginService.threads.series);
-    });
-    this.workerThreadsUpdateSubscription = this.websocketPluginService.workerThreadsUpdate$.subscribe(() => {
-//      console.error('workerThreadsUpdate$');
-        this.idleWorkerThreadsUpdateSubscription = this.websocketPluginService.idleWorkerThreadsUpdate$.subscribe(() => {
-    //      console.error('idleWorkerThreadsUpdate$');
-          this.websocketPluginService.activeWorkerThreads.series = [];
-          this.websocketPluginService.activeWorkerThreads.tsdiff = this.websocketPluginService.idleWorkerThreads.tsdiff ;
-          for (let i = 0; i < this.websocketPluginService.workerThreads.series.length; i++) {
-            this.websocketPluginService.activeWorkerThreads.series.push(this.websocketPluginService.idleWorkerThreads.series[i]);
-            this.websocketPluginService.activeWorkerThreads.series[i][1] = this.websocketPluginService.workerThreads.series[i][1] - this.websocketPluginService.idleWorkerThreads.series[i][1];
-          }
-          this.updateChartData(this.chartWorkerThreads, this.chartdataWorkerThreads, this.websocketPluginService.workerThreads.series, this.websocketPluginService.activeWorkerThreads.series);
-
-        });
-    });
-    this.diskUpdateSubscription = this.websocketPluginService.diskUpdate$.subscribe(() => {
-//      console.error('diskUpdate$');
-      this.updateChartData(this.chartDisk, this.chartdataDisk, this.websocketPluginService.disk.series);
-    });
+    this.log.log('DrawCharts()');
+    this.websocketPluginService.systemloadUpdate$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.chartdataLoad = this.updateChartData(
+          this.chartdataLoad,
+          this.websocketPluginService.systemload.series,
+        );
+        this.cdr.markForCheck();
+      });
+    this.websocketPluginService.systemmemoryUpdate$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.chartdataSystemMemory = this.updateChartData(
+          this.chartdataSystemMemory,
+          this.websocketPluginService.systemmemory.series,
+        );
+        this.cdr.markForCheck();
+      });
+    this.websocketPluginService.systemswapUpdate$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.chartdataSwap = this.updateChartData(
+          this.chartdataSwap,
+          this.websocketPluginService.systemswap.series,
+        );
+        this.cdr.markForCheck();
+      });
+    this.websocketPluginService.memoryUpdate$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.chartdataMemory = this.updateChartData(
+          this.chartdataMemory,
+          this.websocketPluginService.memory.series,
+        );
+        this.cdr.markForCheck();
+      });
+    this.websocketPluginService.threadsUpdate$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.chartdataThreads = this.updateChartData(
+          this.chartdataThreads,
+          this.websocketPluginService.threads.series,
+        );
+        this.cdr.markForCheck();
+      });
+    combineLatest([
+      this.websocketPluginService.workerThreadsUpdate$,
+      this.websocketPluginService.idleWorkerThreadsUpdate$,
+    ])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const workerSeries = this.websocketPluginService.workerThreads.series;
+        const idleSeries = this.websocketPluginService.idleWorkerThreads.series;
+        const len = Math.min(workerSeries.length, idleSeries.length);
+        const activeSeries: [number, number, { time: string }][] = [];
+        for (let i = 0; i < len; i++) {
+          activeSeries.push([
+            workerSeries[i][0],
+            workerSeries[i][1] - idleSeries[i][1],
+            workerSeries[i][2],
+          ]);
+        }
+        this.chartdataWorkerThreads = this.updateChartData(
+          this.chartdataWorkerThreads,
+          workerSeries.slice(0, len),
+          activeSeries,
+        );
+        this.cdr.markForCheck();
+      });
+    this.websocketPluginService.diskUpdate$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.chartdataDisk = this.updateChartData(
+          this.chartdataDisk,
+          this.websocketPluginService.disk.series,
+        );
+        this.cdr.markForCheck();
+      });
   }
 
-
-  updateChartData(chart: UIChart, chartdata, dataseries, dataseries2 = null) {
-    chartdata.labels = [];
-    chartdata.datasets[0].data = [];
-    if ((dataseries.length > 1) && (dataseries2 != null)) {
-      chartdata.datasets[1].data = [];
-    }
-    // console.warn('datasets', chartdata.datasets.length);
+  updateChartData(
+    chartdata: ChartData,
+    dataseries: [number, number, { time: string }][],
+    dataseries2: [number, number, { time: string }][] | null = null,
+  ): ChartData {
+    const labels: string[] = [];
+    const data0: number[] = [];
+    const data1: number[] = [];
 
     for (let i = 0; i < dataseries.length; i++) {
-      chartdata.labels.push(String(dataseries[i][2].time.substr(0, 5)));
-      chartdata.datasets[0].data.push(dataseries[i][1]);
-      if ((dataseries.length > 1) && (dataseries2 != null)) {
-        chartdata.datasets[1].data.push(dataseries2[i][1]);
+      labels.push(String(dataseries[i][2].time.slice(0, 5)));
+      data0.push(dataseries[i][1]);
+      if (dataseries2 != null) {
+        data1.push(dataseries2[i][1]);
       }
     }
+
+    const datasets = chartdata.datasets.map((ds, idx) => ({
+      ...ds,
+      data: idx === 0 ? data0 : data1,
+    }));
+
+    return { ...chartdata, labels, datasets };
   }
-
-
-
-
-
-  updateSystemloadChart(chart: UIChart) {
-    chart.refresh();
-  }
-
-
-  setSystemloadData(loadData) {
-
-    this.chartdataLoad = {
-      labels: [],
-      datasets: [
-        {
-          label: 'System Load',
-          data: [],
-          fill: false,
-          backgroundColor: '#709cc2',
-          borderColor: '#709cc2',
-          pointRadius: 0,
-
-        }
-      ]
-    };
-
-    if (loadData === undefined) {
-    } else {
-      console.log('setSystemloadData (callback)');
-      console.log(loadData);
-      this.loadData = loadData;
-
-      this.chartdataLoad.labels = [];
-      this.chartdataLoad.datasets[0].data = [];
-      console.log('Datapoints: ' + String(loadData.length));
-      for (let i = 0; i < loadData.length; i++) {
-        this.chartdataLoad.datasets[0].data.push(loadData[i][1]);
-      }
-
-      console.log(this.chartdataLoad.labels);
-      console.log(this.chartdataLoad.datasets[0].data);
-
-    }
-  }
-
 }

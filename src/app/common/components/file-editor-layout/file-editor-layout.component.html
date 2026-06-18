@@ -1,0 +1,19 @@
+<div class="file-editor-outer">
+  @if (title) {
+    <div class="shng-page-header">{{ title }}</div>
+  }
+  <div class="file-editor-body">
+    <div class="file-editor-buttons-left">
+      <ng-content select="[slot=buttons-left]" />
+    </div>
+    <div class="file-editor-buttons-right">
+      <ng-content select="[slot=buttons-right]" />
+    </div>
+    <div class="file-editor-list">
+      <ng-content select="[slot=filelist]" />
+    </div>
+    <div class="file-editor-content">
+      <ng-content select="[slot=editor]" />
+    </div>
+  </div>
+</div>

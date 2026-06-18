@@ -1,146 +1,251 @@
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { Component, OnInit, AfterViewChecked, ViewChild } from '@angular/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { MessageService, PrimeTemplate, SelectItem } from 'primeng/api';
 
-import {FilesApiService} from '../../common/services/files-api.service';
-import {ServicesApiService} from '../../common/services/services-api.service';
-import {Title} from '@angular/platform-browser';
-import {TranslateService} from '@ngx-translate/core';
+import { NgStyle } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Title } from '@angular/platform-browser';
+import { Bind } from 'primeng/bind';
+import { ButtonDirective } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
+import { InputText } from 'primeng/inputtext';
+import { Listbox } from 'primeng/listbox';
+import { CodeEditorComponent } from '../../common/components/code-editor/code-editor.component';
+import { FileEditorLayoutComponent } from '../../common/components/file-editor-layout/file-editor-layout.component';
+import { FilesApiService } from '../../common/services/files-api.service';
+import { LogService } from '../../common/services/log.service';
+import { ServicesApiService } from '../../common/services/services-api.service';
 
 @Component({
   selector: 'app-struct-configuration',
   templateUrl: './struct-configuration.component.html',
-  styleUrls: ['./struct-configuration.component.css']
+  styleUrls: ['./struct-configuration.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    Bind,
+    ButtonDirective,
+    Listbox,
+    FormsModule,
+    CodeEditorComponent,
+    Dialog,
+    PrimeTemplate,
+    InputText,
+    NgStyle,
+    TranslatePipe,
+    FileEditorLayoutComponent,
+  ],
 })
-export class StructConfigurationComponent implements AfterViewChecked, OnInit {
+export class StructConfigurationComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
+  private fileService = inject(FilesApiService);
+  private dataService = inject(ServicesApiService);
+  private titleService = inject(Title);
+  private readonly log = inject(LogService);
+  private readonly messageService = inject(MessageService);
 
-  constructor(private fileService: FilesApiService,
-              private dataService: ServicesApiService,
-              private translate: TranslateService,
-              private titleService: Title) { }
+  @ViewChild('codeeditor') codeEditor?: CodeEditorComponent;
 
+  filelist!: string[];
+  structFiles!: SelectItem[];
+  selectedStructfile!: SelectItem;
+  structsDir = './structs'; // updated from backend on init
 
-
-  // -----------------------------------------------------------------
-  //  Vars for the codemirror components
-  //
-  rulers = [];
-
-  // -----------------------------------------------------
-  //  Vars for the YAML syntax checker
-  //
-  @ViewChild('codeeditor') private codeEditor;
-
-  myEditFilename: string;
+  myEditFilename = '';
   myTextarea = '';
   myTextareaOrig = '';
-  cmOptions = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      'F1': function(cm) {
-        this.editorHelp_display = true;
-      },
-      'Tab': 'insertSoftTab',
-      'Shift-Tab': 'indentLess',
-      'F11': function(cm) {
-        cm.setOption('fullScreen', !cm.getOption('fullScreen'));
-        // cm.getScrollerElement().style.maxHeight = 'none';
-      },
-      'Esc': function(cm, fullScreen) {
-        if (cm.getOption('fullScreen')) {
-          cm.setOption('fullScreen', false);
-        }
-      },
-      'Ctrl-Q': function(cm) {
-        cm.foldCode(cm.getCursor());
-      },
-      'Shift-Ctrl-Q': function(cm) {
-          for (let l = cm.firstLine(); l <= cm.lastLine(); ++l) {
-            cm.foldCode({line: l, ch: 0}, null, 'unfold');
-          }
-      }
-    },
-    fullScreen: false,
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-    foldGutter: true,
-    gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
-  };
+
+  cmReadOnly = true;
 
   editorHelp_display = false;
   error_display = false;
   myTextOutput = '';
+  newconfig_display = false;
+  newFilename = '';
+  add_enabled = false;
+  fileExists = false;
 
+  confirmdelete_display = false;
+  delete_param!: {};
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
   }
 
   ngOnInit() {
-    // console.log('LoggingConfigurationComponent.ngOnInit');
+    this.getStructFile('');
 
-    this.setTitle(this.translate.instant('ITEMS.STRUCT_CONFIGFILE'));
+    this.structFiles = [];
 
-    this.myEditFilename = 'struct';
-    for (let i = 1; i <= 100; i++) {
-      this.rulers.push({color: '#eee', column: i * 4, lineStyle: 'dashed'});
+    this.setTitle(this.translate.instant('MENU.ITEM_STRUCT_CONFIGURATION'));
+    this.fileService
+      .getfileList('structs')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const r = response as { dir: string; files: string[] };
+        this.structsDir = r.dir;
+        this.filelist = r.files;
+        this.structFiles = this.filelist.map((fn) => <SelectItem>{ label: fn, value: fn });
+        this.cdr.markForCheck();
+      });
+  }
+
+  newConfig() {
+    this.newFilename = '';
+    this.newconfig_display = true;
+  }
+
+  deleteConfig() {
+    this.delete_param = { config: this.myEditFilename };
+    this.confirmdelete_display = true;
+  }
+
+  DeleteConfigConfirm() {
+    this.confirmdelete_display = false;
+
+    this.fileService
+      .deleteFile('structs', this.myEditFilename)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.myEditFilename = '';
+        this.myTextarea = '';
+        this.cmReadOnly = true;
+        this.ngOnInit();
+        this.cdr.markForCheck();
+      });
+
+    return true;
+  }
+
+  checkInput() {
+    this.fileExists = false;
+    this.add_enabled = false;
+    if (this.newFilename.length > 0) {
+      this.add_enabled = true;
+      for (const fileNo in this.filelist) {
+        const fn = this.filelist[fileNo].slice(0, -5); // strip '.yaml'
+        if (this.newFilename === fn) {
+          this.add_enabled = false;
+          this.fileExists = true;
+        }
+      }
+    }
+  }
+
+  addFile() {
+    this.newconfig_display = false;
+
+    this.myTextarea = '# ' + this.newFilename + '.yaml\n';
+    this.myTextareaOrig = this.myTextarea;
+    this.myEditFilename = this.newFilename;
+    this.cmReadOnly = false;
+
+    this.fileService
+      .createFile('structs', this.myEditFilename, this.myTextarea)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.myTextareaOrig = this.myTextarea;
+          this.structFiles = [];
+          this.fileService
+            .getfileList('structs')
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((response) => {
+              const r = response as { dir: string; files: string[] };
+              this.structsDir = r.dir;
+              this.filelist = r.files;
+              this.structFiles = this.filelist.map((fn) => <SelectItem>{ label: fn, value: fn });
+              this.cdr.markForCheck();
+            });
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          if (err?.status === 409) {
+            this.messageService.add({
+              severity: 'warn',
+              summary: this.translate.instant('COMMON.FILE_EXISTS_TITLE'),
+              detail: this.translate.instant('COMMON.FILE_EXISTS_HINT', {
+                filename: this.myEditFilename,
+              }),
+              life: 5000,
+            });
+          }
+          this.myEditFilename = '';
+          this.myTextarea = '';
+          this.cmReadOnly = true;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  structFileSelected() {
+    let filename = this.selectedStructfile.value;
+    if (filename.toLowerCase().endsWith('.yaml')) {
+      filename = filename.slice(0, -5);
+      this.getStructFile(filename);
+    } else {
+      this.myEditFilename = '';
+      this.myTextarea = '';
+      this.cmReadOnly = true;
+      this.myTextarea = this.translate.instant('STRUCT_CONFIG.FILETYPE_UNSUPPORTED');
+    }
+  }
+
+  getStructFile(filename: string) {
+    this.myEditFilename = '';
+    this.myTextarea = '';
+    this.cmReadOnly = true;
+    if (filename === '') {
+      return;
     }
 
-    this.fileService.readFile('structs')
-      .subscribe(
-        (response) => {
+    this.fileService
+      .readFile('structs', filename)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
           this.myTextarea = response;
           this.myTextareaOrig = response;
-        }
-      );
-
-
+          this.myEditFilename = filename;
+          this.cmReadOnly = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.myTextarea = this.translate.instant('STRUCT_CONFIG.FILE_NOT_FOUND');
+          this.cdr.markForCheck();
+        },
+      });
   }
-
-
-  ngAfterViewChecked() {
-
-    const editor1 = this.codeEditor.codeMirror;
-    if (editor1.getOption('fullScreen')) {
-      editor1.setSize('100vw', '100vh');
-    } else {
-      editor1.setSize('calc(100vw - 70px)', 'calc(100vh - 160px)');
-      // editor1.setSize('93vw', '78vh');
-    }
-    editor1.refresh();
-  }
-
 
   saveConfig() {
-    // console.log('LoggingConfigurationComponent.saveConfig');
-
-    this.dataService.CheckYamlText(this.myTextarea)
-      .subscribe(
-        (response) => {
-          this.myTextOutput = <any> response;
-          if ((this.myTextarea !== '') && (this.myTextOutput.startsWith('ERROR:'))) {
-            this.error_display = true;
-          } else {
-            this.fileService.saveFile('structs', '', this.myTextarea)
-              .subscribe(
-                (response2) => {
-                  this.myTextareaOrig = this.myTextarea;
-                }
-              );
-
-          }
-          const editor = this.codeEditor.codeMirror;
-          editor.refresh();
+    this.dataService
+      .CheckYamlText(this.myTextarea)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.myTextOutput = response as string;
+        if (this.myTextOutput.startsWith('ERROR:')) {
+          this.error_display = true;
+        } else {
+          this.fileService
+            .saveFile('structs', this.myEditFilename, this.myTextarea)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+              this.myTextareaOrig = this.myTextarea;
+              this.cdr.markForCheck();
+            });
         }
-      );
-
+        this.cdr.markForCheck();
+      });
   }
 }

@@ -1,8 +1,8 @@
-
 //
 // Datatype for <shng-server>:<port>/api/server
 //
 export interface ServerInfo {
+  login_required: boolean;
   default_language: string;
   fallback_language_order: string;
   client_ip: string;

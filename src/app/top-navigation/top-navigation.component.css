@@ -1,22 +1,23 @@
-
 body {
-  margin:0px;
-  //font-family:Arial;
+  margin: 0;
 }
 
 /* Global styles for the navbar */
 
-.navbar {
+:host {
   --menu-textcolor: #666;
   --menu-textcolor-hover: #eee;
   --menu-background-color: #eee;
   --menu-background-color-hover: #777;
+  --menu-background-color-active: #ccc;
+}
 
+.navbar {
   display: inline-flex;
-  align-items:flex-start;
+  align-items: flex-start;
   flex-wrap: unset;
   padding: 0;
-  margin-bottom: 5px;   /* leave a bit space to the data body of the page */
+  margin-bottom: 5px; /* leave a bit space to the data body of the page */
   height: 55px;
   width: 100%;
   background-color: var(--menu-background-color);
@@ -24,23 +25,31 @@ body {
   border-bottom: 1px solid #ddd;
 }
 .navbar img {
-  flex-direction: row;
   align-self: flex-start;
-  padding-top: 10px;
-  padding-left: 12px;
-  padding-right: 5px;
+  flex-shrink: 0;
+  object-fit: contain;
+  margin-top: 10px;
+  margin-left: 12px;
+  margin-right: 5px;
+}
+
+.navbar .logo {
+  width: 125px;
+  height: 29px;
+}
+.navbar .logo-small {
+  width: 32px;
+  height: 32px;
 }
 
 .topnav {
   overflow: hidden;
-  //height: 52px;
-  //border-bottom: 1px solid #ddd;
   background-color: var(--menu-background-color);
   width: 100%;
 }
 
 .dropdown .show-caret {
-  display: none;    /* set to 'inherit' to display caret if dropdown menu exist, otherwise set to 'none' */
+  display: none; /* set to 'inherit' to display caret if dropdown menu exist, otherwise set to 'none' */
 }
 
 .topnav a {
@@ -50,11 +59,7 @@ body {
   text-align: center;
   padding: 14px 10px;
   text-decoration: none;
-  font-size: 17px;
-}
-
-.topnav .icon {
-  display: none;
+  font-size: var(--font-size-nav);
 }
 
 .dropdown {
@@ -64,7 +69,7 @@ body {
 }
 
 .dropdown .dropbtn {
-  font-size: 17px;
+  font-size: var(--font-size-nav);
   border: none;
   outline: none;
   color: var(--menu-textcolor);
@@ -79,8 +84,8 @@ body {
   position: absolute;
   background-color: #f9f9f9;
   min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 5;    /* 4 instead of 1 to stay on top of codemirror linenumbers */
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  z-index: 5; /* 4 instead of 1 to stay on top of codemirror linenumbers */
   margin-left: 15px;
 }
 
@@ -97,12 +102,14 @@ body {
   display: none;
 }
 
-.topnav a:hover, .dropdown:hover .dropbtn {
+.dropdown-content.dropdown-touch-open {
+  display: block;
+}
+
+.topnav a:hover,
+.dropdown:hover .dropbtn {
   background-color: var(--menu-background-color-hover);
   color: var(--menu-textcolor-hover);
-  /*
-  border-radius: 5px;
-  */
 }
 
 .dropdown-content a:hover {
@@ -122,7 +129,7 @@ body {
 }
 
 .dropright .droprightbtn {
-  font-size: 17px;
+  font-size: var(--font-size-nav);
   border: none;
   outline: none;
   color: var(--menu-textcolor);
@@ -138,7 +145,7 @@ body {
   position: absolute;
   background-color: #f9f9f9;
   min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
   z-index: 1;
   margin-top: -30px;
   margin-left: 170px;
@@ -153,12 +160,10 @@ body {
   text-align: left;
 }
 
-.topnav a:hover, .dropright:hover .droprightbtn {
+.topnav a:hover,
+.dropright:hover .droprightbtn {
   background-color: var(--menu-background-color-hover);
   color: var(--menu-textcolor-hover);
-  /*
-  border-radius: 5px;
-  */
 }
 
 .dropright-content a:hover {
@@ -170,12 +175,16 @@ body {
   display: block;
 }
 
-.topnav .active{
-  background-color: #ccc;
-  /*
-      border-radius: 5px;
-      margin: 4px;
-  */
+.topnav .active {
+  background-color: var(--menu-background-color-active);
+}
+
+.dropdown.active .dropbtn {
+  background-color: var(--menu-background-color-active);
+}
+
+.dropdown-content a.active {
+  background-color: var(--menu-background-color-active);
 }
 
 .navbar .logo {
@@ -197,110 +206,231 @@ body {
   display: none;
 }
 
-.topnav.responsive .logout-small {
-  float: right;
-  display: none;
-}
-
 .topnav .logout i {
   margin-right: 4px;
 }
 
+/* Mobile controls bar (hamburger + logout icon) — hidden on desktop */
+.navbar-mobile {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.navbar-mobile a {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  color: var(--menu-textcolor);
+  text-decoration: none;
+  cursor: pointer;
+  font-size: var(--font-size-nav);
+  height: 55px;
+  box-sizing: border-box;
+}
+
+.navbar-mobile a:hover {
+  background-color: var(--menu-background-color-hover);
+  color: var(--menu-textcolor-hover);
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--menu-textcolor);
+  font-family: inherit;
+  line-height: 1;
+  height: 55px;
+  box-sizing: border-box;
+}
+
+.hamburger:hover {
+  background-color: var(--menu-background-color-hover);
+  color: var(--menu-textcolor-hover);
+}
+
+/* ---- Side drawer ---- */
+
+.drawer {
+  display: none; /* desktop: drawer not rendered visually */
+  position: fixed;
+  top: 55px; /* bottom edge of the .navbar (height: 55px) */
+  right: 0;
+  width: 280px;
+  height: calc(100vh - 55px);
+  background: #fff;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.25);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.drawer-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 99;
+}
+
+/* Drawer top-level items (no submenu) */
+.drawer > a {
+  display: block;
+  padding: 13px 20px;
+  color: var(--menu-textcolor);
+  text-decoration: none;
+  font-size: var(--font-size-nav);
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.drawer > a:hover {
+  background-color: var(--menu-background-color-hover);
+  color: var(--menu-textcolor-hover);
+}
+
+.drawer > a.active {
+  background-color: var(--menu-background-color-active);
+}
+
+/* Drawer sections (items with submenu) */
+.drawer-section {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.drawer-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 13px 20px;
+  font-size: var(--font-size-nav);
+  font-family: inherit;
+  color: var(--menu-textcolor);
+  background: var(--menu-background-color);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.drawer-section-header:hover {
+  background-color: var(--menu-background-color-hover);
+  color: var(--menu-textcolor-hover);
+}
+
+.drawer-section.active .drawer-section-header {
+  background-color: var(--menu-background-color-active);
+}
+
+.drawer-section-header i {
+  transition: transform 0.2s ease;
+  font-size: 0.8em;
+  flex-shrink: 0;
+}
+
+.drawer-section.open .drawer-section-header i {
+  transform: rotate(180deg);
+}
+
+.drawer-section-items {
+  display: none;
+  background: #f4f4f4;
+}
+
+.drawer-section.open .drawer-section-items {
+  display: block;
+}
+
+.drawer-section-items a {
+  display: block;
+  padding: 11px 20px 11px 36px;
+  color: var(--menu-textcolor);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid #ececec;
+}
+
+.drawer-section-items a:hover {
+  background-color: var(--menu-background-color-hover);
+  color: var(--menu-textcolor-hover);
+}
+
+.drawer-section-items a.active {
+  background-color: var(--menu-background-color-active);
+}
+
+.drawer-footer {
+  padding: 16px 20px;
+  border-top: 2px solid #ddd;
+}
+
+.drawer-logout-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--menu-textcolor);
+  text-decoration: none;
+  font-size: var(--font-size-nav);
+  cursor: pointer;
+}
+
+.drawer-logout-link:hover {
+  color: var(--menu-background-color-hover);
+}
+
 /* Width less than 885px -> switch logo to small */
 @media screen and (max-width: 885px) {
-  .navbar  .logo {
+  .navbar .logo {
     display: none;
   }
-  .navbar  .logo-small {
+  .navbar .logo-small {
     display: initial;
   }
 }
 
-/* Width less than 790px -> switch logout to button without text */
+/* Width less than 790px -> switch logout to icon-only */
 @media screen and (max-width: 790px) {
-  .topnav  .logout {
+  .topnav .logout {
     display: none;
   }
-  .topnav  .logout-small {
+  .topnav .logout-small {
     display: initial;
   }
 }
 
-/* Width less than 720px -> switch to mobile mode with long logo and logout with text */
+/* Width less than 720px -> switch to drawer mode */
 @media screen and (max-width: 720px) {
-  .navbar  .logo {
+  .navbar .logo {
     display: initial;
   }
-  .navbar  .logo-small {
+  .navbar .logo-small {
     display: none;
   }
 
-  .topnav  .logout {
+  /* Hide desktop nav, show mobile controls */
+  .topnav {
     display: none;
   }
-  .topnav  .logout-small {
-    display: initial;
+
+  .navbar-mobile {
+    display: flex;
   }
 
-  .topnav a:not(:first-child), .dropdown .dropbtn {
-    display: none;
-  }
-  .topnav a:not(:first-child), .dropright .droprightbtn {
-    display: none;
-  }
-  .topnav a.icon {
-    float: right;
+  /* Activate drawer */
+  .drawer {
     display: block;
   }
 
-  .topnav.responsive {
-    position: relative;
-    z-index: 4;    /* 4 to stay on top of item tree, scene list, etc. */
-    overflow: hidden;
+  .drawer.drawer-open {
+    transform: translateX(0);
+  }
 
-  }
-  .topnav.responsive .icon {
-    position: absolute;
-    right: 0;
-    top: 0;
-  }
-  .topnav.responsive a {
-    float: none;
+  .drawer-backdrop.active {
     display: block;
-    text-align: left;
-    padding-bottom: 8px;
   }
-
-  .topnav.responsive .dropdown {
-    float: none;
-  }
-  .topnav.responsive .dropdown-content {
-    position: relative;
-  }
-  .topnav.responsive .dropdown .dropbtn {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding-bottom: 8px;
-  }
-  .topnav.responsive .dropdown:not(:first-child) .dropbtn {
-    padding-top: 8px;
-  }
-  .topnav.responsive a:not(:first-child) {
-    padding-top: 8px;
-  }
-
-  .topnav.responsive .dropright {float: none;}
-  .topnav.responsive .dropright-content {
-    position: relative;
-    margin: 0;
-    margin-left: 15px;
-  }
-  .topnav.responsive .dropright .droprightbtn {
-    display: block;
-    width: 100%;
-    text-align: left;
-  }
-
 }
-

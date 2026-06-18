@@ -1,15 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   selector: 'app-logger-tab',
   templateUrl: './logger-tab.component.html',
-  styleUrls: ['./logger-tab.component.css']
+  styleUrls: ['./logger-tab.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [],
 })
-export class LoggerTabComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit() {
-  }
-
-}
+export class LoggerTabComponent {}

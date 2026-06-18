@@ -1,18 +1,12 @@
+import { Injectable, inject } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
-import { Injectable, OnInit } from '@angular/core';
-
-import { Subject, Observable, Observer } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { webSocket } from 'rxjs/webSocket'; // for RxJS 6, for v5 use Observable.webSocket
-
-// import { SystemComponent } from '../system/system.component';
-
-import { AppComponent } from '../../app.component';
-import { WebsocketService } from './websocket.service';
+import { APP_NAME, APP_VERSION } from '../../app.component';
+import { AppConfigService } from './app-config.service';
+import { LogService } from './log.service';
 import { SharedService } from './shared.service';
-import {OlddataService} from './olddata.service';
-
-
+import { WebsocketService } from './websocket.service';
 
 export interface Message {
   cmd: string;
@@ -28,158 +22,128 @@ export interface Message {
   ver?: string;
   browser?: string;
   bver?: string;
-  rawdata: any;
+  rawdata: unknown;
 }
 
+export type SeriesEntry = [number, number, { date: string; time: string }];
 
-type SeriesCallback = ( series: any ) => void;
+interface SeriesResponse {
+  sid: string;
+  series: (number | { date: string; time: string })[][];
+}
 
+interface SeriesData {
+  series: SeriesEntry[];
+  tsdiff: number;
+}
+
+type SeriesCallback = (series: unknown) => void;
 
 // ------------------------------------------------------------------
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
+export class WebsocketPluginService {
+  private appConfig = inject(AppConfigService);
+  private websocketService = inject(WebsocketService);
+  private shared = inject(SharedService);
+  private readonly log = inject(LogService);
+  monitorCallbackFunction: ((data: unknown) => void) | undefined = undefined;
 
-// @Injectable()
-export class WebsocketPluginService implements OnInit {
-  public messages: Subject<Message>;
-
-  wsService: any;
-  subject: any;
-
-  monitorCallbackFunction = undefined;
-
-  private msgMonitorItems = <Message> {
-    'cmd': 'monitor',
-    'items': []
+  private msgMonitorItems: Message = {
+    cmd: 'monitor',
+    items: [],
+    rawdata: null,
   };
 
-  private msgListenSeriesLoad = <Message> {
-    'cmd': 'series',
-    'item': 'env.system.load',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 10
+  private msgListenSeriesLoad = <Message>{
+    cmd: 'series',
+    item: 'env.system.load',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 10,
   };
-  private msgListenSeriesSystemMemory = <Message> {
-    'cmd': 'series',
-    'item': 'env.system.memory.used',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 10
+  private msgListenSeriesSystemMemory = <Message>{
+    cmd: 'series',
+    item: 'env.system.memory.used',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 10,
   };
-  private msgListenSeriesSwap = <Message> {
-    'cmd': 'series',
-    'item': 'env.system.swap',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 10
+  private msgListenSeriesSwap = <Message>{
+    cmd: 'series',
+    item: 'env.system.swap',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 10,
   };
-  private msgListenSeriesMemory = <Message> {
-    'cmd': 'series',
-    'item': 'env.core.memory',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 10
+  private msgListenSeriesMemory = <Message>{
+    cmd: 'series',
+    item: 'env.core.memory',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 10,
   };
-  private msgListenSeriesThreads = <Message> {
-    'cmd': 'series',
-    'item': 'env.core.threads',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 20
+  private msgListenSeriesThreads = <Message>{
+    cmd: 'series',
+    item: 'env.core.threads',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 20,
   };
-  private msgListenSeriesWorkerThreads = <Message> {
-    'cmd': 'series',
-    'item': 'env.core.scheduler.worker_threads',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 20
+  private msgListenSeriesWorkerThreads = <Message>{
+    cmd: 'series',
+    item: 'env.core.scheduler.worker_threads',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 20,
   };
-  private msgListenSeriesIdleWorkerThreads = <Message> {
-    'cmd': 'series',
-    'item': 'env.core.scheduler.idle_threads',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 20
+  private msgListenSeriesIdleWorkerThreads = <Message>{
+    cmd: 'series',
+    item: 'env.core.scheduler.idle_threads',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 20,
   };
-  private msgListenSeriesActiveWorkerThreads = <Message> {
-    'cmd': 'series',
-    'item': 'env.core.scheduler.active_threads',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 20
+  private msgListenSeriesActiveWorkerThreads = <Message>{
+    cmd: 'series',
+    item: 'env.core.scheduler.active_threads',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 20,
   };
-  private msgListenSeriesDisk = <Message> {
-    'cmd': 'series',
-    'item': 'env.system.diskusagepercent',
-    'series': 'avg',
-    'start': '48h',
-    'end': 'now',
-    'count': 10
+  private msgListenSeriesDisk = <Message>{
+    cmd: 'series',
+    item: 'env.system.diskusagepercent',
+    series: 'avg',
+    start: '48h',
+    end: 'now',
+    count: 10,
   };
-
 
   monitor = {
-    'items': [['x', false]],
-    'cmd': 'item'
+    items: [['x', false]],
+    cmd: 'item',
   };
 
-
-  systemload = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  systemmemory = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  systemswap = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  memory = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  threads = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  workerThreads = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  idleWorkerThreads = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  activeWorkerThreads = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
-  disk = {
-    'series': [],
-    'tsdiff': 0,
-  };
-
+  systemload: SeriesData = { series: [], tsdiff: 0 };
+  systemmemory: SeriesData = { series: [], tsdiff: 0 };
+  systemswap: SeriesData = { series: [], tsdiff: 0 };
+  memory: SeriesData = { series: [], tsdiff: 0 };
+  threads: SeriesData = { series: [], tsdiff: 0 };
+  workerThreads: SeriesData = { series: [], tsdiff: 0 };
+  idleWorkerThreads: SeriesData = { series: [], tsdiff: 0 };
+  activeWorkerThreads: SeriesData = { series: [], tsdiff: 0 };
+  disk: SeriesData = { series: [], tsdiff: 0 };
 
   private monitoredItems = new Subject<void>();
   public monitoredItemsUpdate$ = this.monitoredItems.asObservable();
@@ -211,285 +175,200 @@ export class WebsocketPluginService implements OnInit {
   private diskSource = new Subject<void>();
   public diskUpdate$ = this.diskSource.asObservable();
 
+  private readonly stop$ = new Subject<void>();
 
-  constructor(private dataService: OlddataService,
-              private websocketService: WebsocketService,
-              private shared: SharedService,
-              private app: AppComponent) {
-  }
-
-  firstMsgSent = false;
-  msgIdentity = <Message> {
+  private msgIdentity = <Message>{
     cmd: 'identity',
-    sw: this.app.APP_NAME,
-    ver: 'v' + this.app.APP_VERSION,
-    browser: 'y',
-    bver: ''
+    sw: APP_NAME,
+    ver: 'v' + APP_VERSION,
+    browser: '',
+    bver: '',
   };
 
-
-  ngOnInit() {
-  }
-
-
-  async delay(ms: number, msg: string) {
-    await new Promise(resolve => setTimeout(() => resolve(), ms)).then( () => {
-//      console.log('fired ' + msg)
-    });
-  }
-
-
   connect() {
-    const hostip = sessionStorage.getItem('hostip');
-    const wsHost = sessionStorage.getItem('wsHost');
-    const wsPort = sessionStorage.getItem('wsPort');
-    const adm_url = 'ws://' + wsHost + ':' + wsPort + '/adm';
-
-    if (hostip === 'localhost' || hostip === null) {
-      console.log({adm_url}, 'Für mockup Environment ip und port in \'testdata/api/server/info/default.json\' anpassen');
+    if (!this.appConfig.wsHost || !this.appConfig.wsPort) {
+      this.log.warn(
+        'WebsocketPluginService.connect(): wsHost or wsPort not yet available — skipping connect',
+      );
+      return;
     }
-    this.wsService = new WebsocketService();
-    this.subject = this.wsService.connect(adm_url);
-    this.subject.subscribe(msg => {
-        console.warn('connect', msg.data);
-        const data = JSON.parse(msg.data);
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const adm_url = wsProtocol + this.appConfig.wsHost + ':' + this.appConfig.wsPort + '/adm';
+
+    if (this.appConfig.hostIp === null) {
+      this.log.log(
+        { adm_url },
+        "Für mockup Environment ip und port in 'testdata/api/server/info/default.json' anpassen",
+      );
+    }
+
+    this.websocketService.connect(adm_url);
+
+    this.websocketService.messages$.pipe(takeUntil(this.stop$)).subscribe({
+      next: (msg) => {
+        let data: Message;
+        try {
+          data = JSON.parse(msg.data);
+        } catch (e) {
+          this.log.warn('WebsocketPluginService: failed to parse message', msg.data, e);
+          return;
+        }
         if (data.cmd === 'item') {
           this.handleResponseItem(data);
         } else if (data.cmd === 'series') {
-          this.handleResponseSeries(data);
+          this.handleResponseSeries(data as unknown as SeriesResponse);
         } else {
-          console.log('message received :');
-          console.log(data);
+          this.log.log('message received:', data);
         }
       },
-      (err) => console.log(err),
-    );
+      error: (err) => this.log.log(err),
+    });
 
-    if (this.firstMsgSent) {
-      this.wsService.sendMessage(this.msgIdentity);
-    } else {
-      this.delay(500, 'msgIdentity').then(any => {
-        const browser = this.shared.getBrowser();
-        this.msgIdentity.browser = browser.name;
-        this.msgIdentity.bver = browser.version;
-        // task after delay.
-        this.wsService.sendMessage(this.msgIdentity);
-        this.firstMsgSent = true;
+    // Send identity on every (re)connect
+    this.websocketService.open$.pipe(takeUntil(this.stop$)).subscribe(() => {
+      const browser = this.shared.getBrowser();
+      this.websocketService.sendMessage({
+        ...this.msgIdentity,
+        browser: browser.name,
+        bver: browser.version,
       });
-    }
+    });
   }
-
 
   disconnect() {
-    this.subject.unsubscribe();
-    this.wsService.close();
+    this.stop$.next();
+    this.websocketService.close();
   }
 
-
-  handleResponseItem(data) {
-    // console.log('message received (item):');
-    // console.log(data);
-    this.monitorCallbackFunction(data);
-  }
-
-
-  sendMessage(message: any) {
-    if (this.firstMsgSent) {
-      this.wsService.sendMessage(message);
-    } else {
-      this.delay(500, message.item).then(any => {
-        // task after delay.
-        this.wsService.sendMessage(message);
-      });
+  handleResponseItem(data: Message) {
+    if (this.monitorCallbackFunction) {
+      this.monitorCallbackFunction(data);
     }
+    this.monitoredItems.next();
   }
 
-
+  sendMessage(message: unknown) {
+    this.websocketService.sendMessage(message);
+  }
 
   // ------------------------------------------------------------------
-  // requests monitorig of items
+  // requests monitoring of items
   //
 
-  getMonitoredItems(itemList = [], callback) {
+  getMonitoredItems(itemList: [string, unknown][] = [], callback: (data: unknown) => void) {
     this.monitorCallbackFunction = callback;
-
-    const monitorItems = [];
-    for (let i = 0; i < itemList.length; i++) {
-      monitorItems.push(itemList[i][0]);
-    }
-    this.msgMonitorItems.items = monitorItems;
-    this.sendMessage(this.msgMonitorItems);
+    this.sendMessage({
+      ...this.msgMonitorItems,
+      items: itemList.map((item) => item[0]),
+    });
   }
-
 
   // ------------------------------------------------------------------
   // requests series for load, memory and threads
   //
 
   getSeriesLoad(period = '24h', count = 100) {
-    this.msgListenSeriesLoad.start = period;
-    this.msgListenSeriesLoad.count = count;
-    this.sendMessage(this.msgListenSeriesLoad);
+    this.sendMessage({ ...this.msgListenSeriesLoad, start: period, count });
   }
 
   getSeriesSystemMemory(period = '24h', count = 100) {
-    this.msgListenSeriesSystemMemory.start = period;
-    this.msgListenSeriesSystemMemory.count = count;
-    this.sendMessage(this.msgListenSeriesSystemMemory);
+    this.sendMessage({ ...this.msgListenSeriesSystemMemory, start: period, count });
   }
 
   getSeriesSwap(period = '24h', count = 100) {
-    this.msgListenSeriesSwap.start = period;
-    this.msgListenSeriesSwap.count = count;
-    this.sendMessage(this.msgListenSeriesSwap);
+    this.sendMessage({ ...this.msgListenSeriesSwap, start: period, count });
   }
-
 
   getSeriesMemory(period = '24h', count = 100) {
-    this.msgListenSeriesMemory.start = period;
-    this.msgListenSeriesMemory.count = count;
-    this.sendMessage(this.msgListenSeriesMemory);
+    this.sendMessage({ ...this.msgListenSeriesMemory, start: period, count });
   }
-
 
   getSeriesThreads(period = '24h', count = 100) {
-    this.msgListenSeriesThreads.start = period;
-    this.msgListenSeriesThreads.count = count;
-    this.sendMessage(this.msgListenSeriesThreads);
+    this.sendMessage({ ...this.msgListenSeriesThreads, start: period, count });
   }
 
-
   getSeriesWorkerThreads(period = '24h', count = 100) {
-    this.msgListenSeriesWorkerThreads.start = period;
-    this.msgListenSeriesWorkerThreads.count = count;
-    this.sendMessage(this.msgListenSeriesWorkerThreads);
-
-    this.msgListenSeriesIdleWorkerThreads.start = period;
-    this.msgListenSeriesIdleWorkerThreads.count = count;
-    this.sendMessage(this.msgListenSeriesIdleWorkerThreads);
+    this.sendMessage({ ...this.msgListenSeriesWorkerThreads, start: period, count });
+    this.sendMessage({ ...this.msgListenSeriesIdleWorkerThreads, start: period, count });
   }
 
   getSeriesDisk(period = '24h', count = 100) {
-    // this.msgListenSeriesDisk.item = 'env.system.diskfree';
-    this.msgListenSeriesDisk.start = period;
-    this.msgListenSeriesDisk.count = count;
-    this.sendMessage(this.msgListenSeriesDisk);
+    this.sendMessage({ ...this.msgListenSeriesDisk, start: period, count });
   }
-
 
   // ------------------------------------------------------------------
   // Handle responses to series requests
   //
 
-  convertTimestamps(data) {
-    // for each value pair: Create a string value for each timpestamp and append it to the array
+  convertTimestamps(data: SeriesResponse) {
     for (let i = 0; i < data.series.length; i++) {
-      data.series[i].push(this.shared.getTimeStamp(new Date(data.series[i][0])));
-      // console.log(data.series[i]);
+      data.series[i].push(this.shared.getTimeStamp(new Date(data.series[i][0] as number)));
     }
   }
 
-
-  convertMemorysize(data) {
-    // for each value pair: Create a string value for each timpestamp and append it to the array
+  convertMemorysize(data: SeriesResponse) {
     for (let i = 0; i < data.series.length; i++) {
-      data.series[i][1] = data.series[i][1] / 1000 / 1000;
+      data.series[i][1] = (data.series[i][1] as number) / 1000 / 1000;
     }
   }
 
-
-  updateSeries(graphdata, data) {
+  updateSeries(graphdata: SeriesData, data: SeriesResponse) {
     if (graphdata.series.length === 0) {
-      // calculate the difference between oldest and newest timestamp
-      const tstampDiff = data.series[data.series.length - 1][0] - data.series[0][0];
+      const tstampDiff =
+        (data.series[data.series.length - 1][0] as number) - (data.series[0][0] as number);
       graphdata.tsdiff = tstampDiff;
-    } else {
-      const tstampNow = new Date().getTime();
-      // calculate oldest valid timestamp
-      const tstampOldest = tstampNow - graphdata.tsdiff;
-
-      // remove value pairs that are older then the oldest valid timestamp
-//      console.log('Remove old value-pairs:');
-//      console.log(graphdata);
-      // leave one value that is older than oldest valid timestamp
-      let tmp = tstampOldest - graphdata.series[1][0];
-      while (graphdata.series[1][0] < tstampOldest) {
+    } else if (graphdata.series.length > 1) {
+      const tstampOldest = new Date().getTime() - graphdata.tsdiff;
+      while (graphdata.series.length > 1 && graphdata.series[1][0] < tstampOldest) {
         graphdata.series.shift();
-        tmp = tstampOldest - graphdata.series[1][0];
       }
       graphdata.series[0][0] = tstampOldest;
-//      console.log(graphdata);
     }
-
-    // append value pairs to existing series of data
-    graphdata.series.push.apply(graphdata.series, data.series);
-    return;
+    graphdata.series.push(...(data.series as SeriesEntry[]));
   }
 
-
-  handleResponseSeries(data) {
-//    console.warn('handleResponseSeries');
-//    console.log(data);
-    if (data.sid.startsWith(this.msgListenSeriesMemory.item)) {
+  handleResponseSeries(data: SeriesResponse) {
+    if (data.sid.startsWith(this.msgListenSeriesMemory.item!)) {
       this.convertMemorysize(data);
     }
-    if (data.sid.startsWith(this.msgListenSeriesSystemMemory.item)) {
+    if (data.sid.startsWith(this.msgListenSeriesSystemMemory.item!)) {
       this.convertMemorysize(data);
     }
-    if (data.sid.startsWith(this.msgListenSeriesSwap.item)) {
+    if (data.sid.startsWith(this.msgListenSeriesSwap.item!)) {
       this.convertMemorysize(data);
     }
     this.convertTimestamps(data);
-    if (data.sid.startsWith(this.msgListenSeriesLoad.item)) {
-      // console.log('message received (load-series):');
+
+    if (data.sid.startsWith(this.msgListenSeriesLoad.item!)) {
       this.updateSeries(this.systemload, data);
       this.systemloadSource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesSystemMemory.item)) {
-      // console.log('message received (memory-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesSystemMemory.item!)) {
       this.updateSeries(this.systemmemory, data);
       this.systemmemorySource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesSwap.item)) {
-      // console.log('message received (memory-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesSwap.item!)) {
       this.updateSeries(this.systemswap, data);
       this.systemswapSource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesMemory.item)) {
-      // console.log('message received (memory-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesMemory.item!)) {
       this.updateSeries(this.memory, data);
       this.memorySource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesThreads.item)) {
-      // console.log('message received (threads-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesThreads.item!)) {
       this.updateSeries(this.threads, data);
       this.threadsSource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesWorkerThreads.item)) {
-      // console.log('message received (workerThreads-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesWorkerThreads.item!)) {
       this.updateSeries(this.workerThreads, data);
       this.workerThreadsSource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesIdleWorkerThreads.item)) {
-      // console.log('message received (idleWorkerThreads-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesIdleWorkerThreads.item!)) {
       this.updateSeries(this.idleWorkerThreads, data);
       this.idleWorkerThreadsSource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesActiveWorkerThreads.item)) {
-      // console.log('message received (activeWorkerThreads-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesActiveWorkerThreads.item!)) {
       this.updateSeries(this.activeWorkerThreads, data);
       this.activeWorkerThreadsSource.next();
-
-    } else if (data.sid.startsWith(this.msgListenSeriesDisk.item)) {
-      // console.log('message received (disk-series):');
+    } else if (data.sid.startsWith(this.msgListenSeriesDisk.item!)) {
       this.updateSeries(this.disk, data);
       this.diskSource.next();
-
     } else {
-      console.warn('message received (UNKNOWN series):');
-      console.log(data);
-     }
+      this.log.warn('message received (UNKNOWN series):', data);
+    }
   }
-
 }
-

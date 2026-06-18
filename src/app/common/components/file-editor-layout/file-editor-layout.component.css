@@ -1,0 +1,104 @@
+:host {
+  display: contents;
+}
+
+.file-editor-outer {
+  margin-left: var(--page-padding);
+  margin-right: var(--page-padding);
+  margin-bottom: var(--page-padding);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height) - var(--page-padding));
+  min-height: 400px; /* prevent collapse on short viewports; viewport scrollbar handles the rest */
+  overflow: hidden;
+}
+
+.file-editor-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: max(20% - 10px, 200px) 1fr;
+  grid-template-rows: auto 1fr;
+  column-gap: var(--grid-gutter);
+}
+
+.file-editor-buttons-left {
+  grid-column: 1;
+  grid-row: 1;
+  padding-top: 10px;
+  padding-left: 0;
+  padding-right: 20px;
+}
+
+.file-editor-buttons-right {
+  grid-column: 2;
+  grid-row: 1;
+  padding-top: 10px;
+  padding-left: 15px;
+  padding-right: 20px;
+}
+
+.file-editor-list {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 16px;
+  margin-top: 20px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.file-editor-content {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 10px;
+  padding-left: 10px;
+  padding-right: 5px;
+  border: 1px solid var(--shng-border);
+  min-height: 0; /* allow grid cell to shrink below content height */
+  overflow: hidden; /* bound the cell so height:100% children resolve correctly */
+}
+
+/* Slot wrappers projected into the list and content cells must fill their grid cell. */
+/* ::ng-deep is required because projected content belongs to the host component's view. */
+:host ::ng-deep .file-editor-list > * {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Last child inside the filelist wrapper (the p-listbox element) fills remaining height.
+   Also establish it as a flex column so the chain continues through PrimeNG's internals. */
+:host ::ng-deep .file-editor-list > * > :last-child {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* PrimeNG renders p-listbox → div.p-listbox → div.p-listbox-list-container → ul.
+   Cascade flex through those layers so the list container fills the available height
+   and scrolls — rather than growing unboundedly and being clipped by overflow:hidden. */
+:host ::ng-deep .file-editor-list .p-listbox {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep .file-editor-list .p-listbox-list-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  max-height: none !important;
+}
+
+/* Editor slot wrapper fills the content cell */
+:host ::ng-deep .file-editor-content > * {
+  height: 100%;
+}
+
+/* First child inside the editor wrapper (the code editor) fills the wrapper */
+:host ::ng-deep .file-editor-content > * > :first-child {
+  height: 100%;
+}

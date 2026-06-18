@@ -1,23 +1,44 @@
-
-import { Component, AfterViewChecked, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
-import { BrowserModule, Title } from '@angular/platform-browser';
-// import { Title } from '@angular/platform-browser';
-import { HttpClient } from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Title } from '@angular/platform-browser';
+import { timer } from 'rxjs';
+import { AppConfigService } from '../common/services/app-config.service';
+import { UserPreferencesService } from '../common/services/user-preferences.service';
 
 import { saveAs } from 'file-saver';
 
-import {ServicesApiService} from '../common/services/services-api.service';
-import {ServerApiService} from '../common/services/server-api.service';
-import {FilesApiService} from '../common/services/files-api.service';
+import { FilesApiService } from '../common/services/files-api.service';
+import { LogService } from '../common/services/log.service';
+import { ServerApiService } from '../common/services/server-api.service';
+import { ServicesApiService } from '../common/services/services-api.service';
 
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ServerInfo } from '../common/models/server-info';
-import {TranslateService} from '@ngx-translate/core';
-import {SharedService} from '../common/services/shared.service';
+import { SharedService } from '../common/services/shared.service';
 
-import {sha512} from 'js-sha512';
-// import {LogicsWatchItem} from '../common/models/logics-watch-item';
-// import {SelectItem} from 'primeng/api';
-
+import { NgOptimizedImage } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { sha512 } from 'js-sha512';
+import { MessageService, PrimeTemplate } from 'primeng/api';
+import { Bind } from 'primeng/bind';
+import { ButtonDirective } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
+import { FileUpload } from 'primeng/fileupload';
+import { InputText } from 'primeng/inputtext';
+import { Message } from 'primeng/message';
+import { Ripple } from 'primeng/ripple';
+import { Select } from 'primeng/select';
+import { Tab as Tab_1, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
+import { CodeEditorComponent } from '../common/components/code-editor/code-editor.component';
 
 export interface CacheEntryType {
   filename: string;
@@ -26,272 +47,194 @@ export interface CacheEntryType {
   checked?: boolean;
 }
 
-
 @Component({
   selector: 'app-services',
   templateUrl: './services.component.html',
   styleUrls: ['./services.component.css'],
   encapsulation: ViewEncapsulation.None,
-  providers: []
+  providers: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    Bind,
+    Tabs,
+    TabList,
+    Ripple,
+    Tab_1,
+    TabPanels,
+    TabPanel,
+    NgOptimizedImage,
+    Select,
+    FormsModule,
+    ButtonDirective,
+    CodeEditorComponent,
+    InputText,
+    Dialog,
+    PrimeTemplate,
+    FileUpload,
+    TranslatePipe,
+    Message,
+  ],
 })
+export class ServicesComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
+  public shared = inject(SharedService);
+  private fileService = inject(FilesApiService);
+  private dataService = inject(ServicesApiService);
+  private readonly messageService = inject(MessageService);
+  private dataServiceServer = inject(ServerApiService);
+  private titleService = inject(Title);
+  private appConfig = inject(AppConfigService);
+  private userPrefs = inject(UserPreferencesService);
+  private readonly log = inject(LogService);
 
-
-export class ServicesComponent implements AfterViewChecked, OnInit {
-
-//  schedulerinfo: SchedulerInfo[];
-
-  constructor(private http: HttpClient,
-              private translate: TranslateService,
-              public  shared: SharedService,
-              private fileService: FilesApiService,
-              private dataService: ServicesApiService,
-              private dataServiceServer: ServerApiService,
-              private titleService: Title) {
-  }
+  //  schedulerinfo: SchedulerInfo[];
 
   serverInfo = <ServerInfo>{};
-  default_language: string;
-  shng_status: string;
+  default_language!: string;
+  shng_status!: string;
   status_errorcount = 0;
 
-  valid_languagelist = [];
+  valid_languagelist: { label: string; value: string }[] = [];
 
   valid_default_language = '          ';
-  selected_language = null;
+  selected_language: string | null = null;
   shng_statuscode = 0;
 
   pwd_clear = '';
-  pwd_hash: string;
-  pwd_show: boolean;
+  pwd_hash!: string;
+  pwd_show!: boolean;
 
   backup_disabled = false;
   restore_disabled = false;
   show_backup_confirm = false;
   show_restore_chooser = false;
 
-  // -----------------------------------------------------------------
-  //  Vars for the codemirror components
-  //
-  rulers = [];
-
   // -----------------------------------------------------
   //  Vars for the EVAL syntax checker
   //
-  @ViewChild('evalcodeeditor') private evalCodeEditor;
-  @ViewChild('evalcodeeditor2') private evalCodeEditor2;
+  @ViewChild('evalcodeeditor') evalCodeEditor?: CodeEditorComponent;
+  @ViewChild('evalcodeeditor2') evalCodeEditor2?: CodeEditorComponent;
 
   myEvalTextarea = '';
   myRelativeTo = '';
   myEvalResult = '';
   myResultType = '';
-  cmEvalOptions = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      'Tab': 'insertSoftTab',
-      'Shift-Tab': 'indentLess'
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'python',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   myEvalTextOutput = '';
-  cmEvalOptionsOutput = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      'Tab': 'insertSoftTab',
-      'Shift-Tab': 'indentLess'
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'python',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
-
 
   // -----------------------------------------------------
   //  Vars for the YAML syntax checker
   //
-  @ViewChild('codeeditor') private codeEditor;
-  @ViewChild('codeeditor2') private codeEditor2;
+  @ViewChild('codeeditor') codeEditor?: CodeEditorComponent;
+  @ViewChild('codeeditor2') codeEditor2?: CodeEditorComponent;
 
   myTextarea = '';
-  cmOptions = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      'Tab': 'insertSoftTab',
-      'Shift-Tab': 'indentLess'
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   myTextOutput = '';
-  cmOptionsOutput = {
-    indentWithTabs: false,
-    indentUnit: 4,
-    tabSize: 4,
-    extraKeys: {
-      'Tab': 'insertSoftTab',
-      'Shift-Tab': 'indentLess'
-    },
-    lineNumbers: true,
-    readOnly: false,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   // -----------------------------------------------------
   //  Vars for the YAML converter
   //
-  @ViewChild('convertercodeeditor') private converterCodeEditor;
-  @ViewChild('convertercodeeditor2') private converterCodeEditor2;
+  @ViewChild('convertercodeeditor') converterCodeEditor?: CodeEditorComponent;
+  @ViewChild('convertercodeeditor2') converterCodeEditor2?: CodeEditorComponent;
 
   myConverterTextarea = '';
-  cmConveterOptions = {
-    lineNumbers: true,
-    readOnly: false,
-    indentUnit: 4,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    // mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    indentWithTabs: false,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   myConverterTextOutput = '';
-  cmConverterOptionsOutput = {
-    lineNumbers: true,
-    readOnly: false,
-    indentUnit: 4,
-    lineSeparator: '\n',
-    rulers: this.rulers,
-    mode: 'yaml',
-    lineWrapping: false,
-    firstLineNumber: 1,
-    indentWithTabs: false,
-    autorefresh: true,
-    fixedGutter: true,
-  };
 
   cacheInfo: CacheEntryType[] = [];
-  cacheAllChecked: boolean;
+  cacheAllChecked!: boolean;
+
+  cacheSortField = '';
+  cacheSortOrder: 1 | -1 = 1;
+
+  sortCache(field: string): void {
+    this.cacheSortOrder = this.cacheSortField === field ? (this.cacheSortOrder === 1 ? -1 : 1) : 1;
+    this.cacheSortField = field;
+    const ord = this.cacheSortOrder;
+    this.cacheInfo.sort((a, b) => {
+      const av = String((a as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      const bv = String((b as unknown as Record<string, unknown>)[field] ?? '').toLowerCase();
+      return av < bv ? -ord : av > bv ? ord : 0;
+    });
+    this.cdr.markForCheck();
+  }
 
   public setTitle(newTitle: string) {
     this.titleService.setTitle(newTitle);
   }
 
-
   ngOnInit() {
-    // console.log('ServicesComponent.ngOnInit');
+    // this.log.log('ServicesComponent.ngOnInit');
 
-    for (let i = 1; i <= 100; i++) {
-      this.rulers.push({color: '#eee', column: i * 4, lineStyle: 'dashed'});
-    }
+    this.dataServiceServer
+      .getServerinfo()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.shng_status = '?';
+        this.default_language = this.appConfig.defaultLanguage;
 
-    this.dataServiceServer.getServerinfo()
-      .subscribe(
-        (response) => {
-          this.shng_status = '?';
-          this.default_language = sessionStorage.getItem('default_language');
+        this.serverInfo = <ServerInfo>response;
 
-          this.serverInfo = <ServerInfo> response;
+        this.getShngStatus();
 
-          this.getShngStatus();
+        //        this.valid_languagelist = [{label: 'English', value: 'en'},{label: 'Deutsch', value: 'de'},{label: 'Français', value: 'fr'},
+        //        {label: 'Polski', value: 'pl'}];
+        this.valid_languagelist = [
+          { label: 'English', value: 'en' },
+          { label: 'Deutsch', value: 'de' },
+          { label: 'Français', value: 'fr' },
+        ];
 
-//        this.valid_languagelist = [{label: 'English', value: 'en'},{label: 'Deutsch', value: 'de'},{label: 'Français', value: 'fr'},
-//        {label: 'Polski', value: 'pl'}];
-          this.valid_languagelist = [
-            {label: 'English', value: 'en'},
-            {label: 'Deutsch', value: 'de'},
-            {label: 'Français', value: 'fr'}
-            ];
+        // this.valid_default_language = 'Deutsch';
+        this.selected_language = this.default_language;
 
-          // this.valid_default_language = 'Deutsch';
-          this.selected_language = this.default_language;
+        this.setTitle(this.translate.instant('SERVICES.SERVICES'));
 
-          this.setTitle(this.translate.instant('SERVICES.SERVICES'));
-
-          this.loadCacheOrphans();
-        }
-      );
-
+        this.loadCacheOrphans();
+        this.cdr.markForCheck();
+      });
   }
-
 
   loadCacheOrphans() {
-
-    this.dataService.getCacheOrphans()
-      .subscribe(
-        (response) => {
-          this.cacheInfo = <CacheEntryType[]> response;
-          this.cacheAllChecked = false;
-          // console.log('loadChacheOrphans', this.cacheInfo);
-        }
-      );
+    this.dataService
+      .getCacheOrphans()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.cacheInfo = <CacheEntryType[]>response;
+        this.cacheAllChecked = false;
+        // this.log.log('loadChacheOrphans', this.cacheInfo);
+        this.cdr.markForCheck();
+      });
   }
 
-
-  deleteCacheEntry(entryNr) {
-    // console.log('deleteCacheEntry', this.cacheInfo[entryNr].filename);
-    this.dataService.deleteCacheFile(this.cacheInfo[entryNr].filename)
-      .subscribe(
-        () => {
-          this.loadCacheOrphans();
-        }
-      );
+  deleteCacheEntry(entryNr: number) {
+    // this.log.log('deleteCacheEntry', this.cacheInfo[entryNr].filename);
+    this.dataService
+      .deleteCacheFile(this.cacheInfo[entryNr].filename)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.loadCacheOrphans();
+      });
   }
-
 
   deleteCacheSelected() {
-    const filelist = [];
+    const filelist: string[] = [];
     for (let i = 0; i < this.cacheInfo.length; i++) {
       if (this.cacheInfo[i].checked) {
         filelist.push(this.cacheInfo[i].filename);
       }
     }
 
-    this.dataService.deleteCacheFile(JSON.stringify(filelist))
-      .subscribe(
-        () => {
-          this.loadCacheOrphans();
-        }
-      );
-
+    this.dataService
+      .deleteCacheFile(JSON.stringify(filelist))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.loadCacheOrphans();
+      });
   }
-
 
   cacheCheckAll() {
     for (let i = 0; i < this.cacheInfo.length; i++) {
@@ -299,182 +242,136 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     }
   }
 
-
-  ngAfterViewChecked() {
-
-    const evalEditor1 = this.evalCodeEditor.codeMirror;
-    const evalEditor2 = this.evalCodeEditor2.codeMirror;
-    // const h = evalEditor1.getViewport();
-
-    evalEditor1.setSize('100%', 160);
-    evalEditor1.refresh();
-    evalEditor2.setSize('100%', 160);
-    evalEditor2.refresh();
-
-    const editor1 = this.codeEditor.codeMirror;
-    const editor2 = this.codeEditor2.codeMirror;
-    editor1.refresh();
-    editor2.refresh();
-    const editor3 = this.converterCodeEditor.codeMirror;
-    const editor4 = this.converterCodeEditor2.codeMirror;
-    editor3.refresh();
-    editor4.refresh();
-  }
-
-
   createPwdHash() {
-    console.log('createPwdHash');
+    this.log.log('createPwdHash');
     this.pwd_hash = sha512(this.pwd_clear);
   }
-
 
   checkYaml() {
     // this.myTextoutput = this.myTextarea;
 
-    this.dataService.CheckYamlText(this.myTextarea)
-      .subscribe(
-        (response) => {
-          this.myTextOutput = <any> response;
-          this.cmOptionsOutput.lineNumbers = true;
-          // if (this.myTextOutput.startsWith('ERROR:')) {
-          //   this.cmOptionsOutput.lineNumbers = false;
-          // }
-          this.cmOptionsOutput.lineNumbers = !(this.myTextOutput.startsWith('ERROR:'));
-          const editor2 = this.codeEditor2.codeMirror;
-          editor2.refresh();
-        }
-      );
-
+    this.dataService
+      .CheckYamlText(this.myTextarea)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.myTextOutput = response as string;
+        this.cdr.markForCheck();
+      });
   }
-
 
   checkEval() {
-    const evalData = {'expression': this.myEvalTextarea, 'relative_to': this.myRelativeTo};
-    this.dataService.CheckEvalData(evalData)
-      .subscribe(
-        (response) => {
-          const myResponse = <any> response;
-          this.myEvalTextOutput = myResponse.expression;
-          this.myResultType = myResponse.type;
-          if (this.myResultType === 'list' || this.myResultType === 'dict') {
-            this.myEvalResult = JSON.stringify(myResponse.result);
-          } else {
-            this.myEvalResult = myResponse.result;
-          }
+    const evalData = { expression: this.myEvalTextarea, relative_to: this.myRelativeTo };
+    this.dataService
+      .CheckEvalData(evalData)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const myResponse = response as { expression: string; type: string; result: unknown };
+        this.myEvalTextOutput = myResponse.expression;
+        this.myResultType = myResponse.type;
+        if (this.myResultType === 'list' || this.myResultType === 'dict') {
+          this.myEvalResult = JSON.stringify(myResponse.result);
+        } else {
+          this.myEvalResult = String(myResponse.result);
         }
-      );
-
+        this.cdr.markForCheck();
+      });
   }
-
 
   convertYaml() {
     // this.myTextoutput = this.myTextarea;
 
-    this.dataService.ConvertToYamlText(this.myConverterTextarea)
-      .subscribe(
-        (response) => {
-          this.myConverterTextOutput = <any> response;
-          this.cmConverterOptionsOutput.lineNumbers = true;
-//          if (this.myConverterTextOutput.startsWith('ERROR:')) {
-//            this.cmConverterOptionsOutput.lineNumbers = false;
-//          }
-//          const editor4 = this.converterCodeEditor2.codeMirror;
-//          editor4.refresh();
-        }
-      );
-
+    this.dataService
+      .ConvertToYamlText(this.myConverterTextarea)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.myConverterTextOutput = response as string;
+        this.cdr.markForCheck();
+      });
   }
-
 
   setLanguage() {
-    console.log('setLanguage', this.selected_language);
-    sessionStorage.setItem('default_language', this.selected_language);
+    this.log.log('setLanguage', this.selected_language);
+    this.appConfig.setDefaultLanguage(this.selected_language!);
+    this.userPrefs.setLanguage(this.selected_language!); // persist across reloads
     this.shared.setGuiLanguage();
-    this.default_language = sessionStorage.getItem('default_language');
+    this.default_language = this.appConfig.defaultLanguage;
   }
-
 
   // -------------------------------------------------------
   // translate status text of SmartHomeNG
   //
-  translate_shngStatus(text) {
-//    const translated_text = this.translate.instant('SHNG_STATE.' + text);
-//    if (translated_text.startsWith('SHNG_STATE.')) {
-//      return text;
-//    }
+  translate_shngStatus(text: string) {
+    //    const translated_text = this.translate.instant('SHNG_STATE.' + text);
+    //    if (translated_text.startsWith('SHNG_STATE.')) {
+    //      return text;
+    //    }
     return this.translate.instant('SHNG_STATE.' + text);
   }
-
 
   // -------------------------------------------------------
   // poll the status of SmartHomeNG and schedule next poll
   //
   getShngStatus() {
     // duration in seconds
-    const interval1 = 5000;    // standard polling: every 5 seconds
-    const interval2 = 1000;    // polling while (re)starting: every second
-    const interval3 = 3000;    // polling while in error state (shng not running)
-    this.dataServiceServer.getShngServerStatus()
-      .subscribe(
-        (response) => {
-          const res = <any> response;
-          if (res.code === undefined) {
-            // shng is not running
-            this.status_errorcount += 1;
-            console.log('getShngStatus', 'SmartHomeNG not running');
-            this.shng_status =  this.translate_shngStatus('waiting') + '...';
-          } else {
-            // console.log('getShngStatus', res.code, res.text);
-            this.shng_statuscode = res.code;
-            this.shng_status = this.translate_shngStatus(res.text);
-            if (res.details !== undefined) {
-              this.shng_status += ' (' + res.details + ')';
-            }
-            this.status_errorcount = 0;
+    const interval1 = 5000; // standard polling: every 5 seconds
+    const interval2 = 1000; // polling while (re)starting: every second
+    const interval3 = 3000; // polling while in error state (shng not running)
+    this.dataServiceServer
+      .getShngServerStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const res = response as { code?: number; text?: string; details?: string };
+        if (res.code === undefined) {
+          // shng is not running
+          this.status_errorcount += 1;
+          this.log.log('getShngStatus', 'SmartHomeNG not running');
+          this.shng_status = this.translate_shngStatus('waiting') + '...';
+        } else {
+          // this.log.log('getShngStatus', res.code, res.text);
+          this.shng_statuscode = res.code;
+          this.shng_status = this.translate_shngStatus(res.text ?? '');
+          if (res.details !== undefined) {
+            this.shng_status += ' (' + res.details + ')';
           }
-          if (this.status_errorcount < 20) {
-            // schedule next status check
-            let interval = interval1;
-            if (res.code !== 20) {
-              // code = 20 -> status running
-              if (this.status_errorcount === 0) {
-                interval = interval2;
-              } else {
-                interval = interval3;
-              }
-            }
-            this.sleep(interval).then(() => {
-              this.getShngStatus();
-            });
-          } else {
-            console.warn('getShngStatus', 'Statuspolling aborted');
-            this.shng_status = this.translate_shngStatus('not active');
-            this.shng_statuscode = -1;
-          }
+          this.status_errorcount = 0;
         }
-      );
+        if (this.status_errorcount < 20) {
+          // schedule next status check
+          let interval = interval1;
+          if (res.code !== 20) {
+            // code = 20 -> status running
+            if (this.status_errorcount === 0) {
+              interval = interval2;
+            } else {
+              interval = interval3;
+            }
+          }
+          timer(interval)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.getShngStatus());
+        } else {
+          this.log.warn('getShngStatus', 'Statuspolling aborted');
+          this.shng_status = this.translate_shngStatus('not active');
+          this.shng_statuscode = -1;
+        }
+        this.cdr.markForCheck();
+      });
   }
-
-
-  sleep (time) {
-    // https://davidwalsh.name/javascript-sleep-function
-    return new Promise((resolve) => setTimeout(resolve, time));
-  }
-
 
   // -------------------------------------------------------
   // restart SmartHomeNG server application
   //
   restartShng() {
-    this.dataServiceServer.restartShngServer()
-      .subscribe(
-        (response) => {
-          const res = <any> response;
-          console.log('restartShng', res.result);
-          this.shng_status = this.translate_shngStatus('Restart clicked');
-          this.shng_statuscode = -1;
-        }
-      );
+    this.dataServiceServer
+      .restartShngServer()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const res = response as { result?: string };
+        this.log.log('restartShng', res.result);
+        this.shng_status = this.translate_shngStatus('Restart clicked');
+        this.shng_statuscode = -1;
+        this.cdr.markForCheck();
+      });
   }
 
   downloadBackup() {
@@ -496,23 +393,23 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     }
     filename += 'shng_config_backup_' + today + '.zip';
 
-    this.dataServiceServer.downloadConfigBackup()
-      .subscribe(
-        (response) => {
-          const res = <any> response;
-          // saveAs(res, 'shng_config_backup_' + today + '.zip');
-          saveAs(res, filename);
-          this.show_backup_confirm = true;
-          this.backup_disabled = false;
-          this.restore_disabled = false;
+    this.dataServiceServer
+      .downloadConfigBackup()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        const res = response as Blob;
+        // saveAs(res, 'shng_config_backup_' + today + '.zip');
+        saveAs(res, filename);
+        this.show_backup_confirm = true;
+        this.backup_disabled = false;
+        this.restore_disabled = false;
 
-          this.ngOnInit();
-        }
-      );
+        this.ngOnInit();
+        this.cdr.markForCheck();
+      });
   }
 
   restoreBackup() {
-
     this.backup_disabled = true;
     this.restore_disabled = true;
     this.show_restore_chooser = true;
@@ -521,51 +418,54 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     this.restore_disabled = false;
   }
 
+  myUploader(event: { files: File[] }, form: { clear: () => void }) {
+    this.log.log('myUploader', event.files);
+    this.log.log('myUploader', event.files[0].name);
 
-  myUploader(event, form) {
-    console.log('myUploader', event.files);
-    console.log('myUploader', event.files[0].name);
-
-    let filecontent: any;
+    let filecontent: string;
 
     const reader = new FileReader();
 
     // file reading started
-    reader.addEventListener('loadstart', function () {
-      console.log('File reading started');
+    reader.addEventListener('loadstart', () => {
+      this.log.log('File reading started');
     });
 
     // file reading finished successfully
     reader.addEventListener('load', function () {
       // const text = this.result;
-
       // contents of the file
-      // console.log(text);
+      // this.log.log(text);
     });
 
     // file reading failed
-    reader.addEventListener('error', function () {
-      alert('Error : Failed to read file');
+    reader.addEventListener('error', () => {
+      this.log.error('Error: Failed to read file');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'File read error',
+        detail: 'Failed to read the selected file.',
+      });
     });
 
     // file read progress
-    reader.addEventListener('progress', function (e) {
+    reader.addEventListener('progress', (e) => {
       if (e.lengthComputable === true) {
         const percent_read = Math.floor((e.loaded / e.total) * 100);
-        console.log(percent_read + '% read');
+        this.log.log(percent_read + '% read');
       }
     });
 
     reader.onloadend = () => {
-      // console.warn(reader.result);
-      filecontent = reader.result;
+      // this.log.warn(reader.result);
+      filecontent = reader.result as string;
 
-      this.fileService.saveFile('restore', event.files[0].name, filecontent)
-        .subscribe(
-          () => {
-            this.ngOnInit();
-          }
-        );
+      this.fileService
+        .saveFile('restore', event.files[0].name, filecontent)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          this.ngOnInit();
+        });
 
       form.clear();
       this.show_restore_chooser = false;
@@ -577,12 +477,10 @@ export class ServicesComponent implements AfterViewChecked, OnInit {
     reader.readAsDataURL(event.files[0]);
   }
 
+  doUpload(form: { clear: () => void }) {
+    this.log.log('doUpload');
 
-
-  doUpload(form) {
-    console.log('doUpload');
-
-/*
+    /*
     this.fileService.saveFile('restore', event.files[0].name, 'TEST test')
       .subscribe(
         (response2) => {

@@ -1,123 +1,259 @@
 /* You can add global styles to this file, and also import other style files */
 
-@import "~codemirror/lib/codemirror.css";
-@import "~codemirror/addon/hint/show-hint.css";
-@import "~codemirror/addon/dialog/dialog.css";
-@import "~codemirror/addon/search/matchesonscrollbar.css";
-@import "~codemirror/addon/fold/foldgutter.css";
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/700.css';
 
+/* Placeholder / default-value colour
+   Lighter than the browser default (~#757575) so set values (black) are
+   clearly distinct, but still readable. opacity:1 overrides Firefox's
+   built-in 0.54 opacity that would otherwise shift the apparent colour. */
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-placeholder) !important;
+  opacity: 1 !important;
+}
+
+.p-select-label.p-placeholder {
+  color: var(--text-placeholder) !important;
+}
 
 /* Hide spinners for number fields */
 input[type='number'] {
-  -moz-appearance:textfield;
+  -moz-appearance: textfield;
 }
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-/*
-  -webkit-appearance: none;
-*/
+  /* -webkit-appearance: none was tested but removed: hiding spinners entirely
+     breaks usability for fields that genuinely need them (e.g. port numbers).
+     The Firefox rule above is sufficient for the fields that need it suppressed. */
 }
-
-
-/* @import "~codemirror/addon/display/fullscreen.css"; */
-.CodeMirror-fullscreen {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  height: auto;
-  z-index: 12000;
-}
-
-
-/*
-
-    <link rel="stylesheet" href="/gstatic/css/smarthomeng.css" type="text/css"/>
-
-*/
-
 
 :root {
+  color-scheme: light;
+
+  /* Layout */
+  --navbar-height: 60px;
+  --tab-height: 41px;
+  --page-padding: 18px; /* outer spacing: left / bottom / right of every page body */
+  --grid-gutter: 15px; /* Bootstrap grid gutter — set to var(--page-padding) to link with outer spacing */
+
+  /* Brand / status colours */
   --shng-blue: #709cc2;
   --shng-red: #c40808;
   --shng-green: green;
   --shng-warning: #e3d304;
-  --shng-orange: #FF8000;
+  --shng-orange: #ff8000;
 
   --shng-disabled: #bbb;
-/*  älter: --shng-border: #d9d9d9; */
-/*  --shng-border: #f9f9f9; */
   --shng-border: #dee2e5;
   --shng-secondary-button: #e0e0e0;
   --shng-toggle-off: #a9a9a9;
-}
-/*
-  --shng-secondary-button2: #f5f5f5;
-*/
+  --shng-cell-alt-bg: #f7f7f7;
 
+  /* ── Typography ─────────────────────────────── */
+  --font-family-base:
+    'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+
+  /* Named size tokens — all content uses --font-size-base (1rem); the others
+     are kept for the offline banner, captions, and any utility that needs
+     a size outside the standard content scale. lg/xl are intentionally mapped
+     to base so old templates that reference them don't produce oversized text. */
+  --font-size-xs: 0.75rem; /* 12px — captions, footnotes   */
+  --font-size-sm: 0.875rem; /* 14px — offline banner, xs labels */
+  --font-size-base: 1rem; /* 16px — ALL content below nav  */
+  --font-size-nav: 1.0625rem; /* 17px — navigation             */
+  --font-size-lg: 1.25rem; /* kept for compat — unused in content; maps to base via .shng-text-lg */
+  --font-size-xl: 1.5rem; /* kept for compat — unused in content; maps to base via .shng-text-xl */
+
+  /* Weights (Roboto only ships 400 + 700)
+     bold allowed only on: page headline, table-section headers,
+     status ok/error, offline warning message */
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  --line-height-base: 1.5;
+  --line-height-tight: 1.25;
+
+  /* Text colours */
+  --text-primary: #212529; /* body text                     */
+  --text-secondary: #4d4d4d; /* headings, strong emphasis     */
+  --text-muted: #727272; /* subdued labels, group names   */
+  --text-caption: #888888; /* icons, meta, timestamps       */
+  --text-placeholder: #c0c0c0; /* input placeholders            */
+  --text-link: #337ab7; /* links                         */
+  --text-on-dark: #ffffff; /* text on coloured backgrounds  */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+  min-width: 600px; /* prevent layout collapse on narrow viewports; viewport scrollbar handles the rest */
+  overflow-x: auto; /* show horizontal scrollbar when content exceeds viewport width */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+ul,
+ol,
+dl {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* PrimeNG Aura tab layout — flex-fill chain + padding reset.
+   PrimeNG injects its theme CSS dynamically (after this file in the cascade),
+   so equal-specificity rules here would lose. !important is required on the
+   padding reset to guarantee it wins.
+   The flex chain lets content divs use height: 100% instead of fragile
+   calc() strings that must know the exact tablist pixel height.
+   .p-tabs        — rendered root div of the p-tabs component
+   .p-tablist     — the tab button bar (natural/fixed height)
+   .p-tabpanels   — wrapper for all panel slots (has Aura padding by default)
+   .p-tabpanel    — each individual panel                                    */
+.p-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.p-tablist {
+  flex-shrink: 0;
+}
+.p-tabpanels {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 !important;
+}
+/* PrimeNG places content directly inside the <p-tabpanel> host element (no inner div).
+   The host also carries class="p-tabpanel" and uses the HTML [hidden] attribute to hide
+   inactive panels — the browser's UA [hidden]{display:none} handles that.
+   We must NOT use a bare .p-tabpanel{display:block} because it would override [hidden]
+   and show all panels simultaneously. :not([hidden]) ensures only the active panel gets
+   display:block, so [hidden] panels continue to be suppressed correctly. */
+.p-tabpanel:not([hidden]) {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* ================================================================
+   Page-frame for non-tab pages (B / C layout types)
+   Mirrors PrimeNG p-tabs visually so all pages look consistent.
+   Uses only app-owned CSS variables (defined in :root) so styles
+   resolve on every element, independent of PrimeNG components.
+   ================================================================ */
+
+/* Mimics the p-tablist bar: sits above .shng-page-body and provides
+   the same visual breathing room as a real tab row. */
+.shng-page-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--shng-border);
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.125rem; /* matches Aura tab padding */
+  font-weight: 600;
+  color: var(--shng-blue); /* same accent as active tab indicator */
+  min-height: var(--tab-height);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Mimics the p-tabpanel area: l / r / b border, no top border
+   (the page-header's bottom border acts as the visual divider). */
+.shng-page-body {
+  background: #ffffff;
+  border: 1px solid var(--shng-border);
+  border-top: 0;
+  overflow: auto;
+}
 
 textarea {
   white-space: pre;
   overflow-wrap: normal;
   overflow-x: scroll;
-  font-family: monospace !important;
+  font-family: var(--font-family-mono) !important;
 }
 
-/* for PrimeNG */
-
+/* Legacy PrimeNG v7/v8 utility class — kept because some plugin webinterfaces
+   still inject markup that references it. New code should not use this class. */
 .ui-state-highlight {
-  background-color: var(--shng-blue) !important; }
+  background-color: var(--shng-blue) !important;
+}
 
-
-/* TurboTable */
-
+/* Legacy PrimeNG TurboTable overrides — kept for plugin webinterfaces that
+   still use PrimeNG v7/v8 table markup. New code uses p-table (PrimeNG v17+). */
 .ui-table .ui-table-thead > tr {
   background-color: #f0f0f0 !important;
-  border: 0px solid var(--shng-border) !important;
+  border: 0 solid var(--shng-border) !important;
   border-bottom-color: var(--shng-border) !important;
 }
 
 .ui-table .ui-table-thead > tr > th,
 .ui-table .ui-table-tfoot > tr > td {
   background-color: #ffffff !important;
-  border: 0px solid var(--shng-border) !important;
+  border: 0 solid var(--shng-border) !important;
   border-bottom-color: var(--shng-border) !important;
-  color: #1b1d1f !important; }
+  color: #1b1d1f !important;
+}
 
 .ui-table .ui-table-tbody > tr {
   background-color: #f0f0f0 !important;
   border-top: 1px solid var(--shng-border) !important;
   border-bottom: 1px solid var(--shng-border) !important;
   border-bottom-color: var(--shng-border) !important;
-  }
-/*
-.ui-table .ui-table-tbody > tr {
-  background-color: #f0f0f0 !important;
-  border-top: 1px solid var(--shng-border) !important;
-  border-bottom: 1px solid var(--shng-border) !important;
-  color: #222222 !important; }
-*/
+}
 .ui-table .ui-table-tbody > tr > td {
-  border: 0px solid var(--shng-border) !important;
+  border: 0 solid var(--shng-border) !important;
   border-top: 1px solid var(--shng-border) !important;
   border-bottom: 1px solid var(--shng-border) !important;
   background-color: inherit;
   border-top-color: var(--shng-border) !important;
-  border-bottom-color: var(--shng-border) !important; }
+  border-bottom-color: var(--shng-border) !important;
+}
 
 .ui-table .ui-table-tbody > tr.ui-state-highlight {
   background-color: #186ba0 !important;
-  color: #FFFFFF !important; }
+  color: #ffffff !important;
+}
 
 .ui-table .ui-sortable-column.ui-state-highlight {
   background-color: #ffffff !important;
   border-bottom-color: var(--shng-border) !important;
-  color: #1b1d1f !important; }
+  color: #1b1d1f !important;
+}
 
 .ui-table .ui-table-tbody > tr:nth-child(even) {
-  background-color: #ffffff !important; }
+  background-color: #ffffff !important;
+}
 
 .ui-table .ui-sortable-column .ui-sortable-column-icon {
-  color: var(--shng-blue) !important; }
+  color: var(--shng-blue) !important;
+}
 
 .ui-button.ui-state-active {
   background-color: var(--shng-blue) !important;
@@ -128,12 +264,17 @@ textarea {
 }
 
 .btn-primary {
-  font-weight: 900;
+  color: var(--text-on-dark);
   background-color: var(--shng-blue) !important;
+  border-color: var(--shng-blue);
+}
+.btn-primary:hover {
+  color: #fff;
+  background-color: #286090;
+  border-color: #204d74;
 }
 
 .ui-button-success {
-  font-weight: 900;
   background-color: var(--shng-blue) !important;
 }
 
@@ -155,91 +296,92 @@ textarea {
 }
 
 .ui-button-secondary.ui-state-focus {
-  background-color: var(--shng-red) !important; }
+  background-color: var(--shng-red) !important;
+}
 
 .ui-fileupload-buttonbar .ui-button {
-  font-weight: 900;
   background-color: var(--shng-blue) !important;
 }
 
 ui-inputswitch {
-  color: var(--shng-blue) !important; }
-
-.fa-icon-grey {
-  color: #888888;
+  color: var(--shng-blue) !important;
 }
 
-/* TurboTable */
+.fa-icon-grey {
+  color: var(--text-caption);
+}
 
 .ui-table .ui-table-tbody > tr.ui-state-highlight {
   background-color: #186ba0;
-  color: #FFFFFF; }
+  color: #ffffff;
+}
 .ui-table .ui-table-tbody > tr.ui-contextmenu-selected {
   background-color: var(--shng-blue);
-  color: #FFFFFF; }
+  color: #ffffff;
+}
 .ui-table .ui-sortable-column.ui-state-highlight .ui-sortable-column-icon {
-  color: #FFFFFF; }
+  color: #ffffff;
+}
 .ui-table .ui-sortable-column:not(.ui-state-highlight):hover {
   background-color: #eeeeee;
   border-bottom-color: var(--shng-border) !important;
-  color: #212121; }
+  color: #212121;
+}
 .ui-table .ui-sortable-column:not(.ui-state-highlight):hover .ui-sortable-column-icon {
   border-bottom-color: var(--shng-border) !important;
-  color: #212121; }
-.ui-table.ui-table-hoverable-rows .ui-table-tbody > tr:not(.ui-state-highlight):not(.ui-contextmenu-selected):hover {
+  color: #212121;
+}
+.ui-table.ui-table-hoverable-rows
+  .ui-table-tbody
+  > tr:not(.ui-state-highlight):not(.ui-contextmenu-selected):hover {
   cursor: pointer;
   border-bottom-color: var(--shng-border) !important;
   background-color: #eeeeee;
-  color: #212121; }
+  color: #212121;
+}
 
-
-
-
-
-
-
-
-/* for modal vertical align */
-
+/* Vertical centering via display:table — used by legacy modal dialogs from
+   plugin webinterfaces. Modern code uses PrimeNG p-dialog instead.
+   pointer-events:none on the wrapper lets clicks fall through to the backdrop
+   so the modal can still be dismissed by clicking outside it. */
 .vertical-alignment-helper {
-  display:table;
+  display: table;
   height: 100%;
   width: 100%;
-  pointer-events:none; /* This makes sure that we can still click outside of the modal to close it */
+  pointer-events: none;
 }
 .vertical-align-center {
   /* To center vertically */
   display: table-cell;
   vertical-align: middle;
-  pointer-events:none;
+  pointer-events: none;
 }
 .modal-content {
   /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
-  width:inherit;
-  max-width:inherit; /* For Bootstrap 4 - to avoid the modal window stretching full width */
-  height:inherit;
+  width: inherit;
+  max-width: inherit; /* For Bootstrap 4 - to avoid the modal window stretching full width */
+  height: inherit;
   /* To center horizontally */
   margin: 0 auto;
   pointer-events: all;
 }
 
-
-/* from backend plugin */
-
+/* Legacy plugin webinterface styles — injected by backend plugins that
+   use the older SmartHomeNG webinterface component library. */
 plusIconlist-group-item.py-2.node-tree.node-selected {
   background-color: #c3daee;
 }
 
-.table.table-striped.pluginList>tbody>tr:nth-child(even) {
-  background-color:#fff;
+.table.table-striped.pluginList > tbody > tr:nth-child(even) {
+  background-color: #fff;
 }
 
-.table.table-striped.logicsList>tbody>tr:nth-child(4n+3) {
-  background-color:#fff;
+.table.table-striped.logicsList > tbody > tr:nth-child(4n + 3) {
+  background-color: #fff;
 }
 
-.table-hover>tbody>tr:hover>td,
-.table-hover>tbody>tr:hover>th {
+.table-hover > tbody > tr:hover > td,
+.table-hover > tbody > tr:hover > th {
   background-color: #ecf3f8;
 }
 
@@ -248,7 +390,7 @@ plusIconlist-group-item.py-2.node-tree.node-selected {
   display: inline-block;
   height: 22px;
   width: 22px;
-  background-image: url("/gstatic/img/minus.png");
+  background-image: url('/gstatic/img/minus.png');
 }
 
 .plusIcon {
@@ -256,7 +398,7 @@ plusIconlist-group-item.py-2.node-tree.node-selected {
   display: inline-block;
   width: 22px;
   height: 22px;
-  background-image: url("/gstatic/img/plus.png");
+  background-image: url('/gstatic/img/plus.png');
 }
 
 .navBorder {
@@ -273,18 +415,8 @@ plusIconlist-group-item.py-2.node-tree.node-selected {
   top: 0;
   left: 0;
   background: rgba(0, 0, 0, 0.2);
-  border-bottom-right-radius: .25rem;
-  border-bottom-left-radius: .25rem;
-}
-
-.CodeMirror {
-  border: 1px solid #ddd;
-  height: auto;
-}
-
-.CodeMirror-scroll {
-  overflow-x: auto;
-  overflow-y: auto;
+  border-bottom-right-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
 }
 
 .python-tabs .cm-tab {
@@ -294,22 +426,23 @@ plusIconlist-group-item.py-2.node-tree.node-selected {
 }
 
 .item-box {
-  float:left;
-  border: 1px solid rgba(0,0,0,.125);
-  background-color: rgba(0,0,0,.03);
-  border-radius: .25rem;
+  float: left;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 0.25rem;
 }
 
 .text-shng {
-  color: #337ab7 !important;
+  color: var(--text-link) !important;
 }
-a.text-shng:focus, a.text-shng:hover {
+a.text-shng:focus,
+a.text-shng:hover {
   color: #286090 !important;
 }
 
 .text-shng-bold {
-  color: #337ab7 !important;
-  font-weight: bold !important;
+  color: var(--text-link) !important;
+  font-weight: var(--font-weight-bold) !important;
 }
 
 .btn-shng {
@@ -318,7 +451,7 @@ a.text-shng:focus, a.text-shng:hover {
   /* border-color: #2e6da4; */
 }
 .btn-shng:disabled,
-.btn-shng[disabled]{
+.btn-shng[disabled] {
   color: #fff;
   background-color: #a6c1d9;
   /* border-color: #2e6da4; */
@@ -342,21 +475,7 @@ a.text-shng:focus, a.text-shng:hover {
 .btn-shng-secondary {
   color: #fff;
   background-color: #e0e0e0;
-  /* border-color: #2e6da4; */
 }
-/*
-.btn-shng2 {
-    color: #000;
-    background-color: #609dd2;
-    /* border-color: #2e6da4; * /
-}
-.btn-shng2:hover {
-    color: #fff;
-    background-color: #286090;
-    border-color: #204d74;
-}
-*/
-
 
 .btn-shng-outline-secondary {
   color: #868e96;
@@ -371,18 +490,21 @@ a.text-shng:focus, a.text-shng:hover {
   border-color: #868e96;
 }
 
-.btn-shng-outline-secondary:focus, .btn-shng-outline-secondary.focus {
+.btn-shng-outline-secondary:focus,
+.btn-shng-outline-secondary.focus {
   /*
     box-shadow: 0 0 0 0.2rem rgba(134, 142, 150, 0.5);
   */
 }
 
-.btn-shng-outline-secondary.disabled, .btn-shng-outline-secondary:disabled {
+.btn-shng-outline-secondary.disabled,
+.btn-shng-outline-secondary:disabled {
   color: #c8ccd0;
   background-color: transparent;
 }
 
-.btn-shng-outline-secondary:not([disabled]):not(.disabled):active, .btn-shng-outline-secondary:not([disabled]):not(.disabled).active,
+.btn-shng-outline-secondary:not([disabled]):not(.disabled):active,
+.btn-shng-outline-secondary:not([disabled]):not(.disabled).active,
 .show > .btn-shng-outline-secondary.dropdown-toggle {
   color: #212529;
   background-color: #c8ccd0;
@@ -404,27 +526,10 @@ a.text-shng:focus, a.text-shng:hover {
   border-color: #1f601f;
 }
 
-.btn-shng-success:focus, .btn-success.focus {
+.btn-shng-success:focus,
+.btn-success.focus {
   box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.5);
 }
-/*
-.btn-shng-success.disabled, .btn-shng-success:disabled {
-  background-color: #28a745;
-  border-color: #28a745;
-}
-
-.btn-shng-success:not([disabled]):not(.disabled):active, .btn-shng-success:not([disabled]):not(.disabled).active,
-.show > .btn-shng-success.dropdown-toggle {
-  color: #fff;
-  background-color: #1e7e34;
-  border-color: #1c7430;
-}
-
-.btn-shng-success:not([disabled]):not(.disabled):active:focus, .btn-shng-success:not([disabled]):not(.disabled).active:focus,
-.show > .btn-shng-success.dropdown-toggle:focus {
-  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.5);
-}
-*/
 
 .btn-shng-danger {
   color: #fff;
@@ -437,38 +542,627 @@ a.text-shng:focus, a.text-shng:hover {
   background-color: #b34700;
   border-color: #b34700;
 }
-/*
-.btn-shng-danger:focus, .btn-shng-danger.focus {
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
+
+.shng_headline {
+  color: var(--text-caption);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold); /* sparingly: page-level headline */
 }
 
-.btn-shng-danger.disabled, .btn-shng-danger:disabled {
+.shng_heading {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-normal);
+  border-top: 0;
+}
+
+/* Table column-header rows: semi-bold, darker text, visible stripe —
+   more pronounced than body rows; kept separate from accordion headings
+   which use the base .shng_heading rule (normal weight) */
+.table .shng_heading th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: rgba(0, 0, 0, 0.06);
+  text-align: left;
+}
+
+/* ============================================================
+   Bootstrap 4 replacement utilities
+   These reproduce the Bootstrap 4 rules for every class that
+   appears in this project's templates, allowing the Bootstrap
+   package to be removed entirely.  The shng custom classes
+   (btn-shng, text-shng, shng_heading, etc.) are defined above
+   and are not part of Bootstrap — they remain unchanged.
+   ============================================================ */
+
+/* --- Spacing (scale: 1=0.25rem  2=0.5rem  3=1rem  4=1.5rem) --- */
+.m-0 {
+  margin: 0 !important;
+}
+.m-1 {
+  margin: 0.25rem !important;
+}
+.m-2 {
+  margin: 0.5rem !important;
+}
+.mt-1 {
+  margin-top: 0.25rem !important;
+}
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+.mt-4 {
+  margin-top: 1.5rem !important;
+}
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+.mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+.ml-0,
+.ms-0 {
+  margin-left: 0 !important;
+}
+.ml-1,
+.ms-1 {
+  margin-left: 0.25rem !important;
+}
+.ml-2,
+.ms-2 {
+  margin-left: 0.5rem !important;
+}
+.mr-1,
+.me-1 {
+  margin-right: 0.25rem !important;
+}
+.mr-2,
+.me-2 {
+  margin-right: 0.5rem !important;
+}
+
+/* padding: note the .p-N names are distinct from PrimeNG's .p-component selectors */
+.p-0 {
+  padding: 0 !important;
+}
+.p-1 {
+  padding: 0.25rem !important;
+}
+.p-2 {
+  padding: 0.5rem !important;
+}
+.py-1 {
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+.py-2 {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+.pl-2,
+.ps-2 {
+  padding-left: 0.5rem !important;
+}
+.pr-2,
+.pe-2 {
+  padding-right: 0.5rem !important;
+}
+
+/* --- Float --- */
+.float-left,
+.float-sm-left {
+  float: left !important;
+}
+.float-right,
+.float-sm-right {
+  float: right !important;
+}
+
+/* --- Grid (minimal subset actually used) --- */
+.container {
+  width: 100%;
+  padding-right: var(--grid-gutter);
+  padding-left: var(--grid-gutter);
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 1140px;
+  box-sizing: border-box;
+}
+.container-fluid {
+  width: 100%;
+  padding-right: var(--grid-gutter);
+  padding-left: var(--grid-gutter);
+  margin-right: auto;
+  margin-left: auto;
+  box-sizing: border-box;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: calc(-1 * var(--grid-gutter));
+  margin-left: calc(-1 * var(--grid-gutter));
+}
+.col,
+[class*='col-'] {
+  padding-right: var(--grid-gutter);
+  padding-left: var(--grid-gutter);
+  box-sizing: border-box;
+}
+.col {
+  flex: 1 1 0%;
+}
+.col-sm-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+/* --- Tables --- */
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #212529;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-top: 1px solid #dee2e6;
+}
+.table thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid #dee2e6;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* --- Card --- */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.25rem;
+}
+.card-body {
+  flex: 1 1 auto;
+  padding: 1.25rem;
+}
+.card-header {
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 0;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+.card-text {
+  margin-bottom: 0;
+}
+
+/* --- Form controls --- */
+.form-control {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 0.75rem;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-base);
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+}
+.form-control:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* --- Buttons (base + variants used in templates) ---
+   btn-shng and btn-primary colors are defined above;
+   this block adds the structural rules they both depend on.  */
+.btn {
+  display: inline-block;
+  font-weight: var(--font-weight-normal);
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-decoration: none;
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
+}
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: var(--font-size-base); /* old: --font-size-sm */
+  border-radius: 0.2rem;
+}
+.btn-lg {
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-base); /* old: --font-size-lg */
+  border-radius: 0.3rem;
+}
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+.btn-outline-dark {
+  color: #343a40;
+  background-color: transparent;
+  border-color: #343a40;
+}
+.btn-outline-dark:hover:not([disabled]) {
+  color: #fff;
+  background-color: #343a40;
+  border-color: #343a40;
+}
+.btn-outline-dark:disabled {
+  color: #343a40;
+  opacity: 0.65;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  background-color: transparent;
+  border-color: #dc3545;
+}
+.btn-outline-danger:hover:not([disabled]) {
+  color: #fff;
   background-color: #dc3545;
   border-color: #dc3545;
 }
 
-.btn-shng-danger:not([disabled]):not(.disabled):active, .btn-shng-danger:not([disabled]):not(.disabled).active,
-.show > .btn-shng-danger.dropdown-toggle {
+.btn-outline-primary {
+  color: #007bff;
+  background-color: transparent;
+  border-color: #007bff;
+}
+.btn-outline-primary:hover:not([disabled]) {
   color: #fff;
-  background-color: #bd2130;
-  border-color: #b21f2d;
+  background-color: #007bff;
+  border-color: #007bff;
 }
 
-.btn-shng-danger:not([disabled]):not(.disabled):active:focus, .btn-shng-danger:not([disabled]):not(.disabled).active:focus,
-.show > .btn-shng-danger.dropdown-toggle:focus {
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.5);
-}
-*/
-
-.shng_headline {
-  color: #808080;
-  font-size: 150%;
-  font-weight: bold;
+.btn-outline {
+  background-color: transparent;
+  border-color: currentColor;
 }
 
-.shng_heading {
-  color: #4d4d4d;
-  font-weight: bold;
-  border-top: 0;
+/* ================================================================
+   PrimeNG Tree (p-tree) — global consistent styling
+   These rules apply to every p-tree in the app so the look is
+   uniform. Component stylesheets may add further overrides.
+   ================================================================ */
+
+.p-tree {
+  border: none !important;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  padding: 0.25rem !important; /* Aura default is 1rem — reduce the outer whitebox */
 }
 
+.p-tree-root {
+  background: #ffffff;
+  overflow: visible !important; /* PrimeNG injects overflow:auto — prevent inner scrollbar */
+}
+
+.p-tree-node-content {
+  padding: 1px 4px;
+}
+
+.p-tree-node-children {
+  padding-left: 1rem;
+}
+
+.p-tree-node-content.p-highlight {
+  background-color: #709cc2;
+  color: #ffffff;
+}
+
+/* Toggle button: replace PrimeNG SVG chevron with a filled unicode triangle
+   so the icon is visible regardless of icon-font availability.
+   :has([data-p-icon="chevron-down"]) detects the expanded state because
+   PrimeNG swaps the icon element's data-attribute based on node.expanded. */
+.p-tree-node-toggle-button {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.p-tree-node-toggle-button svg {
+  display: none;
+}
+.p-tree-node-toggle-button::before {
+  content: '▶';
+  font-family: Arial, sans-serif;
+  font-size: 0.6em;
+  line-height: 1;
+  color: inherit;
+}
+.p-tree-node-toggle-button:has([data-p-icon='chevron-down'])::before {
+  content: '▼';
+}
+
+/* ================================================================
+   PrimeNG Accordion — replace SVG chevron with unicode triangle
+   p-accordionheader is the button host; data-p-active="true" marks
+   the expanded state.
+   The collapsed-state SVG (chevron-down) has no CSS class, so it must
+   be targeted by data-p-icon attribute. Place triangle via ::before so
+   it appears before the projected text content, matching tree-view style.
+   ================================================================ */
+.p-accordionheader-toggle-icon,
+.p-accordionheader svg[data-p-icon='chevron-down'],
+.p-accordionheader svg[data-p-icon='chevron-up'] {
+  display: none;
+}
+.p-accordionheader {
+  justify-content: flex-start !important;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem !important; /* Aura default is 1.125rem (18 px) — compress to ~6 px */
+  background-color: rgba(0, 0, 0, 0.09) !important;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+  font-weight: var(--font-weight-normal) !important;
+  color: var(--text-secondary) !important;
+}
+.p-accordionheader:hover {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+}
+.p-accordionheader[data-p-active='true'] {
+  background-color: transparent !important;
+}
+.p-accordionheader[data-p-active='true']:hover {
+  background-color: rgba(0, 0, 0, 0.09) !important;
+}
+.p-accordionheader::before {
+  content: '▶';
+  font-family: Arial, sans-serif;
+  font-size: 0.6em;
+  line-height: 1;
+  color: inherit;
+  flex-shrink: 0;
+}
+.p-accordionheader[data-p-active='true']::before {
+  content: '▼';
+}
+
+/* Accordion content — Aura default is "0 1.125rem 1.125rem 1.125rem" (18 px).
+   Reduce to a modest inset so tables/trees inside don't feel over-padded. */
+.p-accordioncontent-content {
+  padding: 0.35rem 0.75rem !important;
+}
+
+/* ================================================================
+   Compact list table
+   Apply class="shng-list-table" to any <table> that should show
+   dense rows (same target density as btn-sm, ~28 px rows).
+   The !important beats Bootstrap's and Primeng's per-cell defaults.
+   ================================================================ */
+.shng-list-table td,
+.shng-list-table th {
+  padding: 2px 4px !important;
+  vertical-align: middle !important;
+}
+
+/* Suppress Bootstrap paragraph margin inside compact table cells */
+.shng-list-table td p {
+  margin-bottom: 0;
+}
+
+/* Tighten p-tree node row spacing */
+.p-tree .p-tree-node-content {
+  padding: 1px 4px !important;
+}
+.p-tree li.p-tree-node {
+  padding: 0 !important;
+}
+
+/* Item-tree view (/items): plain-text labels only — halve the leading */
+.item-tree .p-tree-node-content {
+  padding: 0 4px !important;
+  line-height: 1.1 !important;
+}
+.item-tree .p-tree-node-toggle-button {
+  height: 1.1em !important;
+}
+
+/* PrimeNG DataTable column headers: left-align text */
+.p-datatable th {
+  text-align: left;
+}
+
+/* Sortable table column headers */
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.sortable-th:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.sort-indicator {
+  margin-left: 4px;
+  font-size: 0.75em;
+  color: var(--shng-blue);
+}
+
+/* items-filelist: flex column so p-listbox fills the remaining height */
+.items-filelist {
+  display: flex;
+  flex-direction: column;
+}
+
+.items-filelist .filelist-header {
+  flex-shrink: 0;
+  overflow: hidden; /* contain floated buttons */
+}
+
+.items-filelist p-listbox {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* PrimeNG renders p-listbox → div.p-listbox → div.p-listbox-list-container → ul.
+   Cascade the height through those rendered elements so the list fills the cell.
+   PrimeNG binds scrollHeight (default 14rem) as an inline style.max-height on
+   p-listbox-list-container; !important is required to override that inline style. */
+.items-filelist .p-listbox {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.items-filelist .p-listbox-list-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  max-height: unset !important;
+}
+
+/* Code editor wrapper areas: visible border */
+.items-fileeditor {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.editor-area,
+.tab-editor-area {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Offline banner */
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: #7a3f00;
+  color: var(--text-on-dark);
+  font-size: var(--font-size-sm);
+}
+.offline-icon {
+  font-size: var(--font-size-base);
+}
+.offline-message {
+  font-weight: var(--font-weight-bold); /* sparingly: critical warning */
+}
+.offline-countdown {
+  margin-left: 4px;
+  opacity: 0.85;
+}
+.offline-retry {
+  margin-left: auto;
+  padding: 3px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-on-dark);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+.offline-retry:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ================================================================
+   Typography utilities — single-source overrides for font size,
+   weight, and semantic text colour. Reference the variables above
+   to keep all adjustments in one place.
+   ================================================================ */
+
+.shng-text-xs {
+  font-size: var(--font-size-xs); /* 12px — captions only */
+}
+.shng-text-sm {
+  font-size: var(--font-size-sm); /* 14px — xs labels only */
+}
+.shng-empty-hint {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
+}
+.shng-text-lg {
+  font-size: var(--font-size-base); /* old: --font-size-lg + bold */
+}
+.shng-text-xl {
+  font-size: var(--font-size-base); /* old: --font-size-xl + bold */
+}
+
+.shng-text-muted {
+  color: var(--text-muted);
+}
+.shng-text-caption {
+  color: var(--text-caption);
+}
+
+/* Status colours used on data cells in system-overview */
+.shng-status-ok {
+  color: var(--shng-green);
+  font-weight: var(--font-weight-bold); /* sparingly: status indicator */
+}
+.shng-status-error {
+  color: var(--shng-red);
+  font-weight: var(--font-weight-bold); /* sparingly: status indicator */
+}
+.shng-cell-alt {
+  background-color: var(--shng-cell-alt-bg);
+}
+
+/* ================================================================
+   Responsive scaling for small viewports
+   Reducing the :root font-size shrinks every rem-based measurement
+   (font sizes, spacing, button padding, component sizes) proportionally.
+   Fixed-px layout variables (navbar height, page padding) are also
+   reduced so the frame takes less vertical/horizontal space.
+   ================================================================ */
+@media (max-width: 900px) {
+  :root {
+    font-size: 14px;
+    --navbar-height: 52px;
+    --page-padding: 14px;
+  }
+}
+
+@media (max-width: 800px) {
+  :root {
+    font-size: 12px;
+    --navbar-height: 46px;
+    --page-padding: 10px;
+  }
+}
