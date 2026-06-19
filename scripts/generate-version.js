@@ -22,6 +22,8 @@ function git(cmd) {
   }
 }
 
+const pkg        = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+const appVersion = pkg.internalVersion || pkg.version || '0.0.0';
 const shortHash = git('rev-parse --short HEAD') || 'unknown';
 const branch    = git('rev-parse --abbrev-ref HEAD') || 'unknown';
 // symbolic-ref gives e.g. "refs/heads/work"; strip "refs/" → "heads/work"
@@ -31,6 +33,7 @@ const repoPath  = path.resolve(__dirname, '..');
 const output = `\
 // Auto-generated at build time by scripts/generate-version.js — do not edit.
 // Committed with placeholder values so fresh clones compile without a build step.
+export const APP_VERSION = '${appVersion}';
 export const GIT_COMMIT = '${shortHash}';
 export const GIT_BRANCH = '${branch}';
 export const GIT_REF    = '${fullRef}';   // e.g. "heads/work"
@@ -39,4 +42,4 @@ export const BUILD_PATH = '${repoPath}';
 
 const dest = path.join(__dirname, '..', 'src', 'app', 'git-version.auto.ts');
 fs.writeFileSync(dest, output, 'utf8');
-console.log(`[generate-version] ${shortHash}.${branch}  (${fullRef})`);
+console.log(`[generate-version] v${appVersion}  ${shortHash}.${branch}  (${fullRef})`);

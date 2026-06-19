@@ -28,7 +28,7 @@ import { LogService } from './common/services/log.service';
 import { UserPreferencesService } from './common/services/user-preferences.service';
 import { TopNavigationComponent } from './top-navigation/top-navigation.component';
 // git-version.auto.ts is generated at build time by scripts/generate-version.js
-import { BUILD_PATH, GIT_BRANCH, GIT_COMMIT, GIT_REF } from './git-version.auto';
+import { APP_VERSION, BUILD_PATH, GIT_BRANCH, GIT_COMMIT, GIT_REF } from './git-version.auto';
 
 // Allow ngx-translate to find translation files on other path than /assets/i18n/...
 export function HttpLoaderFactory(http: HttpClient) {
@@ -38,7 +38,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 // Exported as module-level constants so other modules can import them
 // directly without injecting AppComponent.
 export const APP_NAME = 'shngAdmin';
-export const APP_VERSION = '1.12.0';
+export { APP_VERSION };
 
 // Detailed version string matching the format SmartHomeNG core uses:
 //   v{semver}-{short-hash}.{branch}  in  {path}  ({ref})
