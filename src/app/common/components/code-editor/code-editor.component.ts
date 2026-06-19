@@ -6,6 +6,7 @@ import {
   EventEmitter,
   HostBinding,
   Input,
+  NgZone,
   OnChanges,
   OnDestroy,
   OnInit,
@@ -14,7 +15,6 @@ import {
   ViewChild,
   ViewEncapsulation,
   inject,
-  NgZone,
 } from '@angular/core';
 import {
   CompletionContext,
