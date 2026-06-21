@@ -76,6 +76,9 @@ echo "$LOG_TAG running tests"
 npm test -- --watchAll=false --passWithNoTests
 
 # ── Build ─────────────────────────────────────────────────────────────────────
+echo "$LOG_TAG generating version info"
+node scripts/generate-version.js
+
 echo "$LOG_TAG building production bundle"
 NODE_OPTIONS="--trace-deprecation --trace-warnings" \
     npx ng build --configuration production --aot --base-href /admin/

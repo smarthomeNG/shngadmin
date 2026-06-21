@@ -2,7 +2,8 @@
   "root": true,
   "ignorePatterns": [
     "projects/**/*",
-    "src/assets/**"
+    "src/assets/**",
+    "src/testing/fixtures/**"
   ],
   "overrides": [
     {
@@ -10,7 +11,7 @@
         "*.ts"
       ],
       "parserOptions": {
-        "project": ["tsconfig.json"],
+        "project": ["tsconfig.json", "src/tsconfig.spec.json"],
         "createDefaultProgram": true
       },
       "extends": [

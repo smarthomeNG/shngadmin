@@ -29,7 +29,11 @@
     ></button>
   </div>
 
-  <div class="log-filter-row" [class.log-filter-row--fullscreen]="editorFullscreen" style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 98%">
+  <div
+    class="log-filter-row"
+    [class.log-filter-row--fullscreen]="editorFullscreen"
+    style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px; width: 98%"
+  >
     <div>{{ 'LOGS.FILTER' | translate }}:</div>
     <input
       type="text"

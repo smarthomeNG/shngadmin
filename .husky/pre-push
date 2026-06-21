@@ -1,0 +1,51 @@
+[ "$(whoami)" = "sh" ] || exit 0
+
+# Backstop for pre-merge-commit: catches pushes to master/develop regardless of
+# how the commit was produced (merge, rebase, cherry-pick, fast-forward, etc).
+GATE_BRANCHES="master develop"
+
+NEEDS_CHECK=false
+while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
+    REMOTE_BRANCH=$(echo "$REMOTE_REF" | sed -n 's#^refs/heads/##p')
+    for b in $GATE_BRANCHES; do
+        if [ "$REMOTE_BRANCH" = "$b" ]; then
+            NEEDS_CHECK=true
+        fi
+    done
+done
+
+if ! $NEEDS_CHECK; then
+    exit 0
+fi
+
+echo "[pre-push] pushing to a gated branch ($GATE_BRANCHES) — running full CI-equivalent checks"
+
+echo "[pre-push] format check"
+npm run format:check
+if [ $? -ne 0 ]; then
+    echo "[pre-push] formatting FAILED — run 'npm run format' and commit the result, then push again" >&2
+    exit 1
+fi
+
+echo "[pre-push] lint"
+npm run lint
+if [ $? -ne 0 ]; then
+    echo "[pre-push] lint FAILED — aborting push" >&2
+    exit 1
+fi
+
+echo "[pre-push] type check"
+npx tsc --noEmit
+if [ $? -ne 0 ]; then
+    echo "[pre-push] type check FAILED — aborting push" >&2
+    exit 1
+fi
+
+echo "[pre-push] tests"
+npm run test:coverage -- --watchAll=false
+if [ $? -ne 0 ]; then
+    echo "[pre-push] tests FAILED — aborting push" >&2
+    exit 1
+fi
+
+echo "[pre-push] all checks passed"

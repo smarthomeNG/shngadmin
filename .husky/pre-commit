@@ -16,33 +16,27 @@ unset _arg
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
 echo "[pre-commit] branch: '$CURRENT_BRANCH'"
 
-# Skip everything when shng is not on its deployment branch.
-# This optimisation only applies to the automatic git-hook path (e.g. release
-# workflow commits); callers that pass --force bypass it and always run.
-if ! $FORCE; then
-    SHNG_CURRENT=$(git -C "$SHNG_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "")
-    if [[ "$SHNG_CURRENT" != "$SHNG_BRANCH" ]]; then
-        echo "[pre-commit] not deploying context (shng is on '$SHNG_CURRENT', expected '$SHNG_BRANCH') — skipping"
-        exit 0
-    fi
-fi
-
-# Run prettier via lint-staged (formats and re-stages changed files)
+# Run prettier via lint-staged (formats and re-stages changed files) — always.
 echo "[pre-commit] running prettier"
 npx lint-staged
 
-# Run tests
-echo "[pre-commit] running tests"
-npm test -- --watchAll=false --passWithNoTests
-TEST_EXIT=$?
+# Run tests only when shng is on its deployment branch (or --force is passed).
+SHNG_CURRENT=$(git -C "$SHNG_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "")
+if $FORCE || [[ "$SHNG_CURRENT" == "$SHNG_BRANCH" ]]; then
+    echo "[pre-commit] running tests (shng: '$SHNG_CURRENT')"
+    npm test -- --watchAll=false --passWithNoTests
+    TEST_EXIT=$?
 
-if [ $TEST_EXIT -ne 0 ]; then
-  if [ "$CURRENT_BRANCH" = "$REQUIRED_BRANCH" ]; then
-    echo "[pre-commit] tests FAILED on '$REQUIRED_BRANCH' — aborting commit" >&2
-    exit 1
-  else
-    echo "[pre-commit] tests FAILED (not '$REQUIRED_BRANCH', continuing anyway)"
-  fi
+    if [ $TEST_EXIT -ne 0 ]; then
+        if [ "$CURRENT_BRANCH" = "$REQUIRED_BRANCH" ]; then
+            echo "[pre-commit] tests FAILED on '$REQUIRED_BRANCH' — aborting commit" >&2
+            exit 1
+        else
+            echo "[pre-commit] tests FAILED (not '$REQUIRED_BRANCH', continuing anyway)"
+        fi
+    fi
+else
+    echo "[pre-commit] skipping tests (shng is on '$SHNG_CURRENT', expected '$SHNG_BRANCH')"
 fi
 
 echo "[pre-commit] done"
