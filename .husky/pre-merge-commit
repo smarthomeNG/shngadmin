@@ -1,0 +1,40 @@
+[ "$(whoami)" = "sh" ] || exit 0
+
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+
+# Only run the full CI-equivalent gate when merging into master (e.g. release.sh
+# merging develop into master). Merges into other branches are left alone —
+# pre-commit already runs prettier on every commit there.
+if [ "$CURRENT_BRANCH" != "master" ]; then
+    echo "[pre-merge-commit] merge target is '$CURRENT_BRANCH', not 'master' — skipping full check"
+    exit 0
+fi
+
+echo "[pre-merge-commit] merging into master — running full CI-equivalent checks"
+
+echo "[pre-merge-commit] formatting (auto-fix)"
+npx prettier --write "src/**/*.{ts,html,css,json}"
+git add -A -- src
+
+echo "[pre-merge-commit] lint"
+npm run lint
+if [ $? -ne 0 ]; then
+    echo "[pre-merge-commit] lint FAILED — aborting merge commit" >&2
+    exit 1
+fi
+
+echo "[pre-merge-commit] type check"
+npx tsc --noEmit
+if [ $? -ne 0 ]; then
+    echo "[pre-merge-commit] type check FAILED — aborting merge commit" >&2
+    exit 1
+fi
+
+echo "[pre-merge-commit] tests"
+npm run test:coverage -- --watchAll=false
+if [ $? -ne 0 ]; then
+    echo "[pre-merge-commit] tests FAILED — aborting merge commit" >&2
+    exit 1
+fi
+
+echo "[pre-merge-commit] all checks passed"
